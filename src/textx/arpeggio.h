@@ -4,7 +4,7 @@
 #include <vector>
 #include <string>
 #include <optional>
-#include <ostream>
+#include <iostream>
 #include <unordered_map>
 #include <regex>
 
@@ -151,7 +151,7 @@ namespace textx
             };
         }
 
-        inline auto sequence(std::initializer_list<Pattern> patterns)
+        inline auto sequence(std::vector<Pattern> patterns)
         {
             return [=](const Config &config, std::string_view text, size_t pos) -> std::optional<Match>
             {
@@ -169,6 +169,21 @@ namespace textx
                     }
                 }
                 return match;
+            };
+        }
+
+        inline auto ordered_choice(std::vector<Pattern> patterns)
+        {
+            return [=](const Config &config, std::string_view text, size_t pos) -> std::optional<Match>
+            {
+                for (auto pattern: patterns) {
+                    auto match = pattern(config, text, pos);
+                    if (match)
+                    {
+                        return match;
+                    }
+                }
+                return std::nullopt;
             };
         }
 
