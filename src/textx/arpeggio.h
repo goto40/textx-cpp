@@ -122,6 +122,7 @@ namespace textx
         {
             return [=](const Config &config, std::string_view text, size_t pos) -> std::optional<Match>
             {
+                pos = config.skip_text(text, pos);
                 if (text.substr(pos).starts_with(s))
                 {
                     return Match{pos, pos + s.length(), MatchType::str_match};
@@ -137,6 +138,7 @@ namespace textx
         {
             return [r=std::regex{std::string("(")+s+").*"}](const Config &config, std::string_view text, size_t pos) -> std::optional<Match>
             {
+                pos = config.skip_text(text, pos);
                 std::match_results<std::string_view::const_iterator> smatch;
                 if (std::regex_match(text.begin()+pos, text.end(), smatch, r))  
                 {

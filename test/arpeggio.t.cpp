@@ -69,11 +69,13 @@ TEST_CASE("regex_match", "[arpeggio]")
 {
     using namespace textx::arpeggio;
     Config config{ .skip_text = skip_text_functions::nothing() };
+    Config config_skipws{ .skip_text = skip_text_functions::skipws() };
 
     std::string text = "hello123 world";
     auto word_pattern = capture(regex_match(R"(\w+)"));
     {
         CHECK(!word_pattern(config, " space and a word",0));
+        CHECK(word_pattern(config_skipws, " space and a word",0));
         CHECK(word_pattern(config, " space and a word",1));
 
         auto match = word_pattern(config, text,0).value();
