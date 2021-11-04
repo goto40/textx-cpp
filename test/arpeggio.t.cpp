@@ -3,7 +3,6 @@
 #include <sstream>
 #include "textx/arpeggio.h"
 
-
 TEST_CASE("str_match", "[arpeggio]")
 {
     using namespace textx::arpeggio;
@@ -92,16 +91,15 @@ TEST_CASE("sequence", "[arpeggio]")
     Config config{};
 
     std::string text = "hello123 world";
-    auto two_word_pattern = sequence({
-        capture(regex_match(R"(\w+)")),
-        capture(regex_match(R"(\w+)"))});
+    auto two_word_pattern = sequence({capture(regex_match(R"(\w+)")),
+                                      capture(regex_match(R"(\w+)"))});
     {
         auto match = two_word_pattern(config, text, 0);
         CHECK(match);
 
         std::ostringstream o;
         o << match.value();
-        //std::cout << o.str() << "\n";
+        // std::cout << o.str() << "\n";
         CHECK_THAT(o.str(), Catch::Matchers::Contains("<regex_match captured=hello123>"));
         CHECK_THAT(o.str(), Catch::Matchers::Contains("<regex_match captured=world>"));
         CHECK_THAT(o.str(), Catch::Matchers::Contains("<sequence>"));
@@ -114,10 +112,9 @@ TEST_CASE("ordered_choice", "[arpeggio]")
     Config config{};
 
     std::string text = "hello123 world";
-    auto choice_pattern = capture(ordered_choice({
-        str_match("hello"),
-        str_match("hello123"),
-        str_match("world")}));
+    auto choice_pattern = ordered_choice({capture(str_match("hello")),
+                                          capture(str_match("hello123")),
+                                          capture(str_match("world"))});
     {
         auto match = choice_pattern(config, text, 0);
         CHECK(match);
@@ -125,6 +122,7 @@ TEST_CASE("ordered_choice", "[arpeggio]")
         std::ostringstream o;
         o << match.value();
         CHECK_THAT(o.str(), Catch::Matchers::Contains("<str_match captured=hello>"));
+        CHECK_THAT(o.str(), Catch::Matchers::Contains("<ordered_choice>"));
     }
     {
         auto match = choice_pattern(config, text, 9);
@@ -133,5 +131,48 @@ TEST_CASE("ordered_choice", "[arpeggio]")
         std::ostringstream o;
         o << match.value();
         CHECK_THAT(o.str(), Catch::Matchers::Contains("<str_match captured=world>"));
+        CHECK_THAT(o.str(), Catch::Matchers::Contains("<ordered_choice>"));
+    }
+}
+
+TEST_CASE("one_or_more", "[arpeggio]")
+{
+    using namespace textx::arpeggio;
+    Config config{};
+
+    std::string text = "a b c d e f g";
+    auto words_pattern = one_or_more(regex_match(R"(\w+)"));
+    {
+        auto match = words_pattern(config, text, 0);
+        REQUIRE(match);
+        CHECK(match.value().type == MatchType::one_or_more);
+        CHECK(match.value().children.size() == 7);
+    }
+}
+
+TEST_CASE("zero_or_more", "[arpeggio]")
+{
+    using namespace textx::arpeggio;
+    Config config{};
+
+    {
+        std::string text = "a b c d e f g";
+        auto words_pattern = zero_or_more(regex_match(R"(\w+)"));
+        {
+            auto match = words_pattern(config, text, 0);
+            REQUIRE(match);
+            CHECK(match.value().type == MatchType::zero_or_more);
+            CHECK(match.value().children.size() == 7);
+        }
+    }
+    {
+        std::string text = "";
+        auto words_pattern = zero_or_more(regex_match(R"(\w+)"));
+        {
+            auto match = words_pattern(config, text, 0);
+            REQUIRE(match);
+            CHECK(match.value().type == MatchType::zero_or_more);
+            CHECK(match.value().children.size() == 0);
+        }
     }
 }

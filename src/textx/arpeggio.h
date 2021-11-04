@@ -13,10 +13,15 @@ namespace textx
     namespace arpeggio
     {
 
-        enum class MatchType {
+        enum class MatchType
+        {
             str_match,
             regex_match,
             sequence,
+            ordered_choice,
+            not_this,
+            one_or_more,
+            zero_or_more,
         };
         struct Match
         {
@@ -30,7 +35,7 @@ namespace textx
             static std::unordered_map<MatchType, bool> is_terminal;
             friend std::ostream &operator<<(std::ostream &o, const Match &match)
             {
-                o << "<" << type2str.at(match.type);                
+                o << "<" << type2str.at(match.type);
                 if (match.name.has_value())
                 {
                     o << ":" << match.name.value();
@@ -40,7 +45,8 @@ namespace textx
                     o << " captured=" << match.captured.value();
                 }
                 o << ">(";
-                for(auto &child: match.children) {
+                for (auto &child : match.children)
+                {
                     o << child;
                 }
                 o << ")";
@@ -50,45 +56,58 @@ namespace textx
 
         using SkipTextFun = std::function<size_t(std::string_view text, size_t pos)>;
 
-        namespace skip_text_functions {
-            inline auto nothing() {
-                return [](std::string_view, size_t pos)->size_t {
+        namespace skip_text_functions
+        {
+            inline auto nothing()
+            {
+                return [](std::string_view, size_t pos) -> size_t
+                {
                     return pos;
                 };
-            }            
-            inline auto skipws() {
-                return [=](std::string_view text, size_t pos)->size_t {
-                    while(pos<text.length() && std::isspace(text[pos])) {
+            }
+            inline auto skipws()
+            {
+                return [=](std::string_view text, size_t pos) -> size_t
+                {
+                    while (pos < text.length() && std::isspace(text[pos]))
+                    {
                         pos++;
                     }
                     return pos;
                 };
-            }            
-            inline auto combine(std::initializer_list<SkipTextFun> ps) {
-                return [=](std::string_view text, size_t pos)->size_t {
+            }
+            inline auto combine(std::initializer_list<SkipTextFun> ps)
+            {
+                return [=](std::string_view text, size_t pos) -> size_t
+                {
                     size_t pos0 = pos;
-                    do {
+                    do
+                    {
                         pos0 = pos;
-                        for (auto p: ps) {
-                            pos = p(text,pos);
+                        for (auto p : ps)
+                        {
+                            pos = p(text, pos);
                         }
-                    } while(pos0!=pos);
+                    } while (pos0 != pos);
                     return pos;
                 };
-            }            
+            }
         }
 
-        struct Config {
+        struct Config
+        {
             SkipTextFun skip_text = skip_text_functions::skipws();
         };
 
         using Pattern = std::function<std::optional<Match>(const Config &config, std::string_view text, size_t pos)>;
 
-        inline std::string_view get_str(std::string_view text, Match match) {
-            return text.substr(match.start, match.end-match.start);
+        inline std::string_view get_str(std::string_view text, Match match)
+        {
+            return text.substr(match.start, match.end - match.start);
         }
 
-        inline bool is_terminal(const Match& m) {
+        inline bool is_terminal(const Match &m)
+        {
             return Match::is_terminal.at(m.type);
         }
 
@@ -136,11 +155,11 @@ namespace textx
 
         inline auto regex_match(std::string s)
         {
-            return [r=std::regex{std::string("(")+s+").*"}](const Config &config, std::string_view text, size_t pos) -> std::optional<Match>
+            return [r = std::regex{std::string("(") + s + ").*"}](const Config &config, std::string_view text, size_t pos) -> std::optional<Match>
             {
                 pos = config.skip_text(text, pos);
                 std::match_results<std::string_view::const_iterator> smatch;
-                if (std::regex_match(text.begin()+pos, text.end(), smatch, r))  
+                if (std::regex_match(text.begin() + pos, text.end(), smatch, r))
                 {
                     return Match{pos, pos + smatch[1].length(), MatchType::regex_match};
                 }
@@ -156,15 +175,17 @@ namespace textx
             return [=](const Config &config, std::string_view text, size_t pos) -> std::optional<Match>
             {
                 Match match{pos, pos, MatchType::sequence};
-                for (auto pattern: patterns) {
+                for (auto pattern : patterns)
+                {
                     auto sub_match = pattern(config, text, pos);
                     if (sub_match)
                     {
                         pos = sub_match.value().end;
                         match.end = pos;
-                        match.children.push_back(sub_match.value());                         
+                        match.children.push_back(sub_match.value());
                     }
-                    else {
+                    else
+                    {
                         return std::nullopt;
                     }
                 }
@@ -176,14 +197,68 @@ namespace textx
         {
             return [=](const Config &config, std::string_view text, size_t pos) -> std::optional<Match>
             {
-                for (auto pattern: patterns) {
+                for (auto pattern : patterns)
+                {
                     auto match = pattern(config, text, pos);
                     if (match)
                     {
-                        return match;
+                        return Match{.start=match.value().start, .end=match.value().end, .type=MatchType::ordered_choice, .children={match.value()}};
                     }
                 }
                 return std::nullopt;
+            };
+        }
+
+        inline auto not_this(Pattern pattern)
+        {
+            return [=](const Config &config, std::string_view text, size_t pos) -> std::optional<Match>
+            {
+                auto match = pattern(config, text, pos);
+                if (!match)
+                {
+                    return Match{pos, pos, MatchType::not_this};
+                }
+                else
+                {
+                    return std::nullopt;
+                }
+            };
+        }
+
+       inline auto one_or_more(Pattern pattern)
+        {
+            return [=](const Config &config, std::string_view text, size_t pos) -> std::optional<Match>
+            {
+                auto sub_match = pattern(config, text, pos);
+                if (!sub_match)
+                {
+                    return std::nullopt;
+                }
+                else
+                {
+                    auto match = Match{.start=sub_match.value().start, .end=sub_match.value().end, .type=MatchType::one_or_more, .children={sub_match.value()}};
+                    pos = match.end;
+                    while(auto next_match = pattern(config, text, pos)) {
+                        match.children.push_back(next_match.value());
+                        pos = next_match.value().end;
+                        match.end=pos;
+                    }
+                    return match;
+                }
+            };
+        }
+
+       inline auto zero_or_more(Pattern pattern)
+        {
+            return [=](const Config &config, std::string_view text, size_t pos) -> std::optional<Match>
+            {
+                auto match = Match{.start=pos, .end=pos, .type=MatchType::zero_or_more, .children={}};
+                while(auto next_match = pattern(config, text, pos)) {
+                    match.children.push_back(next_match.value());
+                    pos = next_match.value().end;
+                    match.end=pos;
+                }
+                return match;
             };
         }
 
