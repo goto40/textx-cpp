@@ -61,3 +61,19 @@ TEST_CASE("captured", "[arpeggio]")
         CHECK_THAT(o.str(), Catch::Matchers::Contains("<str_match:hello captured=hello>"));
     }
 }
+
+TEST_CASE("regex_match", "[arpeggio]")
+{
+    using namespace textx::arpeggio;
+
+    std::string text = "hello123 world";
+    auto word_pattern = capture(regex_match(R"(\w+)"));
+    {
+        CHECK(!word_pattern(" ",1));
+
+        auto match = word_pattern(text,0).value();
+        std::ostringstream o;
+        o << match;
+        CHECK_THAT(o.str(), Catch::Matchers::Contains("<regex_match captured=hello123>"));
+    }
+}
