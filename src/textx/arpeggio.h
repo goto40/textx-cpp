@@ -48,6 +48,14 @@ namespace textx
             }
         };
 
+        inline std::string_view get_str(std::string_view text, Match match) {
+            return text.substr(match.start, match.end-match.start);
+        }
+
+        inline bool is_terminal(const Match& m) {
+            return Match::is_terminal.at(m.type);
+        }
+
         template<class Pattern>
         auto named(std::string name, Pattern pattern)
         {
@@ -60,14 +68,6 @@ namespace textx
                 }
                 return match;
             };
-        }
-
-        inline std::string_view get_str(std::string_view text, Match match) {
-            return text.substr(match.start, match.end-match.start);
-        }
-
-        inline bool is_terminal(const Match& m) {
-            return Match::is_terminal.at(m.type);
         }
 
         template<class Pattern>
