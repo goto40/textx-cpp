@@ -176,3 +176,23 @@ TEST_CASE("zero_or_more", "[arpeggio]")
         }
     }
 }
+
+TEST_CASE("optional", "[arpeggio]")
+{
+    using namespace textx::arpeggio;
+    Config config{};
+
+    {
+        std::string text = "hello";
+        auto p1 = optional(str_match("hello"));
+        auto p2 = optional(str_match("world"));
+        {
+            auto match = p1(config, text, 0);
+            CHECK(match);
+        }
+        {
+            auto match = p2(config, text, 0);
+            CHECK(match);
+        }
+    }
+}

@@ -22,6 +22,7 @@ namespace textx
             not_this,
             one_or_more,
             zero_or_more,
+            optional,
         };
         struct Match
         {
@@ -154,6 +155,21 @@ namespace textx
                     match.value().captured = get_str(text, match.value());
                 }
                 return match;
+            });
+        }
+
+        inline auto optional(Pattern pattern)
+        {
+            return cached([=](const Config &config, std::string_view text, size_t pos) -> std::optional<Match>
+            {
+                auto match = pattern(config, text, pos);
+                if (match.has_value())
+                {
+                    return Match{.start=match.value().start, .end=match.value().end, .type=MatchType::optional, .children={match.value()}};
+                }
+                else {
+                    return Match{.start=pos, .end=pos, .type=MatchType::optional, .children={}};
+                }
             });
         }
 

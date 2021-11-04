@@ -12,6 +12,7 @@ namespace textx
             {MatchType::not_this, "not_this"},
             {MatchType::one_or_more, "one_or_more"},
             {MatchType::zero_or_more, "zero_or_more"},
+            {MatchType::optional, "optional"},
         };
 
         std::unordered_map<MatchType, bool> Match::is_terminal = {
@@ -22,6 +23,7 @@ namespace textx
             {MatchType::not_this, false},
             {MatchType::one_or_more, false},
             {MatchType::zero_or_more, false},
+            {MatchType::optional, false},
         };
 
     }
