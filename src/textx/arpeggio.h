@@ -16,8 +16,8 @@ namespace textx
         enum class MatchType {
             str_match,
             regex_match,
+            sequence,
         };
-
         struct Match
         {
             size_t start, end;
@@ -48,6 +48,34 @@ namespace textx
             }
         };
 
+        using Pattern = std::function<std::optional<Match>(std::string_view text, size_t pos)>;
+        using SkipTextFun = std::function<size_t(std::string_view text, size_t pos)>;
+
+        namespace skip_text_functions {
+            inline auto nothing() {
+                return [](std::string_view, size_t pos)->size_t {
+                    return pos;
+                };
+            }            
+            inline auto skipws(SkipTextFun p) {
+                return [=](std::string_view text, size_t pos)->size_t {
+                    size_t pos0 = pos;
+                    do {
+                        pos0 = pos;
+                        pos = p(text,pos);
+                        while(pos<text.length() && std::isspace(text[pos])) {
+                            pos++;
+                        }
+                    } while(pos0!=pos);
+                    return pos;
+                };
+            }            
+        }
+
+        struct Config {
+            SkipTextFun skip_text = skip_text_functions::skipws(skip_text_functions::nothing());
+        };
+
         inline std::string_view get_str(std::string_view text, Match match) {
             return text.substr(match.start, match.end-match.start);
         }
@@ -56,8 +84,7 @@ namespace textx
             return Match::is_terminal.at(m.type);
         }
 
-        template<class Pattern>
-        auto named(std::string name, Pattern pattern)
+        inline auto named(std::string name, Pattern pattern)
         {
             return [=](std::string_view text, size_t pos) -> std::optional<Match>
             {
@@ -70,8 +97,7 @@ namespace textx
             };
         }
 
-        template<class Pattern>
-        auto capture(Pattern pattern)
+        inline auto capture(Pattern pattern)
         {
             return [=](std::string_view text, size_t pos) -> std::optional<Match>
             {
@@ -112,6 +138,27 @@ namespace textx
                 {
                     return std::nullopt;
                 }
+            };
+        }
+
+        inline auto sequence(std::initializer_list<Pattern> patterns)
+        {
+            return [=](std::string_view text, size_t pos) -> std::optional<Match>
+            {
+                Match match{pos, pos, MatchType::sequence};
+                for (auto pattern: patterns) {
+                    auto sub_match = pattern(text,pos);
+                    if (sub_match)
+                    {
+                        pos = sub_match.value().end;
+                        match.end = pos;
+                        match.children.push_back(sub_match.value());                         
+                    }
+                    else {
+                        return std::nullopt;
+                    }
+                }
+                return match;
             };
         }
 

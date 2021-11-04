@@ -69,7 +69,8 @@ TEST_CASE("regex_match", "[arpeggio]")
     std::string text = "hello123 world";
     auto word_pattern = capture(regex_match(R"(\w+)"));
     {
-        CHECK(!word_pattern(" ",1));
+        CHECK(!word_pattern(" space and a word",0));
+        CHECK(word_pattern(" space and a word",1));
 
         auto match = word_pattern(text,0).value();
         std::ostringstream o;
