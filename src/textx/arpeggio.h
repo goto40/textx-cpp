@@ -48,7 +48,6 @@ namespace textx
             }
         };
 
-        using Pattern = std::function<std::optional<Match>(std::string_view text, size_t pos)>;
         using SkipTextFun = std::function<size_t(std::string_view text, size_t pos)>;
 
         namespace skip_text_functions {
@@ -57,14 +56,21 @@ namespace textx
                     return pos;
                 };
             }            
-            inline auto skipws(SkipTextFun p) {
+            inline auto skipws() {
+                return [=](std::string_view text, size_t pos)->size_t {
+                    while(pos<text.length() && std::isspace(text[pos])) {
+                        pos++;
+                    }
+                    return pos;
+                };
+            }            
+            inline auto combine(std::initializer_list<SkipTextFun> ps) {
                 return [=](std::string_view text, size_t pos)->size_t {
                     size_t pos0 = pos;
                     do {
                         pos0 = pos;
-                        pos = p(text,pos);
-                        while(pos<text.length() && std::isspace(text[pos])) {
-                            pos++;
+                        for (auto p: ps) {
+                            pos = p(text,pos);
                         }
                     } while(pos0!=pos);
                     return pos;
@@ -73,8 +79,10 @@ namespace textx
         }
 
         struct Config {
-            SkipTextFun skip_text = skip_text_functions::skipws(skip_text_functions::nothing());
+            SkipTextFun skip_text = skip_text_functions::skipws();
         };
+
+        using Pattern = std::function<std::optional<Match>(const Config &config, std::string_view text, size_t pos)>;
 
         inline std::string_view get_str(std::string_view text, Match match) {
             return text.substr(match.start, match.end-match.start);
@@ -86,9 +94,9 @@ namespace textx
 
         inline auto named(std::string name, Pattern pattern)
         {
-            return [=](std::string_view text, size_t pos) -> std::optional<Match>
+            return [=](const Config &config, std::string_view text, size_t pos) -> std::optional<Match>
             {
-                auto match = pattern(text, pos);
+                auto match = pattern(config, text, pos);
                 if (match.has_value())
                 {
                     match.value().name = name;
@@ -99,9 +107,9 @@ namespace textx
 
         inline auto capture(Pattern pattern)
         {
-            return [=](std::string_view text, size_t pos) -> std::optional<Match>
+            return [=](const Config &config, std::string_view text, size_t pos) -> std::optional<Match>
             {
-                auto match = pattern(text, pos);
+                auto match = pattern(config, text, pos);
                 if (match.has_value())
                 {
                     match.value().captured = get_str(text, match.value());
@@ -112,7 +120,7 @@ namespace textx
 
         inline auto str_match(std::string s)
         {
-            return [=](std::string_view text, size_t pos) -> std::optional<Match>
+            return [=](const Config &config, std::string_view text, size_t pos) -> std::optional<Match>
             {
                 if (text.substr(pos).starts_with(s))
                 {
@@ -127,7 +135,7 @@ namespace textx
 
         inline auto regex_match(std::string s)
         {
-            return [r=std::regex{std::string("(")+s+").*"}](std::string_view text, size_t pos) -> std::optional<Match>
+            return [r=std::regex{std::string("(")+s+").*"}](const Config &config, std::string_view text, size_t pos) -> std::optional<Match>
             {
                 std::match_results<std::string_view::const_iterator> smatch;
                 if (std::regex_match(text.begin()+pos, text.end(), smatch, r))  
@@ -143,11 +151,11 @@ namespace textx
 
         inline auto sequence(std::initializer_list<Pattern> patterns)
         {
-            return [=](std::string_view text, size_t pos) -> std::optional<Match>
+            return [=](const Config &config, std::string_view text, size_t pos) -> std::optional<Match>
             {
                 Match match{pos, pos, MatchType::sequence};
                 for (auto pattern: patterns) {
-                    auto sub_match = pattern(text,pos);
+                    auto sub_match = pattern(config, text, pos);
                     if (sub_match)
                     {
                         pos = sub_match.value().end;

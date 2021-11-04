@@ -6,14 +6,15 @@
 TEST_CASE("str_match", "[arpeggio]")
 {
     using namespace textx::arpeggio;
+    Config config{ .skip_text = skip_text_functions::nothing() };
 
     std::string text = "hello world";
     auto hello_pattern = str_match("hello");
     auto world_pattern = str_match("world");
-    CHECK(hello_pattern(text, 0));
-    CHECK(!world_pattern(text, 0));
-    auto match = hello_pattern(text, 0).value();
-    auto match2_opt = world_pattern(text, match.end + 1);
+    CHECK(hello_pattern(config, text, 0));
+    CHECK(!world_pattern(config, text, 0));
+    auto match = hello_pattern(config, text, 0).value();
+    auto match2_opt = world_pattern(config, text, match.end + 1);
     REQUIRE(match2_opt);
 
     CHECK(get_str(text, match)=="hello");
@@ -23,12 +24,13 @@ TEST_CASE("str_match", "[arpeggio]")
 TEST_CASE("named", "[arpeggio]")
 {
     using namespace textx::arpeggio;
+    Config config{ .skip_text = skip_text_functions::nothing() };
 
     std::string text = "hello world";
     auto hello_pattern = str_match("hello");
     auto named_hello_pattern = named("hello", str_match("hello"));
-    auto match = hello_pattern(text, 0).value();
-    auto named_match = named_hello_pattern(text, 0).value();
+    auto match = hello_pattern(config, text, 0).value();
+    auto named_match = named_hello_pattern(config, text, 0).value();
     {
         std::ostringstream o;
         o << match;
@@ -44,12 +46,13 @@ TEST_CASE("named", "[arpeggio]")
 TEST_CASE("captured", "[arpeggio]")
 {
     using namespace textx::arpeggio;
+    Config config{ .skip_text = skip_text_functions::nothing() };
 
     std::string text = "hello world";
     auto hello_pattern = capture(str_match("hello"));
     auto named_hello_pattern = capture(named("hello", str_match("hello")));
-    auto match = hello_pattern(text, 0).value();
-    auto named_match = named_hello_pattern(text, 0).value();
+    auto match = hello_pattern(config, text, 0).value();
+    auto named_match = named_hello_pattern(config, text, 0).value();
     {
         std::ostringstream o;
         o << match;
@@ -65,14 +68,15 @@ TEST_CASE("captured", "[arpeggio]")
 TEST_CASE("regex_match", "[arpeggio]")
 {
     using namespace textx::arpeggio;
+    Config config{ .skip_text = skip_text_functions::nothing() };
 
     std::string text = "hello123 world";
     auto word_pattern = capture(regex_match(R"(\w+)"));
     {
-        CHECK(!word_pattern(" space and a word",0));
-        CHECK(word_pattern(" space and a word",1));
+        CHECK(!word_pattern(config, " space and a word",0));
+        CHECK(word_pattern(config, " space and a word",1));
 
-        auto match = word_pattern(text,0).value();
+        auto match = word_pattern(config, text,0).value();
         std::ostringstream o;
         o << match;
         CHECK_THAT(o.str(), Catch::Matchers::Contains("<regex_match captured=hello123>"));
