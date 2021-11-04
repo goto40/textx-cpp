@@ -1,0 +1,3 @@
+import SimpleBaseBase
+
+Import: 'import' importURI=STRING;

@@ -1,0 +1,3 @@
+import SimpleBase
+
+Model: "Simple" name=ID;

@@ -1,0 +1,1 @@
+tar cvzf .devcontainer/vscode_cache.tgz /home/vscode/.vscode-server/

@@ -1,0 +1,11 @@
+import "example_B.components"
+
+package a {
+    component A {
+        out o
+    }
+
+    instance mya : A
+    instance myb : b.B
+    connect mya.o to myb.i
+}

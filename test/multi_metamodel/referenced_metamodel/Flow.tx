@@ -1,0 +1,7 @@
+reference Data
+
+Model: includes*=Include algos+=Algo flows+=Flow;
+Algo: 'algo' name=ID ':' inp=[Data.Data|ID|+m:data] '->' outp=[Data.Data|ID|+m:data];
+Flow: 'connect' algo1=[Algo|ID|+m:algos] '->' algo2=[Algo|ID|+m:algos] ;
+Include: '#include' importURI=STRING;
+Comment: /\/\/.*?$/;

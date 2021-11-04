@@ -1,1 +1,5 @@
 build
+out
+vscode_cache.tgz
+deno_cache.tgz
+src-gen

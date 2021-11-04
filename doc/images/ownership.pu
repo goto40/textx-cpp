@@ -1,0 +1,9 @@
+Workspace o-- "many" Metamodel : "for\neach\nfile\next."
+Workspace o-- "0|1" Metamodel : "default\nMetamodel\n(non-owning\nfor internal\nWorkspaces)"
+Workspace --o "1|1" Metamodel : "internal Workspace\n(used if no\nworkspace\nis employed)"
+Workspace o-- Model
+Model o.. Model : "imported\nmodels\n(non-owning)"
+Model o-- Object
+Model o.. Metamodel : "non\nowning"
+Object o.. Model : "non\nowning"
+Object o-- Object
