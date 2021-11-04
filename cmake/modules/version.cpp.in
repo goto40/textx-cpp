@@ -1,0 +1,9 @@
+//the path to the version.h file is relative to your build directory.
+#include "@PROJECT_NAME@/version.h"
+
+namespace @PROJECT_NAME@ {
+
+const std::string VERSION = "@VERSION@";
+const std::string VERSION_SHORT = "@VERSION_SHORT@";
+
+}
