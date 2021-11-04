@@ -32,6 +32,10 @@ namespace textx
                 {
                     o << ":" << match.name.value();
                 }
+                if (match.captured.has_value())
+                {
+                    o << " captured=" << match.captured.value();
+                }
                 o << ">(";
                 for(auto &child: match.children) {
                     o << child;
@@ -50,6 +54,24 @@ namespace textx
                 if (match.has_value())
                 {
                     match.value().name = name;
+                }
+                return match;
+            };
+        }
+
+        inline std::string_view get_str(std::string_view text, Match match) {
+            return text.substr(match.start, match.end-match.start);
+        }
+
+        template<class Pattern>
+        auto capture(Pattern pattern)
+        {
+            return [=](std::string_view text, size_t pos) -> std::optional<Match>
+            {
+                auto match = pattern(text, pos);
+                if (match.has_value())
+                {
+                    match.value().captured = get_str(text, match.value());
                 }
                 return match;
             };
