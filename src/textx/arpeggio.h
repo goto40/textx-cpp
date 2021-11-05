@@ -24,6 +24,7 @@ namespace textx
             one_or_more,
             zero_or_more,
             optional,
+            end_of_file,
         };
         struct Match
         {
@@ -117,6 +118,10 @@ namespace textx
         {
             return [=, cache = std::unordered_map<size_t, std::optional<Match>>{}, chached_text = std::string_view{}](const Config &config, std::string_view text, size_t pos) mutable -> std::optional<Match>
             {
+                if (pos > text.length())
+                {
+                    throw std::runtime_error("unexpected: pos>text.length()");
+                }
                 if (chached_text != text)
                 {
                     chached_text = text;
@@ -136,33 +141,31 @@ namespace textx
         inline auto named(std::string name, Pattern pattern)
         {
             return cached([=](const Config &config, std::string_view text, size_t pos) -> std::optional<Match>
-            {
+                          {
                 auto match = pattern(config, text, pos);
                 if (match.has_value())
                 {
                     match.value().name = name;
                 }
-                return match;
-            });
+                return match; });
         }
 
         inline auto capture(Pattern pattern)
         {
             return cached([=](const Config &config, std::string_view text, size_t pos) -> std::optional<Match>
-            {
+                          {
                 auto match = pattern(config, text, pos);
                 if (match.has_value())
                 {
                     match.value().captured = get_str(text, match.value());
                 }
-                return match;
-            });
+                return match; });
         }
 
         inline auto optional(Pattern pattern)
         {
             return cached([=](const Config &config, std::string_view text, size_t pos) -> std::optional<Match>
-            {
+                          {
                 auto match = pattern(config, text, pos);
                 if (match.has_value())
                 {
@@ -170,14 +173,13 @@ namespace textx
                 }
                 else {
                     return Match{.start=pos, .end=pos, .type=MatchType::optional, .children={}};
-                }
-            });
+                } });
         }
 
         inline auto str_match(std::string s)
         {
             return cached([=](const Config &config, std::string_view text, size_t pos) -> std::optional<Match>
-            {
+                          {
                 pos = config.skip_text(text, pos);
                 if (text.substr(pos).starts_with(s))
                 {
@@ -186,14 +188,13 @@ namespace textx
                 else
                 {
                     return std::nullopt;
-                }
-            });
+                } });
         }
 
         inline auto regex_match(std::string s)
         {
             return cached([r = std::regex{std::string("(") + s + ").*"}](const Config &config, std::string_view text, size_t pos) -> std::optional<Match>
-            {
+                          {
                 pos = config.skip_text(text, pos);
                 std::match_results<std::string_view::const_iterator> smatch;
                 if (std::regex_match(text.begin() + pos, text.end(), smatch, r))
@@ -203,14 +204,13 @@ namespace textx
                 else
                 {
                     return std::nullopt;
-                }
-            });
+                } });
         }
 
         inline auto sequence(std::vector<Pattern> patterns)
         {
             return cached([=](const Config &config, std::string_view text, size_t pos) -> std::optional<Match>
-            {
+                          {
                 Match match{pos, pos, MatchType::sequence};
                 for (auto pattern : patterns)
                 {
@@ -226,14 +226,13 @@ namespace textx
                         return std::nullopt;
                     }
                 }
-                return match;
-            });
+                return match; });
         }
 
         inline auto ordered_choice(std::vector<Pattern> patterns)
         {
             return cached([=](const Config &config, std::string_view text, size_t pos) -> std::optional<Match>
-            {
+                          {
                 for (auto pattern : patterns)
                 {
                     auto match = pattern(config, text, pos);
@@ -242,14 +241,13 @@ namespace textx
                         return Match{.start = match.value().start, .end = match.value().end, .type = MatchType::ordered_choice, .children = {match.value()}};
                     }
                 }
-                return std::nullopt;
-            });
+                return std::nullopt; });
         }
 
         inline auto negative_lookahead(Pattern pattern)
         {
             return cached([=](const Config &config, std::string_view text, size_t pos) -> std::optional<Match>
-            {
+                          {
                 auto match = pattern(config, text, pos);
                 if (!match)
                 {
@@ -258,14 +256,13 @@ namespace textx
                 else
                 {
                     return std::nullopt;
-                }
-            });
+                } });
         }
 
         inline auto positive_lookahead(Pattern pattern)
         {
             return cached([=](const Config &config, std::string_view text, size_t pos) -> std::optional<Match>
-            {
+                          {
                 auto match = pattern(config, text, pos);
                 if (match)
                 {
@@ -274,14 +271,13 @@ namespace textx
                 else
                 {
                     return std::nullopt;
-                }
-            });
+                } });
         }
 
         inline auto one_or_more(Pattern pattern)
         {
             return cached([=](const Config &config, std::string_view text, size_t pos) -> std::optional<Match>
-            {
+                          {
                 auto sub_match = pattern(config, text, pos);
                 if (!sub_match)
                 {
@@ -298,14 +294,13 @@ namespace textx
                         match.end = pos;
                     }
                     return match;
-                }
-            });
+                } });
         }
 
         inline auto zero_or_more(Pattern pattern)
         {
             return cached([=](const Config &config, std::string_view text, size_t pos) -> std::optional<Match>
-            {
+                          {
                 auto match = Match{.start = pos, .end = pos, .type = MatchType::zero_or_more, .children = {}};
                 while (auto next_match = pattern(config, text, pos))
                 {
@@ -313,8 +308,20 @@ namespace textx
                     pos = next_match.value().end;
                     match.end = pos;
                 }
-                return match;
-            });
+                return match; });
+        }
+
+        inline auto end_of_file()
+        {
+            return cached([=](const Config &config, std::string_view text, size_t pos) -> std::optional<Match>
+                          {
+                pos = config.skip_text(text, pos);
+                if (pos==text.length()) {
+                    return Match{pos,pos,MatchType::end_of_file};
+                }
+                else {
+                    return std::nullopt;
+                } });
         }
 
     }

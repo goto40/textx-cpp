@@ -243,3 +243,28 @@ TEST_CASE("negative_lookahead", "[arpeggio]")
         }
     }
 }
+
+TEST_CASE("end_of_file", "[arpeggio]")
+{
+    using namespace textx::arpeggio;
+    Config config{};
+
+    {
+        auto p = capture(sequence({
+            zero_or_more(ordered_choice({
+                str_match("A"),
+                str_match("B"), 
+            })),
+            str_match("C"),
+            end_of_file(),
+        }));
+
+        CHECK(p(config, "ABBABC", 0));
+        CHECK(p(config, "C", 0));
+        CHECK(p(config, "C ", 0));
+        CHECK(p(config, "ABBABC   ", 0));
+
+        CHECK(!p(config, "AB", 0));
+        CHECK(!p(config, "C C", 0));
+    }
+}

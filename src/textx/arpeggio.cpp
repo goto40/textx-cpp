@@ -14,6 +14,7 @@ namespace textx
             {MatchType::one_or_more, "one_or_more"},
             {MatchType::zero_or_more, "zero_or_more"},
             {MatchType::optional, "optional"},
+            {MatchType::end_of_file, "end_of_file"},
         };
 
         std::unordered_map<MatchType, bool> Match::is_terminal = {
@@ -26,6 +27,7 @@ namespace textx
             {MatchType::one_or_more, false},
             {MatchType::zero_or_more, false},
             {MatchType::optional, false},
+            {MatchType::end_of_file, true}, // true? special case?
         };
 
     }
