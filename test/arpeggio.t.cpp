@@ -4,7 +4,7 @@
 #include "textx/arpeggio.h"
 
 template<class F, class C>
-auto parse(F f, const C& config, std::string_view s, textx::arpeggio::TextPosition pos={}) {
+auto test_parse(F f, const C& config, std::string_view s, textx::arpeggio::TextPosition pos={}) {
     textx::arpeggio::ParserState ps{s};
     return f(config, ps, pos);
 }
@@ -80,9 +80,9 @@ TEST_CASE("regex_match", "[arpeggio]")
     ParserState text = {"hello123 world"};
     auto word_pattern = capture(regex_match(R"(\w+)"));
     {
-        CHECK(!parse(word_pattern, config, " space and a word", {}));
-        CHECK(parse(word_pattern, config_skipws, " space and a word", {}));
-        CHECK(parse(word_pattern, config, " space and a word", {1,1,1}));
+        CHECK(!test_parse(word_pattern, config, " space and a word", {}));
+        CHECK(test_parse(word_pattern, config_skipws, " space and a word", {}));
+        CHECK(test_parse(word_pattern, config, " space and a word", {1,1,1}));
 
         auto match = word_pattern(config, text, {}).value();
         std::ostringstream o;
@@ -211,7 +211,7 @@ TEST_CASE("positive_lookahead", "[arpeggio]")
     {
         auto p = capture(sequence({str_match("A"), positive_lookahead(capture(str_match("B")))}));
         {
-            auto match = parse(p, config, "AB", {});
+            auto match = test_parse(p, config, "AB", {});
             REQUIRE(match);
             CHECK(match.value().start == 0);
             CHECK(match.value().end == 1);
@@ -222,7 +222,7 @@ TEST_CASE("positive_lookahead", "[arpeggio]")
             CHECK_THAT(o.str(), Catch::Matchers::Contains("<str_match captured=B>"));
         }
         {
-            auto match = parse(p, config, "A", {});
+            auto match = test_parse(p, config, "A", {});
             CHECK(!match);
         }
     }
@@ -236,11 +236,11 @@ TEST_CASE("negative_lookahead", "[arpeggio]")
     {
         auto p = capture(sequence({negative_lookahead(str_match("keyword")),regex_match(R"(\w+)")}));
         {
-            auto match = parse(p, config, "keyword", {});
+            auto match = test_parse(p, config, "keyword", {});
             REQUIRE(!match);
         }
         {
-            auto match = parse(p, config, "nokeyword", {});
+            auto match = test_parse(p, config, "nokeyword", {});
             REQUIRE(match);
 
             std::ostringstream o;
@@ -265,12 +265,12 @@ TEST_CASE("end_of_file", "[arpeggio]")
             end_of_file(),
         }));
 
-        CHECK(parse(p, config, "ABBABC", {}));
-        CHECK(parse(p, config, "C", {}));
-        CHECK(parse(p, config, "C ", {}));
-        CHECK(parse(p, config, "ABBABC   ", {}));
+        CHECK(test_parse(p, config, "ABBABC", {}));
+        CHECK(test_parse(p, config, "C", {}));
+        CHECK(test_parse(p, config, "C ", {}));
+        CHECK(test_parse(p, config, "ABBABC   ", {}));
 
-        CHECK(!parse(p, config, "AB", {}));
-        CHECK(!parse(p, config, "C C", {}));
+        CHECK(!test_parse(p, config, "AB", {}));
+        CHECK(!test_parse(p, config, "C C", {}));
     }
 }
