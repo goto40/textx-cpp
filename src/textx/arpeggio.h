@@ -89,9 +89,10 @@ namespace textx
             friend auto operator<=>(const TextPosition& a, const AnnotatedTextPosition& b) noexcept {return a<=>b.text_position;}
         };
 
-        struct ParserState {
+        class ParserState {
+            std::string_view source;
+        public:
             static size_t cache_reset_indicator_source; 
-            const std::string_view source;
             size_t cache_reset_indicator = {cache_reset_indicator_source++};
             size_t cache_hits = {0};
             size_t cache_misses = {0};
@@ -110,6 +111,7 @@ namespace textx
                     };
                 }
             }
+            std::string_view str() { return source; }
         };
 
         using SkipTextFun = std::function<TextPosition(ParserState& text, TextPosition pos)>;
@@ -158,6 +160,27 @@ namespace textx
         };
 
         using Pattern = std::function<std::optional<Match>(const Config &config, ParserState& text, TextPosition pos)>;
+
+        class Grammar {
+            Pattern main;
+            Config config={};
+            ParserState state={""};
+            bool ok=true;
+        public:
+            Grammar(Pattern text) : main{text} {}
+            std::optional<Match> parse(std::string_view text) {
+                state = ParserState{text};
+                auto res = main(config, state, {});
+                ok = {res};
+                return res;
+            }
+            AnnotatedTextPosition get_last_error_position() {
+                if (ok) {
+                    throw std::runtime_error("unexpected: called get_last_error_position() w/o error.");
+                }
+                return state.farthest_position;
+            }
+        };
 
         inline std::string_view get_str(std::string_view text, Match match)
         {
@@ -243,7 +266,7 @@ namespace textx
             return rule([=](const Config &config, ParserState& text, TextPosition pos) -> std::optional<Match>
                           {
                 pos = config.skip_text(text, pos);
-                if (text.source.substr(pos).starts_with(s))
+                if (text.str().substr(pos).starts_with(s))
                 {
                     return Match{pos, pos.add(text, s.length()), MatchType::str_match};
                 }
@@ -260,7 +283,7 @@ namespace textx
                           {
                 pos = config.skip_text(text, pos);
                 std::match_results<std::string_view::const_iterator> smatch;
-                if (std::regex_search(text.source.begin() + pos, text.source.end(), smatch, r))
+                if (std::regex_search(text.str().begin() + pos, text.str().end(), smatch, r))
                 {
                     return Match{pos, pos.add(text,smatch.length()), MatchType::regex_match};
                 }

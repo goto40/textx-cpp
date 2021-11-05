@@ -253,24 +253,20 @@ TEST_CASE("negative_lookahead", "[arpeggio]")
 TEST_CASE("end_of_file", "[arpeggio]")
 {
     using namespace textx::arpeggio;
-    Config config{};
+    auto grammar = Grammar{capture(sequence({
+        zero_or_more(ordered_choice({
+            str_match("A"),
+            str_match("B"), 
+        })),
+        str_match("C"),
+        end_of_file(),
+    }))};
 
-    {
-        auto p = capture(sequence({
-            zero_or_more(ordered_choice({
-                str_match("A"),
-                str_match("B"), 
-            })),
-            str_match("C"),
-            end_of_file(),
-        }));
+    CHECK(grammar.parse("ABBABC"));
+    CHECK(grammar.parse("C"));
+    CHECK(grammar.parse("C "));
+    CHECK(grammar.parse("ABBABC   "));
 
-        CHECK(test_parse(p, config, "ABBABC", {}));
-        CHECK(test_parse(p, config, "C", {}));
-        CHECK(test_parse(p, config, "C ", {}));
-        CHECK(test_parse(p, config, "ABBABC   ", {}));
-
-        CHECK(!test_parse(p, config, "AB", {}));
-        CHECK(!test_parse(p, config, "C C", {}));
-    }
+    CHECK(!grammar.parse("AB"));
+    CHECK(!grammar.parse("C C"));
 }
