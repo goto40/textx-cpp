@@ -3,12 +3,18 @@
 #include <sstream>
 #include "textx/arpeggio.h"
 
+template<class F, class C>
+auto parse(F f, const C& config, std::string_view s, size_t pos=0) {
+    textx::arpeggio::ParserState ps{s};
+    return f(config, ps, pos);
+}
+
 TEST_CASE("str_match", "[arpeggio]")
 {
     using namespace textx::arpeggio;
     Config config{.skip_text = skip_text_functions::nothing()};
 
-    std::string text = "hello world";
+    ParserState text = {"hello world"};
     auto hello_pattern = str_match("hello");
     auto world_pattern = str_match("world");
     CHECK(hello_pattern(config, text, 0));
@@ -26,7 +32,7 @@ TEST_CASE("named", "[arpeggio]")
     using namespace textx::arpeggio;
     Config config{.skip_text = skip_text_functions::nothing()};
 
-    std::string text = "hello world";
+    ParserState text = {"hello world"};
     auto hello_pattern = str_match("hello");
     auto named_hello_pattern = named("hello", str_match("hello"));
     auto match = hello_pattern(config, text, 0).value();
@@ -48,7 +54,7 @@ TEST_CASE("captured", "[arpeggio]")
     using namespace textx::arpeggio;
     Config config{.skip_text = skip_text_functions::nothing()};
 
-    std::string text = "hello world";
+    ParserState text = {"hello world"};
     auto hello_pattern = capture(str_match("hello"));
     auto named_hello_pattern = capture(named("hello", str_match("hello")));
     auto match = hello_pattern(config, text, 0).value();
@@ -71,12 +77,12 @@ TEST_CASE("regex_match", "[arpeggio]")
     Config config{.skip_text = skip_text_functions::nothing()};
     Config config_skipws{.skip_text = skip_text_functions::skipws()};
 
-    std::string text = "hello123 world";
+    ParserState text = {"hello123 world"};
     auto word_pattern = capture(regex_match(R"(\w+)"));
     {
-        CHECK(!word_pattern(config, " space and a word", 0));
-        CHECK(word_pattern(config_skipws, " space and a word", 0));
-        CHECK(word_pattern(config, " space and a word", 1));
+        CHECK(!parse(word_pattern, config, " space and a word", 0));
+        CHECK(parse(word_pattern, config_skipws, " space and a word", 0));
+        CHECK(parse(word_pattern, config, " space and a word", 1));
 
         auto match = word_pattern(config, text, 0).value();
         std::ostringstream o;
@@ -90,7 +96,7 @@ TEST_CASE("sequence", "[arpeggio]")
     using namespace textx::arpeggio;
     Config config{};
 
-    std::string text = "hello123 world";
+    ParserState text = {"hello123 world"};
     auto two_word_pattern = sequence({capture(regex_match(R"(\w+)")),
                                       capture(regex_match(R"(\w+)"))});
     {
@@ -111,7 +117,7 @@ TEST_CASE("ordered_choice", "[arpeggio]")
     using namespace textx::arpeggio;
     Config config{};
 
-    std::string text = "hello123 world";
+    ParserState text = {"hello123 world"};
     auto choice_pattern = ordered_choice({capture(str_match("hello")),
                                           capture(str_match("hello123")),
                                           capture(str_match("world"))});
@@ -140,7 +146,7 @@ TEST_CASE("one_or_more", "[arpeggio]")
     using namespace textx::arpeggio;
     Config config{};
 
-    std::string text = "a b c d e f g";
+    ParserState text = {"a b c d e f g"};
     auto words_pattern = one_or_more(regex_match(R"(\w+)"));
     {
         auto match = words_pattern(config, text, 0);
@@ -156,7 +162,7 @@ TEST_CASE("zero_or_more", "[arpeggio]")
     Config config{};
 
     {
-        std::string text = "a b c d e f g";
+        ParserState text = {"a b c d e f g"};
         auto words_pattern = zero_or_more(regex_match(R"(\w+)"));
         {
             auto match = words_pattern(config, text, 0);
@@ -166,7 +172,7 @@ TEST_CASE("zero_or_more", "[arpeggio]")
         }
     }
     {
-        std::string text = "";
+        ParserState text = {""};
         auto words_pattern = zero_or_more(regex_match(R"(\w+)"));
         {
             auto match = words_pattern(config, text, 0);
@@ -183,7 +189,7 @@ TEST_CASE("optional", "[arpeggio]")
     Config config{};
 
     {
-        std::string text = "hello";
+        ParserState text = {"hello"};
         auto p1 = optional(str_match("hello"));
         auto p2 = optional(str_match("world"));
         {
@@ -205,7 +211,7 @@ TEST_CASE("positive_lookahead", "[arpeggio]")
     {
         auto p = capture(sequence({str_match("A"), positive_lookahead(capture(str_match("B")))}));
         {
-            auto match = p(config, "AB", 0);
+            auto match = parse(p, config, "AB", 0);
             REQUIRE(match);
             CHECK(match.value().start == 0);
             CHECK(match.value().end == 1);
@@ -216,7 +222,7 @@ TEST_CASE("positive_lookahead", "[arpeggio]")
             CHECK_THAT(o.str(), Catch::Matchers::Contains("<str_match captured=B>"));
         }
         {
-            auto match = p(config, "A", 0);
+            auto match = parse(p, config, "A", 0);
             CHECK(!match);
         }
     }
@@ -230,11 +236,11 @@ TEST_CASE("negative_lookahead", "[arpeggio]")
     {
         auto p = capture(sequence({negative_lookahead(str_match("keyword")),regex_match(R"(\w+)")}));
         {
-            auto match = p(config, "keyword", 0);
+            auto match = parse(p, config, "keyword", 0);
             REQUIRE(!match);
         }
         {
-            auto match = p(config, "nokeyword", 0);
+            auto match = parse(p, config, "nokeyword", 0);
             REQUIRE(match);
 
             std::ostringstream o;
@@ -259,12 +265,12 @@ TEST_CASE("end_of_file", "[arpeggio]")
             end_of_file(),
         }));
 
-        CHECK(p(config, "ABBABC", 0));
-        CHECK(p(config, "C", 0));
-        CHECK(p(config, "C ", 0));
-        CHECK(p(config, "ABBABC   ", 0));
+        CHECK(parse(p, config, "ABBABC", 0));
+        CHECK(parse(p, config, "C", 0));
+        CHECK(parse(p, config, "C ", 0));
+        CHECK(parse(p, config, "ABBABC   ", 0));
 
-        CHECK(!p(config, "AB", 0));
-        CHECK(!p(config, "C C", 0));
+        CHECK(!parse(p, config, "AB", 0));
+        CHECK(!parse(p, config, "C C", 0));
     }
 }

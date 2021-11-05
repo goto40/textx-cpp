@@ -30,5 +30,7 @@ namespace textx
             {MatchType::end_of_file, true}, // true? special case?
         };
 
+        size_t ParserState::cache_reset_indicator_source = 1; 
+
     }
 }
