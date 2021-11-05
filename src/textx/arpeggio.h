@@ -89,7 +89,7 @@ namespace textx
 
         struct ParserState {
             static size_t cache_reset_indicator_source; 
-            std::string_view source;
+            const std::string_view source;
             size_t cache_reset_indicator = {cache_reset_indicator_source++};
             size_t cache_hits = {0};
             size_t cache_misses = {0};
