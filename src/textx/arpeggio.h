@@ -212,6 +212,8 @@ namespace textx
         /**
          * This function is a rule wrapper requried for each rule.
          * It manages memoization and basic checks.
+         * 
+         * If you omit the rule-call in your high-level grammar you loose some efficiency.
          */
         inline auto rule(Pattern pattern)
         {

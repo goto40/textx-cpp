@@ -6,390 +6,372 @@ namespace textx
     /** adapted grammar from lang.py */
     namespace lang
     {
-        inline textx::arpeggio::Pattern import_or_reference_stm();
-        inline textx::arpeggio::Pattern import_stm();
-        inline textx::arpeggio::Pattern reference_stm();
-        inline textx::arpeggio::Pattern textx_rule();
-        inline textx::arpeggio::Pattern grammar_to_import();
-        inline textx::arpeggio::Pattern language_name();
-        inline textx::arpeggio::Pattern language_alias();
-        inline textx::arpeggio::Pattern ident();
-        inline textx::arpeggio::Pattern rule_name();
-        inline textx::arpeggio::Pattern rule_params();
-        inline textx::arpeggio::Pattern textx_rule_body();
-        inline textx::arpeggio::Pattern rule_param();
-        inline textx::arpeggio::Pattern param_name();
-        inline textx::arpeggio::Pattern string_value();
-        inline textx::arpeggio::Pattern choice();
-        inline textx::arpeggio::Pattern sequence();
-        inline textx::arpeggio::Pattern repeatable_expr();
-        inline textx::arpeggio::Pattern expression();
-        inline textx::arpeggio::Pattern repeat_operator();
-        inline textx::arpeggio::Pattern assignment();
-        inline textx::arpeggio::Pattern syntactic_predicate();
-        inline textx::arpeggio::Pattern simple_match();
-        inline textx::arpeggio::Pattern rule_ref();
-        inline textx::arpeggio::Pattern bracketed_choice();
-        inline textx::arpeggio::Pattern repeat_modifiers();
-        inline textx::arpeggio::Pattern str_match();
-        inline textx::arpeggio::Pattern re_match();
-        inline textx::arpeggio::Pattern attribute();
-        inline textx::arpeggio::Pattern assignment_op();
-        inline textx::arpeggio::Pattern assignment_rhs();
-        inline textx::arpeggio::Pattern reference();
-        inline textx::arpeggio::Pattern obj_ref();
-        inline textx::arpeggio::Pattern class_name();
-        inline textx::arpeggio::Pattern obj_ref_rule();
-        inline textx::arpeggio::Pattern rrel_expression();
-        inline textx::arpeggio::Pattern qualified_ident();
-        inline textx::arpeggio::Pattern comment_line();
-        inline textx::arpeggio::Pattern comment_block();
-        inline textx::arpeggio::Pattern rrel_sequence();
+        namespace ta = textx::arpeggio;
+
+        inline ta::Pattern import_or_reference_stm();
+        inline ta::Pattern import_stm();
+        inline ta::Pattern reference_stm();
+        inline ta::Pattern textx_rule();
+        inline ta::Pattern grammar_to_import();
+        inline ta::Pattern language_name();
+        inline ta::Pattern language_alias();
+        inline ta::Pattern ident();
+        inline ta::Pattern rule_name();
+        inline ta::Pattern rule_params();
+        inline ta::Pattern textx_rule_body();
+        inline ta::Pattern rule_param();
+        inline ta::Pattern param_name();
+        inline ta::Pattern string_value();
+        inline ta::Pattern choice();
+        inline ta::Pattern sequence();
+        inline ta::Pattern repeatable_expr();
+        inline ta::Pattern expression();
+        inline ta::Pattern repeat_operator();
+        inline ta::Pattern assignment();
+        inline ta::Pattern syntactic_predicate();
+        inline ta::Pattern simple_match();
+        inline ta::Pattern rule_ref();
+        inline ta::Pattern bracketed_choice();
+        inline ta::Pattern repeat_modifiers();
+        inline ta::Pattern str_match();
+        inline ta::Pattern re_match();
+        inline ta::Pattern attribute();
+        inline ta::Pattern assignment_op();
+        inline ta::Pattern assignment_rhs();
+        inline ta::Pattern reference();
+        inline ta::Pattern obj_ref();
+        inline ta::Pattern class_name();
+        inline ta::Pattern obj_ref_rule();
+        inline ta::Pattern rrel_expression();
+        inline ta::Pattern qualified_ident();
+        inline ta::Pattern comment_line();
+        inline ta::Pattern comment_block();
+        inline ta::Pattern rrel_sequence();
 
         // textX grammar
-        inline textx::arpeggio::Pattern textx_model()
+        inline ta::Pattern textx_model()
         {
-            return textx::arpeggio::sequence({textx::arpeggio::zero_or_more(import_or_reference_stm()),
-                                              textx::arpeggio::zero_or_more(textx_rule())});
+            return ta::sequence({ta::zero_or_more(import_or_reference_stm()),
+                                 ta::zero_or_more(textx_rule())});
         }
 
-        inline textx::arpeggio::Pattern import_or_reference_stm()
+        inline ta::Pattern import_or_reference_stm()
         {
-            return textx::arpeggio::ordered_choice({import_stm(),
-                                                    reference_stm()});
+            return ta::ordered_choice({import_stm(),
+                                       reference_stm()});
         }
 
-        inline textx::arpeggio::Pattern import_stm()
+        inline ta::Pattern import_stm()
         {
-            return textx::arpeggio::sequence({textx::arpeggio::str_match("import"),
-                                              grammar_to_import()});
+            return ta::sequence({ta::str_match("import"),
+                                 grammar_to_import()});
         }
 
-        inline textx::arpeggio::Pattern reference_stm()
+        inline ta::Pattern reference_stm()
         {
-            return textx::arpeggio::sequence({textx::arpeggio::str_match("reference"),
-                                              language_name(),
-                                              textx::arpeggio::optional(language_alias())});
+            return ta::sequence({ta::str_match("reference"),
+                                 language_name(),
+                                 ta::optional(language_alias())});
         }
 
-        inline textx::arpeggio::Pattern language_alias()
+        inline ta::Pattern language_alias()
         {
-            return textx::arpeggio::sequence({textx::arpeggio::str_match("as"),
-                                              ident()});
+            return ta::sequence({ta::str_match("as"),
+                                 ident()});
         }
 
-        inline textx::arpeggio::Pattern language_name()
+        inline ta::Pattern language_name()
         {
-            return textx::arpeggio::regex_match(R"((\w|-)+)");
+            return ta::regex_match(R"((\w|-)+)");
         }
 
-        inline textx::arpeggio::Pattern grammar_to_import()
+        inline ta::Pattern grammar_to_import()
         {
-            return textx::arpeggio::regex_match(R"((\w|\.)+)");
+            return ta::regex_match(R"((\w|\.)+)");
         };
 
         // Rules
-        inline textx::arpeggio::Pattern textx_rule()
+        inline ta::Pattern textx_rule()
         {
-            return textx::arpeggio::sequence({rule_name(),
-                                              textx::arpeggio::optional(rule_params()),
-                                              textx::arpeggio::str_match(":"),
-                                              textx_rule_body(),
-                                              textx::arpeggio::str_match(";")});
+            return ta::sequence({rule_name(),
+                                 ta::optional(rule_params()),
+                                 ta::str_match(":"),
+                                 textx_rule_body(),
+                                 ta::str_match(";")});
         }
 
-        inline textx::arpeggio::Pattern rule_params()
+        inline ta::Pattern rule_params()
         {
-            return textx::arpeggio::sequence({textx::arpeggio::str_match("["),
-                                              rule_param(),
-                                              textx::arpeggio::zero_or_more(textx::arpeggio::sequence({textx::arpeggio::str_match(","),
-                                                                                                       rule_param()})),
-                                              textx::arpeggio::str_match("]")});
+            return ta::sequence({ta::str_match("["),
+                                 rule_param(),
+                                 ta::zero_or_more(ta::sequence({ta::str_match(","),
+                                                                rule_param()})),
+                                 ta::str_match("]")});
         }
 
-        inline textx::arpeggio::Pattern rule_param()
+        inline ta::Pattern rule_param()
         {
-            return textx::arpeggio::sequence({param_name(),
-                                              textx::arpeggio::optional(textx::arpeggio::sequence({textx::arpeggio::str_match("="),
-                                                                                                   string_value()}))});
+            return ta::sequence({param_name(),
+                                 ta::optional(ta::sequence({ta::str_match("="),
+                                                            string_value()}))});
         }
 
-        inline textx::arpeggio::Pattern param_name()
+        inline ta::Pattern param_name()
         {
             return ident();
         };
 
-        inline textx::arpeggio::Pattern textx_rule_body()
+        inline ta::Pattern textx_rule_body()
         {
             return choice();
         }
 
-        inline textx::arpeggio::Pattern choice()
+        inline ta::Pattern choice()
         {
-            return textx::arpeggio::sequence({sequence(), textx::arpeggio::zero_or_more(
-                                                              textx::arpeggio::sequence({textx::arpeggio::str_match("|"),
-                                                                                         sequence()}))});
+            return ta::sequence({sequence(), ta::zero_or_more(
+                                                 ta::sequence({ta::str_match("|"),
+                                                               sequence()}))});
         }
 
-        inline textx::arpeggio::Pattern sequence()
+        inline ta::Pattern sequence()
         {
-            return textx::arpeggio::one_or_more(repeatable_expr());
+            return ta::one_or_more(repeatable_expr());
         }
 
-        inline textx::arpeggio::Pattern repeatable_expr()
+        inline ta::Pattern repeatable_expr()
         {
-            return textx::arpeggio::sequence({expression(),
-                                              textx::arpeggio::optional(repeat_operator()),
-                                              textx::arpeggio::optional(textx::arpeggio::str_match("-"))});
+            return ta::sequence({expression(),
+                                 ta::optional(repeat_operator()),
+                                 ta::optional(ta::str_match("-"))});
         }
 
-        inline textx::arpeggio::Pattern expression()
+        inline ta::Pattern expression()
         {
-            return textx::arpeggio::ordered_choice({assignment(),
-                                                    textx::arpeggio::sequence({textx::arpeggio::optional(syntactic_predicate()),
-                                                                               textx::arpeggio::ordered_choice({simple_match(),
-                                                                                                                rule_ref(),
-                                                                                                                bracketed_choice()})})});
+            return ta::ordered_choice({assignment(),
+                                       ta::sequence({ta::optional(syntactic_predicate()),
+                                                     ta::ordered_choice({simple_match(),
+                                                                         rule_ref(),
+                                                                         bracketed_choice()})})});
         }
 
-        inline textx::arpeggio::Pattern bracketed_choice()
+        inline ta::Pattern bracketed_choice()
         {
-            return textx::arpeggio::sequence({textx::arpeggio::str_match("("),
-                                              choice(),
-                                              textx::arpeggio::str_match(")")});
+            return ta::sequence({ta::str_match("("),
+                                 choice(),
+                                 ta::str_match(")")});
         }
 
-        inline textx::arpeggio::Pattern repeat_operator()
+        inline ta::Pattern repeat_operator()
         {
-            return textx::arpeggio::sequence({textx::arpeggio::ordered_choice({textx::arpeggio::str_match("*"),
-                                                                               textx::arpeggio::str_match("?"),
-                                                                               textx::arpeggio::str_match("+"),
-                                                                               textx::arpeggio::str_match("#")}),
-                                              textx::arpeggio::optional(repeat_modifiers())});
+            return ta::sequence({ta::ordered_choice({ta::str_match("*"),
+                                                     ta::str_match("?"),
+                                                     ta::str_match("+"),
+                                                     ta::str_match("#")}),
+                                 ta::optional(repeat_modifiers())});
         }
 
-        inline textx::arpeggio::Pattern repeat_modifiers()
+        inline ta::Pattern repeat_modifiers()
         {
-            return textx::arpeggio::sequence({textx::arpeggio::str_match("["),
-                                              textx::arpeggio::one_or_more(
-                                                  textx::arpeggio::ordered_choice({simple_match(),
-                                                                                   textx::arpeggio::str_match("eolterm")})),
-                                              textx::arpeggio::str_match("]")});
+            return ta::sequence({ta::str_match("["),
+                                 ta::one_or_more(
+                                     ta::ordered_choice({simple_match(),
+                                                         ta::str_match("eolterm")})),
+                                 ta::str_match("]")});
         }
 
-        inline textx::arpeggio::Pattern syntactic_predicate()
+        inline ta::Pattern syntactic_predicate()
         {
-            return textx::arpeggio::ordered_choice({textx::arpeggio::str_match("!"),
-                                                    textx::arpeggio::str_match("&")});
+            return ta::ordered_choice({ta::str_match("!"),
+                                       ta::str_match("&")});
         }
 
-        inline textx::arpeggio::Pattern simple_match()
+        inline ta::Pattern simple_match()
         {
-            return textx::arpeggio::ordered_choice({str_match(),
-                                                    re_match()});
+            return ta::ordered_choice({str_match(),
+                                       re_match()});
         }
 
         // Assignment
-        inline textx::arpeggio::Pattern assignment()
+        inline ta::Pattern assignment()
         {
-            return textx::arpeggio::sequence({attribute(),
-                                              assignment_op(),
-                                              assignment_rhs()});
+            return ta::sequence({attribute(),
+                                 assignment_op(),
+                                 assignment_rhs()});
         }
 
-        inline textx::arpeggio::Pattern attribute()
+        inline ta::Pattern attribute()
         {
             return ident();
         }
 
-        inline textx::arpeggio::Pattern assignment_op()
+        inline ta::Pattern assignment_op()
         {
-            return textx::arpeggio::ordered_choice({textx::arpeggio::str_match("="),
-                                                    textx::arpeggio::str_match("*="),
-                                                    textx::arpeggio::str_match("+="),
-                                                    textx::arpeggio::str_match("?=")});
+            return ta::ordered_choice({ta::str_match("="),
+                                       ta::str_match("*="),
+                                       ta::str_match("+="),
+                                       ta::str_match("?=")});
         }
 
-        inline textx::arpeggio::Pattern assignment_rhs()
+        inline ta::Pattern assignment_rhs()
         {
-            return textx::arpeggio::sequence({textx::arpeggio::ordered_choice({simple_match(),
-                                                                               reference()}),
-                                              textx::arpeggio::optional(repeat_modifiers())});
+            return ta::sequence({ta::ordered_choice({simple_match(),
+                                                     reference()}),
+                                 ta::optional(repeat_modifiers())});
         }
 
         // References
-        inline textx::arpeggio::Pattern reference()
+        inline ta::Pattern reference()
         {
-            return textx::arpeggio::ordered_choice({rule_ref(),
-                                                    obj_ref()});
+            return ta::ordered_choice({rule_ref(),
+                                       obj_ref()});
         }
 
-        inline textx::arpeggio::Pattern rule_ref()
-        {
-            return ident();
-        }
-
-        inline textx::arpeggio::Pattern obj_ref()
-        {
-            return textx::arpeggio::sequence({
-                textx::arpeggio::str_match("["),
-                class_name(),
-                textx::arpeggio::optional(textx::arpeggio::sequence({
-                    textx::arpeggio::str_match("|"),
-                    obj_ref_rule(), 
-                    textx::arpeggio::optional(textx::arpeggio::sequence({
-                        textx::arpeggio::str_match("|"),
-                        rrel_expression()
-                    }))
-                })),
-                textx::arpeggio::str_match("]")
-            });
-        }
-
-        inline textx::arpeggio::Pattern rule_name()
+        inline ta::Pattern rule_ref()
         {
             return ident();
         }
 
-        inline textx::arpeggio::Pattern obj_ref_rule()
+        inline ta::Pattern obj_ref()
+        {
+            return ta::sequence({ta::str_match("["),
+                                 class_name(),
+                                 ta::optional(ta::sequence({ta::str_match("|"),
+                                                            obj_ref_rule(),
+                                                            ta::optional(ta::sequence({ta::str_match("|"),
+                                                                                       rrel_expression()}))})),
+                                 ta::str_match("]")});
+        }
+
+        inline ta::Pattern rule_name()
         {
             return ident();
         }
 
-        inline textx::arpeggio::Pattern class_name()
+        inline ta::Pattern obj_ref_rule()
+        {
+            return ident();
+        }
+
+        inline ta::Pattern class_name()
         {
             return qualified_ident();
         }
 
-        inline textx::arpeggio::Pattern str_match()
+        inline ta::Pattern str_match()
         {
             return string_value();
         }
 
-        inline textx::arpeggio::Pattern re_match()
+        inline ta::Pattern re_match()
         {
-            return textx::arpeggio::regex_match(R"(/((?:(?:\\/)|[^/])*)/)");
+            return ta::regex_match(R"(/((?:(?:\\/)|[^/])*)/)");
         }
 
-        inline textx::arpeggio::Pattern ident()
+        inline ta::Pattern ident()
         {
-            return textx::arpeggio::regex_match(R"(\w+)");
+            return ta::regex_match(R"(\w+)");
         }
 
-        inline textx::arpeggio::Pattern qualified_ident()
+        inline ta::Pattern qualified_ident()
         {
-            return textx::arpeggio::regex_match(R"(\w+(\.\w+)?)");
+            return ta::regex_match(R"(\w+(\.\w+)?)");
         }
 
-        inline textx::arpeggio::Pattern integer()
+        inline ta::Pattern integer()
         {
-            return textx::arpeggio::regex_match(R"([-+]?[0-9]+)");
+            return ta::regex_match(R"([-+]?[0-9]+)");
         }
 
-        inline textx::arpeggio::Pattern string_value()
+        inline ta::Pattern string_value()
         {
-            return textx::arpeggio::ordered_choice({textx::arpeggio::regex_match(R"('((\\')|[^'])*')"),
-                                                    textx::arpeggio::regex_match(R"("((\\")|[^"])*")")});
+            return ta::ordered_choice({ta::regex_match(R"('((\\')|[^'])*')"),
+                                       ta::regex_match(R"("((\\")|[^"])*")")});
         }
 
         // Comments
-        inline textx::arpeggio::Pattern comment()
+        inline ta::Pattern comment()
         {
-            return textx::arpeggio::ordered_choice({comment_line(),
-                                                    comment_block()});
+            return ta::ordered_choice({comment_line(),
+                                       comment_block()});
         }
 
-        inline textx::arpeggio::Pattern comment_line()
+        inline ta::Pattern comment_line()
         {
-            return textx::arpeggio::regex_match(R"(//.*?$)");
+            return ta::regex_match(R"(//.*?$)");
         }
 
-        inline textx::arpeggio::Pattern comment_block()
+        inline ta::Pattern comment_block()
         {
-            return textx::arpeggio::regex_match(R"(/\*(.|\n)*?\*/)");
+            return ta::regex_match(R"(/\*(.|\n)*?\*/)");
         }
 
-        inline textx::arpeggio::Pattern rrel_id() {
-            return textx::arpeggio::regex_match(R"([^\d\W]\w*\b)");  // from lang.py
+        inline ta::Pattern rrel_id()
+        {
+            return ta::regex_match(R"([^\d\W]\w*\b)"); // from lang.py
         }
 
-        inline textx::arpeggio::Pattern rrel_parent() {
-            return textx::arpeggio::sequence({
-                textx::arpeggio::str_match("parent"),
-                textx::arpeggio::str_match("("), 
-                rrel_id(),
-                textx::arpeggio::str_match(")")
-            });
+        inline ta::Pattern rrel_parent()
+        {
+            return ta::sequence({ta::str_match("parent"),
+                                 ta::str_match("("),
+                                 rrel_id(),
+                                 ta::str_match(")")});
         }
 
-        inline textx::arpeggio::Pattern rrel_navigation() {
-            return textx::arpeggio::sequence({
-                textx::arpeggio::optional(textx::arpeggio::str_match("~")), 
-                rrel_id()
-            });
+        inline ta::Pattern rrel_navigation()
+        {
+            return ta::sequence({ta::optional(ta::str_match("~")),
+                                 rrel_id()});
         }
 
-        inline textx::arpeggio::Pattern rrel_brackets() {
-            return textx::arpeggio::sequence({
-                textx::arpeggio::str_match("("), 
-                rrel_sequence(),
-                textx::arpeggio::str_match(")")
-            });
+        inline ta::Pattern rrel_brackets()
+        {
+            return ta::sequence({ta::str_match("("),
+                                 rrel_sequence(),
+                                 ta::str_match(")")});
         }
 
-        inline textx::arpeggio::Pattern rrel_dots() {
-            return textx::arpeggio::regex_match(R"(\.+)");
+        inline ta::Pattern rrel_dots()
+        {
+            return ta::regex_match(R"(\.+)");
         }
 
-        inline textx::arpeggio::Pattern rrel_path_element() {
-            return textx::arpeggio::ordered_choice({
-                rrel_parent(),
-                rrel_brackets(),
-                rrel_navigation()
-            });
+        inline ta::Pattern rrel_path_element()
+        {
+            return ta::ordered_choice({rrel_parent(),
+                                       rrel_brackets(),
+                                       rrel_navigation()});
         }
 
-        inline textx::arpeggio::Pattern rrel_zero_or_more() {
-            return textx::arpeggio::sequence({
-                rrel_path_element(),
-                textx::arpeggio::str_match("*")
-            });
+        inline ta::Pattern rrel_zero_or_more()
+        {
+            return ta::sequence({rrel_path_element(),
+                                 ta::str_match("*")});
         }
 
-        inline textx::arpeggio::Pattern rrel_path() {
-            return textx::arpeggio::sequence({
-                textx::arpeggio::optional(textx::arpeggio::sequence({
-                    textx::arpeggio::str_match("^"), 
-                    rrel_dots()
-                })), 
-                textx::arpeggio::zero_or_more(
-                    textx::arpeggio::sequence({
-                        textx::arpeggio::ordered_choice({rrel_zero_or_more(), rrel_path_element()}), 
-                        textx::arpeggio::str_match(".")
-                    })
-                ), 
-                textx::arpeggio::optional( // echt???
-                    textx::arpeggio::ordered_choice({
-                        rrel_zero_or_more(), 
-                        rrel_path_element()
-                    })
-                )
-            });
+        inline ta::Pattern rrel_path()
+        {
+            return ta::sequence({ta::optional(ta::sequence({ta::str_match("^"),
+                                                            rrel_dots()})),
+                                 ta::zero_or_more(
+                                     ta::sequence({ta::ordered_choice({rrel_zero_or_more(), rrel_path_element()}),
+                                                   ta::str_match(".")})),
+                                 ta::optional( // echt???
+                                     ta::ordered_choice({rrel_zero_or_more(),
+                                                         rrel_path_element()}))});
         }
 
-        inline textx::arpeggio::Pattern rrel_sequence() {
-            return textx::arpeggio::zero_or_more(textx::arpeggio::sequence({
-                rrel_path(),
-                textx::arpeggio::str_match(","),
-                rrel_path()
-            }));
+        inline ta::Pattern rrel_sequence()
+        {
+            return ta::zero_or_more(ta::sequence({rrel_path(),
+                                                  ta::str_match(","),
+                                                  rrel_path()}));
         }
 
-        inline textx::arpeggio::Pattern rrel_expression() {
-            return textx::arpeggio::sequence({
-                textx::arpeggio::optional(textx::arpeggio::regex_match(R"(\+[mp]+:)")),
-                rrel_sequence()
-            });
+        inline ta::Pattern rrel_expression()
+        {
+            return ta::sequence({ta::optional(ta::regex_match(R"(\+[mp]+:)")),
+                                 rrel_sequence()});
         }
 
     }
