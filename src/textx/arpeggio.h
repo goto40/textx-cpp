@@ -237,13 +237,13 @@ namespace textx
 
         inline auto regex_match(std::string s)
         {
-            return cached([r = std::regex{std::string("(") + s + ").*"}](const Config &config, ParserState& text, TextPosition pos) -> std::optional<Match>
+            return cached([r = std::regex{std::string("^") + s}](const Config &config, ParserState& text, TextPosition pos) -> std::optional<Match>
                           {
                 pos = config.skip_text(text, pos);
                 std::match_results<std::string_view::const_iterator> smatch;
-                if (std::regex_match(text.source.begin() + pos, text.source.end(), smatch, r))
+                if (std::regex_search(text.source.begin() + pos, text.source.end(), smatch, r))
                 {
-                    return Match{pos, pos.add(text,smatch[1].length()), MatchType::regex_match};
+                    return Match{pos, pos.add(text,smatch.length()), MatchType::regex_match};
                 }
                 else
                 {
