@@ -7,6 +7,7 @@
 #include <iostream>
 #include <unordered_map>
 #include <regex>
+#include <tuple>
 #include <compare>
 
 namespace textx
@@ -82,11 +83,18 @@ namespace textx
 
         struct AnnotatedTextPosition {
             TextPosition text_position={};
-            MatchType type = {MatchType::end_of_file}; // smallest possible type!
-            std::string info="(uninitialized)";
-            auto operator<=>(const AnnotatedTextPosition&) const noexcept=default;
-            friend auto operator<=>(const AnnotatedTextPosition& a, const TextPosition& b) noexcept {return a.text_position<=>b;}
-            friend auto operator<=>(const TextPosition& a, const AnnotatedTextPosition& b) noexcept {return a<=>b.text_position;}
+            std::vector<std::tuple<MatchType, std::string>> info;
+            auto operator<=>(const AnnotatedTextPosition& b) const noexcept {return text_position<=>b.text_position;}
+            operator TextPosition() { return text_position; }
+            
+            friend std::ostream &operator<<(std::ostream &o, const AnnotatedTextPosition &pos)
+            {
+                // o << text_position.line << ":" << text_position.col << ":";
+                for(auto &i: pos.info) {
+                    o << "(" << Match::type2str.at(std::get<MatchType>(i)) << "," << std::get<std::string>(i) << ")";
+                }
+                return o;
+            }
         };
 
         class ParserState {
@@ -106,9 +114,11 @@ namespace textx
                 if(pos>farthest_position) {
                     farthest_position = AnnotatedTextPosition{
                         .text_position = pos,
-                        .type = type,
-                        .info = std::string{info}
+                        .info = {{type,std::string{info}}}
                     };
+                }
+                else if(pos==farthest_position) {
+                    farthest_position.info.push_back({type,std::string{info}});
                 }
             }
             std::string_view str() { return source; }
@@ -179,6 +189,13 @@ namespace textx
                     throw std::runtime_error("unexpected: called get_last_error_position() w/o error.");
                 }
                 return state.farthest_position;
+            }
+
+            std::string get_last_error_string() {
+                std::ostringstream s;
+                auto pos = get_last_error_position();
+                s << pos.text_position.line << ":" << pos.text_position.col << ":" << "expected " << pos;
+                return s.str();
             }
         };
 
