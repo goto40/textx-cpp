@@ -19,7 +19,8 @@ namespace textx
             regex_match,
             sequence,
             ordered_choice,
-            not_this,
+            negative_lookahead,
+            positive_lookahead,
             one_or_more,
             zero_or_more,
             optional,
@@ -245,14 +246,30 @@ namespace textx
             });
         }
 
-        inline auto not_this(Pattern pattern)
+        inline auto negative_lookahead(Pattern pattern)
         {
             return cached([=](const Config &config, std::string_view text, size_t pos) -> std::optional<Match>
             {
                 auto match = pattern(config, text, pos);
                 if (!match)
                 {
-                    return Match{pos, pos, MatchType::not_this};
+                    return Match{.start=pos, .end=pos, .type=MatchType::negative_lookahead};
+                }
+                else
+                {
+                    return std::nullopt;
+                }
+            });
+        }
+
+        inline auto positive_lookahead(Pattern pattern)
+        {
+            return cached([=](const Config &config, std::string_view text, size_t pos) -> std::optional<Match>
+            {
+                auto match = pattern(config, text, pos);
+                if (match)
+                {
+                    return Match{.start=pos, .end=pos, .type=MatchType::positive_lookahead, .children={match.value()}};
                 }
                 else
                 {

@@ -196,3 +196,50 @@ TEST_CASE("optional", "[arpeggio]")
         }
     }
 }
+
+TEST_CASE("positive_lookahead", "[arpeggio]")
+{
+    using namespace textx::arpeggio;
+    Config config{};
+
+    {
+        auto p = capture(sequence({str_match("A"), positive_lookahead(capture(str_match("B")))}));
+        {
+            auto match = p(config, "AB", 0);
+            REQUIRE(match);
+            CHECK(match.value().start == 0);
+            CHECK(match.value().end == 1);
+
+            std::ostringstream o;
+            o << match.value();
+            CHECK_THAT(o.str(), Catch::Matchers::Contains("<sequence captured=A>"));
+            CHECK_THAT(o.str(), Catch::Matchers::Contains("<str_match captured=B>"));
+        }
+        {
+            auto match = p(config, "A", 0);
+            CHECK(!match);
+        }
+    }
+}
+
+TEST_CASE("negative_lookahead", "[arpeggio]")
+{
+    using namespace textx::arpeggio;
+    Config config{};
+
+    {
+        auto p = capture(sequence({negative_lookahead(str_match("keyword")),regex_match(R"(\w+)")}));
+        {
+            auto match = p(config, "keyword", 0);
+            REQUIRE(!match);
+        }
+        {
+            auto match = p(config, "nokeyword", 0);
+            REQUIRE(match);
+
+            std::ostringstream o;
+            o << match.value();
+            CHECK_THAT(o.str(), Catch::Matchers::Contains("<sequence captured=nokeyword>"));
+        }
+    }
+}
