@@ -24,7 +24,7 @@ namespace textx
                 std::cout << "ref(" << name << ")@" << pos <<"\n";
                 auto res = rules.at(name)(config, text, pos);
                 if (res) {
-                    std::cout << "=> ref(" << name << ")@" << pos << " --> " << res.value().start << ".." << res.value().end << ", " << res.value() << "\n";
+                    std::cout << "=> ref(" << name << ")@" << pos << " --> " << res.value().start << ".." << res.value().end << ", " << res.value() << "='" << textx::arpeggio::get_str(text.str(),res.value()) << "'\n";
                 }
                 return res;
             }));

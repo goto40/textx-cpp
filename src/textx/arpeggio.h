@@ -39,8 +39,10 @@ namespace textx
                         col=1;
                         line++;
                     }
+                    else {
+                        col++;
+                    }
                     pos++;
-                    col++;
                 }
             }
             TextPosition add(std::string_view text, size_t amount) {
