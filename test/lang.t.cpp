@@ -6,6 +6,7 @@
 TEST_CASE("simple1", "[textx/lang]")
 {
     using namespace textx::arpeggio;
+    using namespace textx;
 
     auto grammar1 = R"(
         Model: A|B;
@@ -13,6 +14,6 @@ TEST_CASE("simple1", "[textx/lang]")
         B: 'B';
     )";
 
-    Grammar textx{textx::lang::textx_model()};
+    //Grammar textx{textx::lang::textx_model()};
     //CHECK(textx.parse(grammar1));
 }

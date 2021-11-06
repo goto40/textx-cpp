@@ -2,6 +2,7 @@
 #include <iostream>
 #include <sstream>
 #include "textx/arpeggio.h"
+#include "textx/grammar.h"
 
 template<class F, class C>
 auto test_parse(F f, const C& config, std::string_view s, textx::arpeggio::TextPosition pos={}) {
@@ -253,7 +254,7 @@ TEST_CASE("negative_lookahead", "[arpeggio]")
 TEST_CASE("end_of_file", "[arpeggio]")
 {
     using namespace textx::arpeggio;
-    auto grammar = Grammar{capture(sequence({
+    auto grammar = textx::Grammar{capture(sequence({
         zero_or_more(ordered_choice({
             str_match("A"),
             str_match("B"), 
@@ -281,4 +282,11 @@ TEST_CASE("end_of_file", "[arpeggio]")
         auto err_text = grammar.get_last_error_string();
         CHECK_THAT(err_text, Catch::Matchers::Contains("(end_of_file,)"));
     }
+}
+
+TEST_CASE("grammar_no_main_rule", "[arpeggio]")
+{
+    using namespace textx;
+    auto grammar = Grammar{};
+    CHECK_THROWS(grammar.parse(""));
 }

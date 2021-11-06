@@ -172,34 +172,6 @@ namespace textx
 
         using Pattern = std::function<std::optional<Match>(const Config &config, ParserState& text, TextPosition pos)>;
 
-        class Grammar {
-            Pattern main;
-            Config config={};
-            ParserState state={""};
-            bool ok=true;
-        public:
-            Grammar(Pattern text) : main{text} {}
-            std::optional<Match> parse(std::string_view text) {
-                state = ParserState{text};
-                auto res = main(config, state, {});
-                ok = {res};
-                return res;
-            }
-            AnnotatedTextPosition get_last_error_position() {
-                if (ok) {
-                    throw std::runtime_error("unexpected: called get_last_error_position() w/o error.");
-                }
-                return state.farthest_position;
-            }
-
-            std::string get_last_error_string() {
-                std::ostringstream s;
-                auto pos = get_last_error_position();
-                s << pos.text_position.line << ":" << pos.text_position.col << ":" << "expected " << pos;
-                return s.str();
-            }
-        };
-
         inline std::string_view get_str(std::string_view text, Match match)
         {
             return text.substr(match.start, match.end - match.start);

@@ -1,0 +1,319 @@
+            inline ta::Pattern import_or_reference_stm()
+            {
+                return ta::ordered_choice({ref("import_stm"),
+                                        ref("reference_stm")});
+            }
+
+            inline ta::Pattern import_stm()
+            {
+                return ta::sequence({ta::str_match("import"),
+                                    ref("grammar_to_import")});
+            }
+
+            inline ta::Pattern reference_stm()
+            {
+                return ta::sequence({ta::str_match("reference"),
+                                    ref("language_name"),
+                                    ta::optional(ref("language_alias"))});
+            }
+
+            inline ta::Pattern language_alias()
+            {
+                return ta::sequence({ta::str_match("as"),
+                                    ref("ident")});
+            }
+
+            inline ta::Pattern language_name()
+            {
+                return ta::regex_match(R"((\w|-)+)");
+            }
+
+            inline ta::Pattern grammar_to_import()
+            {
+                return ta::regex_match(R"((\w|\.)+)");
+            };
+
+            // Rules
+            inline ta::Pattern textx_rule()
+            {
+                return ta::sequence({ref("rule_name"),
+                                    ta::optional(ref("rule_params")),
+                                    ta::str_match(":"),
+                                    ref("textx_rule_body"),
+                                    ta::str_match(";")});
+            }
+
+            inline ta::Pattern rule_params()
+            {
+                return ta::sequence({ta::str_match("["),
+                                    ref("rule_param"),
+                                    ta::zero_or_more(ta::sequence({ta::str_match(","),
+                                                                    ref("rule_param")})),
+                                    ta::str_match("]")});
+            }
+
+            inline ta::Pattern rule_param()
+            {
+                return ta::sequence({ref("param_name"),
+                                    ta::optional(ta::sequence({ta::str_match("="),
+                                                                ref("string_value")}))});
+            }
+
+            inline ta::Pattern param_name()
+            {
+                return ref("ident");
+            };
+
+            inline ta::Pattern textx_rule_body()
+            {
+                return ref("choice");
+            }
+
+            inline ta::Pattern choice()
+            {
+                return ta::sequence({ref("sequence"), ta::zero_or_more(
+                                                    ta::sequence({ta::str_match("|"),
+                                                                ref("sequence")}))});
+            }
+
+            inline ta::Pattern sequence()
+            {
+                return ta::one_or_more(ref("repeatable_expr"));
+            }
+
+            inline ta::Pattern repeatable_expr()
+            {
+                return ta::sequence({ref("expression"),
+                                    ta::optional(ref("repeat_operator")),
+                                    ta::optional(ta::str_match("-"))});
+            }
+
+            inline ta::Pattern expression()
+            {
+                return ta::ordered_choice({ref("assignment"),
+                                        ta::sequence({ta::optional(ref("syntactic_predicate")),
+                                                        ta::ordered_choice({ref("simple_match"),
+                                                                            ref("rule_ref"),
+                                                                            ref("bracketed_choice")})})});
+            }
+
+            inline ta::Pattern bracketed_choice()
+            {
+                return ta::sequence({ta::str_match("("),
+                                    ref("choice"),
+                                    ta::str_match(")")});
+            }
+
+            inline ta::Pattern repeat_operator()
+            {
+                return ta::sequence({ta::ordered_choice({ta::str_match("*"),
+                                                        ta::str_match("?"),
+                                                        ta::str_match("+"),
+                                                        ta::str_match("#")}),
+                                    ta::optional(ref("repeat_modifiers"))});
+            }
+
+            inline ta::Pattern repeat_modifiers()
+            {
+                return ta::sequence({ta::str_match("["),
+                                    ta::one_or_more(
+                                        ta::ordered_choice({ref("simple_match"),
+                                                            ta::str_match("eolterm")})),
+                                    ta::str_match("]")});
+            }
+
+            inline ta::Pattern syntactic_predicate()
+            {
+                return ta::ordered_choice({ta::str_match("!"),
+                                        ta::str_match("&")});
+            }
+
+            inline ta::Pattern simple_match()
+            {
+                return ta::ordered_choice({ref("str_match"),
+                                        ref("re_match")});
+            }
+
+            // Assignment
+            inline ta::Pattern assignment()
+            {
+                return ta::sequence({ref("attribute"),
+                                    ref("assignment_op"),
+                                    ref("assignment_rhs")});
+            }
+
+            inline ta::Pattern attribute()
+            {
+                return ident();
+            }
+
+            inline ta::Pattern assignment_op()
+            {
+                return ta::ordered_choice({ta::str_match("="),
+                                        ta::str_match("*="),
+                                        ta::str_match("+="),
+                                        ta::str_match("?=")});
+            }
+
+            inline ta::Pattern assignment_rhs()
+            {
+                return ta::sequence({ta::ordered_choice({simple_match(),
+                                                        reference()}),
+                                    ta::optional(repeat_modifiers())});
+            }
+
+            // References
+            inline ta::Pattern reference()
+            {
+                return ta::ordered_choice({rule_ref(),
+                                        obj_ref()});
+            }
+
+            inline ta::Pattern rule_ref()
+            {
+                return ident();
+            }
+
+            inline ta::Pattern obj_ref()
+            {
+                return ta::sequence({ta::str_match("["),
+                                    class_name(),
+                                    ta::optional(ta::sequence({ta::str_match("|"),
+                                                                obj_ref_rule(),
+                                                                ta::optional(ta::sequence({ta::str_match("|"),
+                                                                                        rrel_expression()}))})),
+                                    ta::str_match("]")});
+            }
+
+            inline ta::Pattern rule_name()
+            {
+                return ident();
+            }
+
+            inline ta::Pattern obj_ref_rule()
+            {
+                return ident();
+            }
+
+            inline ta::Pattern class_name()
+            {
+                return qualified_ident();
+            }
+
+            inline ta::Pattern str_match()
+            {
+                return string_value();
+            }
+
+            inline ta::Pattern re_match()
+            {
+                return ta::regex_match(R"(/((?:(?:\\/)|[^/])*)/)");
+            }
+
+            inline ta::Pattern ident()
+            {
+                return ta::regex_match(R"(\w+)");
+            }
+
+            inline ta::Pattern qualified_ident()
+            {
+                return ta::regex_match(R"(\w+(\.\w+)?)");
+            }
+
+            inline ta::Pattern integer()
+            {
+                return ta::regex_match(R"([-+]?[0-9]+)");
+            }
+
+            inline ta::Pattern string_value()
+            {
+                return ta::ordered_choice({ta::regex_match(R"('((\\')|[^'])*')"),
+                                        ta::regex_match(R"("((\\")|[^"])*")")});
+            }
+
+            // Comments
+            inline ta::Pattern comment()
+            {
+                return ta::ordered_choice({comment_line(),
+                                        comment_block()});
+            }
+
+            inline ta::Pattern comment_line()
+            {
+                return ta::regex_match(R"(//.*?$)");
+            }
+
+            inline ta::Pattern comment_block()
+            {
+                return ta::regex_match(R"(/\*(.|\n)*?\*/)");
+        }
+
+        inline ta::Pattern rrel_id()
+        {
+            return ta::regex_match(R"([^\d\W]\w*\b)"); // from lang.py
+        }
+
+        inline ta::Pattern rrel_parent()
+        {
+            return ta::sequence({ta::str_match("parent"),
+                                 ta::str_match("("),
+                                 rrel_id(),
+                                 ta::str_match(")")});
+        }
+
+        inline ta::Pattern rrel_navigation()
+        {
+            return ta::sequence({ta::optional(ta::str_match("~")),
+                                 rrel_id()});
+        }
+
+        inline ta::Pattern rrel_brackets()
+        {
+            return ta::sequence({ta::str_match("("),
+                                 rrel_sequence(),
+                                 ta::str_match(")")});
+        }
+
+        inline ta::Pattern rrel_dots()
+        {
+            return ta::regex_match(R"(\.+)");
+        }
+
+        inline ta::Pattern rrel_path_element()
+        {
+            return ta::ordered_choice({rrel_parent(),
+                                       rrel_brackets(),
+                                       rrel_navigation()});
+        }
+
+        inline ta::Pattern rrel_zero_or_more()
+        {
+            return ta::sequence({rrel_path_element(),
+                                 ta::str_match("*")});
+        }
+
+        inline ta::Pattern rrel_path()
+        {
+            return ta::sequence({ta::optional(ta::sequence({ta::str_match("^"),
+                                                            rrel_dots()})),
+                                 ta::zero_or_more(
+                                     ta::sequence({ta::ordered_choice({rrel_zero_or_more(), rrel_path_element()}),
+                                                   ta::str_match(".")})),
+                                 ta::optional( // echt???
+                                     ta::ordered_choice({rrel_zero_or_more(),
+                                                         rrel_path_element()}))});
+        }
+
+        inline ta::Pattern rrel_sequence()
+        {
+            return ta::zero_or_more(ta::sequence({rrel_path(),
+                                                  ta::str_match(","),
+                                                  rrel_path()}));
+        }
+
+        inline ta::Pattern rrel_expression()
+        {
+            return ta::sequence({ta::optional(ta::regex_match(R"(\+[mp]+:)")),
+                                 rrel_sequence()});
+        }
+ 
