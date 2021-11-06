@@ -48,6 +48,12 @@ namespace textx
                 me.inc(text, amount);
                 return me;
             }
+
+            friend std::ostream &operator<<(std::ostream &o, const TextPosition &pos)
+            {
+                o << pos.line << ":" << pos.col;
+                return o;
+            }
         };
 
         struct Match
@@ -89,7 +95,6 @@ namespace textx
             
             friend std::ostream &operator<<(std::ostream &o, const AnnotatedTextPosition &pos)
             {
-                // o << text_position.line << ":" << text_position.col << ":";
                 for(auto &i: pos.info) {
                     o << "(" << Match::type2str.at(std::get<MatchType>(i)) << "," << std::get<std::string>(i) << ")";
                 }
@@ -182,6 +187,7 @@ namespace textx
             return Match::is_terminal.at(m.type);
         }
 
+        // decorator
         /**
          * This function is a rule wrapper requried for each rule.
          * It manages memoization and basic checks.
@@ -212,35 +218,39 @@ namespace textx
                 }
                 else {
                     text.cache_misses++;
+                    cache[pos] = std::nullopt; // recursion breaker
+
+                    auto match = pattern(config, text, pos);
+                    cache[pos] = match;
+                    return match;
                 }
-                auto match = pattern(config, text, pos);
-                cache[pos] = match;
-                return match;
             };
         }
 
+        // decorator
         inline auto named(std::string name, Pattern pattern)
         {
-            return rule([=](const Config &config, ParserState& text, TextPosition pos) -> std::optional<Match>
+            return [=](const Config &config, ParserState& text, TextPosition pos) -> std::optional<Match>
                           {
                 auto match = pattern(config, text, pos);
                 if (match.has_value())
                 {
                     match.value().name = name;
                 }
-                return match; });
+                return match; };
         }
 
+        // decorator
         inline auto capture(Pattern pattern)
         {
-            return rule([=](const Config &config, ParserState& text, TextPosition pos) -> std::optional<Match>
+            return [=](const Config &config, ParserState& text, TextPosition pos) -> std::optional<Match>
                           {
                 auto match = pattern(config, text, pos);
                 if (match.has_value())
                 {
                     match.value().captured = get_str(text, match.value());
                 }
-                return match; });
+                return match; };
         }
 
         inline auto optional(Pattern pattern)

@@ -19,10 +19,15 @@ namespace textx
 
         auto ref(std::string name)
         {
-            return [this,name](const textx::arpeggio::Config &config, textx::arpeggio::ParserState &text, textx::arpeggio::TextPosition pos) -> std::optional<textx::arpeggio::Match>
+            return textx::arpeggio::rule(textx::arpeggio::named(name, [this,name](const textx::arpeggio::Config &config, textx::arpeggio::ParserState &text, textx::arpeggio::TextPosition pos) -> std::optional<textx::arpeggio::Match>
             {
-                return rules.at(name)(config, text, pos);
-            };
+                std::cout << "ref(" << name << ")@" << pos <<"\n";
+                auto res = rules.at(name)(config, text, pos);
+                if (res) {
+                    std::cout << "=> ref(" << name << ")@" << pos << " --> " << res.value().start << ".." << res.value().end << ", " << res.value() << "\n";
+                }
+                return res;
+            }));
         }
 
         void add_rule(std::string_view name, textx::arpeggio::Pattern p)

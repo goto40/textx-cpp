@@ -10,7 +10,8 @@ namespace textx
             namespace ta = textx::arpeggio;
 
             // textX grammar
-
+           set_main_rule(ref("textx_model"));
+ 
             add_rule("textx_model", ta::sequence({ta::zero_or_more(ref("import_or_reference_stm")),
                                                   ta::zero_or_more(ref("textx_rule"))}));
 
@@ -186,7 +187,6 @@ namespace textx
 
             add_rule("rrel_expression", ta::sequence({ta::optional(ta::regex_match(R"(\+[mp]+:)")),
                                     ref("rrel_sequence")}));
- 
         }
     }
 }
