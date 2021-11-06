@@ -13,6 +13,6 @@ TEST_CASE("simple1", "[textx/lang]")
         B: 'B';
     )";
 
-    //Grammar textx{textx::lang::textx_model()};
+    Grammar textx{textx::lang::textx_model()};
     //CHECK(textx.parse(grammar1));
 }

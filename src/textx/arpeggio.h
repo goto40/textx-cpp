@@ -99,13 +99,14 @@ namespace textx
 
         class ParserState {
             std::string_view source;
-        public:
             static size_t cache_reset_indicator_source; 
             size_t cache_reset_indicator = {cache_reset_indicator_source++};
+        public:
             size_t cache_hits = {0};
             size_t cache_misses = {0};
             AnnotatedTextPosition farthest_position={};
             
+            size_t get_cache_reset_indicator() { return cache_reset_indicator; }
             ParserState(std::string_view s) : source(s) {}
             operator std::string_view() { return source; }
             size_t length() { return source.length(); }
@@ -226,15 +227,19 @@ namespace textx
                 }
 
                 // memoization:
-                if (chached_state != text.cache_reset_indicator)
+                if (chached_state != text.get_cache_reset_indicator())
                 {
-                    chached_state = text.cache_reset_indicator;
+                    chached_state = text.get_cache_reset_indicator();
                     cache = {};
                 }
                 auto res = cache.find(pos);
                 if (res != cache.end())
                 {
+                    text.cache_hits++;
                     return *(res->second);
+                }
+                else {
+                    text.cache_misses++;
                 }
                 auto match = pattern(config, text, pos);
                 cache[pos] = match;
