@@ -322,3 +322,26 @@ TEST_CASE("grammar_no_main_rule", "[arpeggio]")
     auto grammar = Grammar{};
     CHECK_THROWS(grammar.parse(""));
 }
+
+TEST_CASE("comments", "[arpeggio]")
+{
+    using namespace textx::arpeggio;
+    auto grammar = textx::Grammar{capture(sequence({
+        zero_or_more(ordered_choice({
+            str_match("A"),
+            str_match("B"), 
+        })),
+        str_match("C"),
+        end_of_file(),
+    }))};
+    grammar.get_config().skip_text = textx::arpeggio::skip_text_functions::skip_cpp_style();
+
+    CHECK(grammar.parse("A BB ABC "));
+    CHECK(grammar.parse("A BB ABC // comment!"));
+    CHECK(grammar.parse("A BB AB // comment!\n C"));
+    CHECK(grammar.parse("A BB AB // comment!\n ABC"));
+    CHECK(grammar.parse("A BB ABC /* comment! */"));
+    CHECK(grammar.parse("A BB AB /* comment! */ C"));
+    CHECK(grammar.parse("C"));
+    CHECK(grammar.parse("C "));
+}

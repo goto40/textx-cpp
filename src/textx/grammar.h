@@ -81,6 +81,10 @@ namespace textx
               << "expected " << pos;
             return s.str();
         }
+
+        auto& get_config() {
+            return config;
+        }
     };
 
 }
