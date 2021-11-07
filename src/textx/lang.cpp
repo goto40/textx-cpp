@@ -13,7 +13,7 @@ namespace textx
            set_main_rule(ref("textx_model"));
  
             add_rule("textx_model", ta::sequence({ta::zero_or_more(ref("import_or_reference_stm")),
-                                                  ta::zero_or_more(ref("textx_rule"))}));
+                                                  ta::zero_or_more(ref("textx_rule")), ta::end_of_file()}));
 
 
             add_rule("import_or_reference_stm", ta::ordered_choice({ref("import_stm"),
