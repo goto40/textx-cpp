@@ -41,7 +41,7 @@ TEST_CASE("simple1", "[textx/lang]")
         )";
 
         textx::lang::TextxGrammar textx_grammar;
-        CHECK(textx_grammar.parse(grammar1));
+        CHECK(textx_grammar.parse_or_throw(grammar1));
         CHECK(!textx_grammar.parse(grammar1_error));
     }
 }
@@ -50,12 +50,12 @@ TEST_CASE("simple2", "[textx/lang]")
 {
     {
         auto grammar1 = R"(
-            Model: A|B;
+            Model: A|B; // some comments!
             A: 'A';
             B: 'B';
         )";
 
         textx::lang::TextxGrammar textx_grammar;
-        CHECK(textx_grammar.parse(grammar1));
+        CHECK(textx_grammar.parse_or_throw(grammar1));
     }
 }

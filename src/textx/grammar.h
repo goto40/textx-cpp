@@ -50,6 +50,15 @@ namespace textx
             return res;
         }
 
+        std::optional<textx::arpeggio::Match> parse_or_throw(std::string_view text)
+        {
+            auto res = parse(text);
+            if (!res) {
+                throw std::runtime_error( get_last_error_string() );
+            }
+            return res;
+        }
+
         textx::arpeggio::AnnotatedTextPosition get_last_error_position()
         {
             if (ok)

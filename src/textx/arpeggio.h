@@ -247,6 +247,10 @@ namespace textx
                 {
                     match.value().name = name;
                 }
+                else
+                {
+                    text.update_farthest_position(pos,MatchType::str_match,std::string("rule-name="+name));
+                }
                 return match; };
         }
 
