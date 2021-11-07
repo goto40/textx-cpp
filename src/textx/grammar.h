@@ -21,6 +21,9 @@ namespace textx
         {
             return textx::arpeggio::rule(textx::arpeggio::named(name, [this,name](const textx::arpeggio::Config &config, textx::arpeggio::ParserState &text, textx::arpeggio::TextPosition pos) -> std::optional<textx::arpeggio::Match>
             {
+                if (rules.find(name)==rules.end()) {
+                    throw std::runtime_error(std::string("cannot find ref(\"")+name+"\");");
+                }
                 std::cout << "ref(" << name << ")@" << pos <<"\n";
                 auto res = rules.at(name)(config, text, pos);
                 if (res) {
