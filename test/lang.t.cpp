@@ -12,7 +12,8 @@ TEST_CASE("simple0", "[textx/lang]")
             add_rule("textx_rule", ta::sequence({ref("rule_name"),
                                     ta::str_match(":"),
                                     ref("textx_rule_body"),
-                                    ta::str_match(";")}));
+                                    ta::str_match(";"),
+                                    ta::end_of_file()}));
             add_rule("textx_rule_body", ta::regex_match(R"([^;]+)"));
             add_rule("rule_name", ref("ident"));
             add_rule("ident", ta::regex_match(R"(\w+)"));
