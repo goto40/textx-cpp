@@ -214,16 +214,23 @@ namespace textx
                     cache = {};
                 }
                 auto res = cache.find(pos);
-                if (res != cache.end())
-                {
+                if (res != cache.end() && res->second.has_value()) { // recursion breaker (2nd part)
                     text.cache_hits++;
                     return *(res->second);
                 }
                 else {
                     text.cache_misses++;
-                    cache[pos] = std::nullopt; // recursion breaker
+                    cache[pos] = std::nullopt; // recursion breaker (1st part)
 
                     auto match = pattern(config, text, pos);
+                    
+                    if (match) {
+                        if (match.value().type==MatchType::undefined) {
+                            std::ostringstream s;
+                            s << "unexpected, found undefined result = " << match.value();
+                            throw std::runtime_error(s.str());
+                        }
+                    }
                     cache[pos] = match;
                     return match;
                 }
@@ -294,7 +301,8 @@ namespace textx
                 std::match_results<std::string_view::const_iterator> smatch;
                 if (std::regex_search(text.str().begin() + pos, text.str().end(), smatch, r))
                 {
-                    return Match{pos, pos.add(text,smatch.length()), MatchType::regex_match};
+                    auto res = Match{pos, pos.add(text,smatch.length()), MatchType::regex_match};
+                    return res;
                 }
                 else
                 {
