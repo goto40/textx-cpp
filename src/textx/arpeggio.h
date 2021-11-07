@@ -17,7 +17,8 @@ namespace textx
 
         enum class MatchType
         {
-            end_of_file=0,
+            undefined,
+            end_of_file,
             str_match,
             regex_match,
             sequence,

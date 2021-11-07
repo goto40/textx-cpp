@@ -38,7 +38,7 @@ TEST_CASE("simple1", "[textx/lang]")
         )";
 
         textx::lang::TextxGrammar textx_grammar;
-        //CHECK(textx_grammar.parse(grammar1));
+        CHECK(textx_grammar.parse(grammar1));
     }
     {
         auto grammar1 = R"(

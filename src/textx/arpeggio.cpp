@@ -5,6 +5,7 @@ namespace textx
     namespace arpeggio
     {
         std::unordered_map<MatchType, std::string> Match::type2str = {
+            {MatchType::undefined, "undefined"},
             {MatchType::str_match, "str_match"},
             {MatchType::regex_match, "regex_match"},
             {MatchType::sequence, "sequence"},
@@ -18,6 +19,7 @@ namespace textx
         };
 
         std::unordered_map<MatchType, bool> Match::is_terminal = {
+            {MatchType::undefined, false},
             {MatchType::str_match, true},
             {MatchType::regex_match, true},
             {MatchType::sequence, false},
