@@ -36,9 +36,13 @@ TEST_CASE("simple1", "[textx/lang]")
         auto grammar1 = R"(
             Model: 'hello';
         )";
+        auto grammar1_error = R"(
+            Model: 'hello'
+        )";
 
         textx::lang::TextxGrammar textx_grammar;
         CHECK(textx_grammar.parse(grammar1));
+        CHECK(!textx_grammar.parse(grammar1_error));
     }
 }
 
