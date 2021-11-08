@@ -107,7 +107,7 @@ namespace textx
             {
                 for (auto &i : pos.info)
                 {
-                    o << "(" << Match::type2str.at(std::get<MatchType>(i)) << "," << std::get<std::string>(i) << ")";
+                    o << " -" << Match::type2str.at(std::get<MatchType>(i)) << "," << std::get<std::string>(i) << "\n";
                 }
                 return o;
             }
@@ -326,7 +326,7 @@ namespace textx
                 }
                 else
                 {
-                    text.update_farthest_position(pos,MatchType::regex_match,s);
+                    //text.update_farthest_position(pos,MatchType::regex_match,s);
                     return std::nullopt;
                 } });
         }

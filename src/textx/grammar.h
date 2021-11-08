@@ -78,7 +78,7 @@ namespace textx
             std::ostringstream s;
             auto pos = get_last_error_position();
             s << pos.text_position.line << ":" << pos.text_position.col << ":"
-              << "expected " << pos;
+              << "expected\n" << pos;
             return s.str();
         }
 

@@ -144,12 +144,13 @@ namespace textx
                                         ta::regex_match(R"("((\\")|[^"])*")")}));
 
             // Comments
-            add_rule("comment", ta::ordered_choice({ref("comment_line"),
-                                        ref("comment_block")}));
+            // add_rule("comment", ta::ordered_choice({ref("comment_line"),
+            //                             ref("comment_block")}));
 
-            add_rule("comment_line", ta::regex_match(R"(//.*?$)"));
+            // add_rule("comment_line", ta::regex_match(R"(//.*?$)"));
 
-            add_rule("comment_block", ta::regex_match(R"(/\*(.|\n)*?\*/)"));
+            // add_rule("comment_block", ta::regex_match(R"(/\*(.|\n)*?\*/)"));
+            // TODO?? see above skip_cpp_style
 
             add_rule("rrel_id", ta::regex_match(R"([^\d\W]\w*\b)")); // from lang.py
 
@@ -174,7 +175,7 @@ namespace textx
             add_rule("rrel_zero_or_more", ta::sequence({ref("rrel_path_element"),
                                     ta::str_match("*")}));
 
-            add_rule("rrel_path", ta::sequence({ta::optional(ta::sequence({ta::str_match("^"),
+            add_rule("rrel_path", ta::sequence({ta::optional(ta::ordered_choice({ta::str_match("^"),
                                                                 ref("rrel_dots")})),
                                     ta::zero_or_more(
                                         ta::sequence({ta::ordered_choice({ref("rrel_zero_or_more"), ref("rrel_path_element")}),
