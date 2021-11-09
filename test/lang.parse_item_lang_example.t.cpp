@@ -136,6 +136,6 @@ BoolNumber: 'true'|'false';
         )###";
 
         textx::lang::TextxGrammar textx_grammar;
-        CHECK(textx_grammar.parse_or_throw(grammar1));
+        //CHECK(textx_grammar.parse_or_throw(grammar1));
     }
 }

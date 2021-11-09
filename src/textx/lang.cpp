@@ -184,9 +184,9 @@ namespace textx
                                         ta::ordered_choice({ref("rrel_zero_or_more"),
                                                             ref("rrel_path_element")}))}));
 
-            add_rule("rrel_sequence", ta::zero_or_more(ta::sequence({ref("rrel_path"),
-                                                    ta::str_match(","),
-                                                    ref("rrel_path")})));
+            add_rule("rrel_sequence", ta::sequence({ta::zero_or_more(ta::sequence({ref("rrel_path"),
+                                                    ta::str_match(",")})),
+                                                    ref("rrel_path")}));
 
             add_rule("rrel_expression", ta::sequence({ta::optional(ta::regex_match(R"(\+[mp]+:)")),
                                     ref("rrel_sequence")}));

@@ -59,3 +59,35 @@ TEST_CASE("simple2", "[textx/lang]")
         CHECK(textx_grammar.parse_or_throw(grammar1));
     }
 }
+
+TEST_CASE("rrel1", "[textx/lang]")
+{
+    {
+        namespace ta = textx::arpeggio;
+
+        struct MyGrammar : textx::lang::TextxGrammar {
+            MyGrammar() {
+                add_rule("main",ta::sequence({ref("rrel_expression"), ta::end_of_file()}));
+                set_main_rule( ref("main") );
+            }
+        } textx_grammar;
+        CHECK(textx_grammar.parse_or_throw("a.b.c"));
+        CHECK(textx_grammar.parse_or_throw(".."));
+        CHECK(textx_grammar.parse_or_throw("(..)"));
+        CHECK(textx_grammar.parse_or_throw("parent(Attribute).(..).attributes.(~type.attributes)*"));
+        CHECK(textx_grammar.parse_or_throw("parent(Attribute).(..).attributes.(~type.attributes)*"));
+        CHECK(textx_grammar.parse_or_throw("+mp:parent(Attribute).(..).attributes.(~type.attributes)*,parent(Attribute).~type.enum_entries"));
+        CHECK(textx_grammar.parse_or_throw("+mp:\nparent(Attribute).(..).attributes.(~type.attributes)*,\nparent(Attribute).~type.enum_entries"));
+        CHECK(textx_grammar.parse_or_throw(R"(+mp:
+            parent(Attribute).(..).attributes.(~type.attributes)*,
+            parent(Attribute).~type.enum_entries,
+            parent(Constant).~type.enum_entries,
+            parent(Constants).constant_entries,
+            parent(Struct).constant_entries,
+            parent(Attribute).~variant_selector.~ref.~type.enum_entries,
+            ^(package,packages)*.constants.constant_entries,
+            ^(package,packages)*.items.constant_entries,
+            ^(package,packages)*.items.enum_entries,            
+        )"));
+    }
+}
