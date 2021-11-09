@@ -137,5 +137,9 @@ BoolNumber: 'true'|'false';
 
         textx::lang::TextxGrammar textx_grammar;
         CHECK(textx_grammar.parse_or_throw(grammar1));
+        
+        // BENCHMARK("parse item grammar speed test") {
+        //     return textx_grammar.parse_or_throw(grammar1); // The return is a handy way to avoid the compiler optimizing away the benchmark code. https://github.com/catchorg/Catch2/blob/devel/docs/benchmarks.md
+        // };
     }
 }

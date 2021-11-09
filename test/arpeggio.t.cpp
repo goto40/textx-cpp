@@ -246,8 +246,8 @@ TEST_CASE("positive_lookahead", "[arpeggio]")
         {
             auto match = test_parse(p, config, "AB", {});
             REQUIRE(match);
-            CHECK(match.value().start == 0);
-            CHECK(match.value().end == 1);
+            CHECK(match.value().start.pos == 0);
+            CHECK(match.value().end.pos == 1);
 
             std::ostringstream o;
             o << match.value();
