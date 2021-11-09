@@ -305,14 +305,14 @@ TEST_CASE("end_of_file", "[arpeggio]")
     {
         auto err_text = grammar.get_last_error_string();
         CHECK_THAT(err_text, Catch::Matchers::Contains("expected"));
-        CHECK_THAT(err_text, Catch::Matchers::Contains("(str_match,A)"));
-        CHECK_THAT(err_text, Catch::Matchers::Contains("(str_match,B)"));
-        CHECK_THAT(err_text, Catch::Matchers::Contains("(str_match,C)"));
+        CHECK_THAT(err_text, Catch::Matchers::Contains("str_match,A"));
+        CHECK_THAT(err_text, Catch::Matchers::Contains("str_match,B"));
+        CHECK_THAT(err_text, Catch::Matchers::Contains("str_match,C"));
     }
     CHECK(!grammar.parse("C C"));
     {
         auto err_text = grammar.get_last_error_string();
-        CHECK_THAT(err_text, Catch::Matchers::Contains("(end_of_file,)"));
+        CHECK_THAT(err_text, Catch::Matchers::Contains("end_of_file,"));
     }
 }
 
