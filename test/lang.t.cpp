@@ -87,7 +87,10 @@ TEST_CASE("rrel1", "[textx/lang]")
             parent(Attribute).~variant_selector.~ref.~type.enum_entries,
             ^(package,packages)*.constants.constant_entries,
             ^(package,packages)*.items.constant_entries,
-            ^(package,packages)*.items.enum_entries,            
+            ^(package,packages)*.items.enum_entries           
         )"));
+
+        CHECK(!textx_grammar.parse("a.b.c."));
+        CHECK(!textx_grammar.parse(""));
     }
 }
