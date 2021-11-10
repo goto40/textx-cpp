@@ -1,6 +1,6 @@
 #pragma once
 
-//#define ARPEGGIO_USE_BOOST_FOR_REGEX
+#define ARPEGGIO_USE_BOOST_FOR_REGEX
 
 #include <cstdlib>
 #include <vector>
