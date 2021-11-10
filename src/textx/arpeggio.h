@@ -65,19 +65,31 @@ namespace textx
             }
         };
 
-        struct Match
+        class Match
         {
-            TextPosition start, end;
-            MatchType type;
+            TextPosition m_start, m_end;
+            MatchType m_type;
+        public:
             std::vector<Match> children = {};
             std::optional<std::string> name = std::nullopt;
             std::optional<std::string> captured = std::nullopt;
+
+            Match(TextPosition s, TextPosition e, MatchType t, std::vector<Match> c={}) :m_start{s}, m_end{e}, m_type{t}, children{c} {
+                if (m_type==MatchType::undefined) {
+                    throw std::runtime_error("unexpected: undefined match type...");
+                }
+            }
+
+            auto start() const { return m_start; }
+            auto end() const { return m_end; }
+            auto type() const { return m_type; }
+            void update_end(TextPosition e) { m_end=e; }
 
             static std::unordered_map<MatchType, std::string> type2str;
             static std::unordered_map<MatchType, bool> is_terminal;
             friend std::ostream &operator<<(std::ostream &o, const Match &match)
             {
-                o << "<" << type2str.at(match.type);
+                o << "<" << type2str.at(match.type());
                 if (match.name.has_value())
                 {
                     o << ":" << match.name.value();
@@ -194,12 +206,12 @@ namespace textx
 
         inline std::string_view get_str(std::string_view text, Match match)
         {
-            return text.substr(match.start, match.end - match.start);
+            return text.substr(match.start(), match.end() - match.start());
         }
 
         inline bool is_terminal(const Match &m)
         {
-            return Match::is_terminal.at(m.type);
+            return Match::is_terminal.at(m.type());
         }
 
         // decorator
@@ -225,8 +237,8 @@ namespace textx
                     chached_state = text.get_cache_reset_indicator();
                     cache = {};
                 }
-                auto res = cache.find(pos);
-                if (res != cache.end() && res->second.has_value())
+                auto res = cache.find(pos.pos);
+                if (res != cache.end())
                 { // recursion breaker (2nd part)
                     text.cache_hits++;
                     return *(res->second);
@@ -234,20 +246,22 @@ namespace textx
                 else
                 {
                     text.cache_misses++;
-                    cache[pos] = std::nullopt; // recursion breaker (1st part)
+                    cache[pos.pos] = std::nullopt; // recursion breaker (1st part)
 
                     auto match = pattern(config, text, pos);
 
                     if (match)
                     {
-                        if (match.value().type == MatchType::undefined)
+                        std::cout << ">>>> " << match.value() << "\n";
+                        if (match.value().type() == MatchType::undefined)
                         {
                             std::ostringstream s;
                             s << "unexpected, found undefined result = " << match.value();
+                            std::cout << s.str() << "\n";
                             throw std::runtime_error(s.str());
                         }
                     }
-                    cache[pos] = match;
+                    cache[pos.pos] = match;
                     return match;
                 }
             };
@@ -290,10 +304,10 @@ namespace textx
                 auto match = pattern(config, text, pos);
                 if (match.has_value())
                 {
-                    return Match{.start=match.value().start, .end=match.value().end, .type=MatchType::optional, .children={match.value()}};
+                    return Match{match.value().start(), match.value().end(), MatchType::optional, {match.value()}};
                 }
                 else {
-                    return Match{.start=pos, .end=pos, .type=MatchType::optional, .children={}};
+                    return Match{pos, pos, MatchType::optional, {}};
                 } });
         }
 
@@ -322,11 +336,13 @@ namespace textx
                 if (std::regex_search(text.str().begin() + pos, text.str().end(), smatch, r))
                 {
                     auto res = Match{pos, pos.add(text,smatch.length()), MatchType::regex_match};
+                    std::cout << ">> " << res << "\n";
                     return res;
                 }
                 else
                 {
                     //text.update_farthest_position(pos,MatchType::regex_match,s);
+                    std::cout << ">> nullopt\n";
                     return std::nullopt;
                 } });
         }
@@ -341,8 +357,8 @@ namespace textx
                     auto sub_match = pattern(config, text, pos);
                     if (sub_match)
                     {
-                        pos = sub_match.value().end;
-                        match.end = pos;
+                        pos = sub_match.value().end();
+                        match.update_end(pos);
                         match.children.push_back(sub_match.value());
                     }
                     else
@@ -362,7 +378,7 @@ namespace textx
                     auto match = pattern(config, text, pos);
                     if (match)
                     {
-                        return Match{.start = match.value().start, .end = match.value().end, .type = MatchType::ordered_choice, .children = {match.value()}};
+                        return Match{match.value().start(),match.value().end(),MatchType::ordered_choice, {match.value()}};
                     }
                 }
                 return std::nullopt; });
@@ -375,7 +391,7 @@ namespace textx
                 auto match = pattern(config, text, pos);
                 if (!match)
                 {
-                    return Match{.start=pos, .end=pos, .type=MatchType::negative_lookahead};
+                    return Match{pos, pos,MatchType::negative_lookahead};
                 }
                 else
                 {
@@ -390,7 +406,7 @@ namespace textx
                 auto match = pattern(config, text, pos);
                 if (match)
                 {
-                    return Match{.start=pos, .end=pos, .type=MatchType::positive_lookahead, .children={match.value()}};
+                    return Match{pos, pos, MatchType::positive_lookahead, {match.value()}};
                 }
                 else
                 {
@@ -409,13 +425,13 @@ namespace textx
                 }
                 else
                 {
-                    auto match = Match{.start = sub_match.value().start, .end = sub_match.value().end, .type = MatchType::one_or_more, .children = {sub_match.value()}};
-                    pos = match.end;
+                    auto match = Match{sub_match.value().start(), sub_match.value().end(), MatchType::one_or_more, {sub_match.value()}};
+                    pos = match.end();
                     while (auto next_match = pattern(config, text, pos))
                     {
                         match.children.push_back(next_match.value());
-                        pos = next_match.value().end;
-                        match.end = pos;
+                        pos = next_match.value().end();
+                        match.update_end(pos);
                     }
                     return match;
                 } });
@@ -425,12 +441,12 @@ namespace textx
         {
             return rule([=](const Config &config, ParserState &text, TextPosition pos) -> std::optional<Match>
                         {
-                auto match = Match{.start = pos, .end = pos, .type = MatchType::zero_or_more, .children = {}};
+                auto match = Match{pos, pos,MatchType::zero_or_more, {}};
                 while (auto next_match = pattern(config, text, pos))
                 {
                     match.children.push_back(next_match.value());
-                    pos = next_match.value().end;
-                    match.end = pos;
+                    pos = next_match.value().end();
+                    match.update_end(pos);
                 }
                 return match; });
         }
@@ -459,7 +475,7 @@ namespace textx
                     std::optional<Match> match;
                     while ((pos < text.length()) && (match = p(empty_config, text, pos)))
                     {
-                        pos = match.value().end;
+                        pos = match.value().end();
                     }
                     return pos;
                 };

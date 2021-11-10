@@ -21,7 +21,7 @@ TEST_CASE("str_match", "[arpeggio]")
     CHECK(hello_pattern(config, text, {}));
     CHECK(!world_pattern(config, text, {}));
     auto match = hello_pattern(config, text, {}).value();
-    auto match2_opt = world_pattern(config, text, match.end.add(text,1));
+    auto match2_opt = world_pattern(config, text, match.end().add(text,1));
     REQUIRE(match2_opt);
 
     CHECK(get_str(text, match) == "hello");
@@ -89,8 +89,8 @@ TEST_CASE("regex_match", "[arpeggio]")
         std::ostringstream o;
         o << match;
         CHECK_THAT(o.str(), Catch::Matchers::Contains("<regex_match captured=hello123>"));
-        CHECK(match.start.pos == 0);
-        CHECK(match.end.pos == 0+8);
+        CHECK(match.start().pos == 0);
+        CHECK(match.end().pos == 0+8);
     }
 }
 
@@ -113,10 +113,10 @@ TEST_CASE("sequence", "[arpeggio]")
         CHECK_THAT(o.str(), Catch::Matchers::Contains("<regex_match captured=world>"));
         CHECK_THAT(o.str(), Catch::Matchers::Contains("<sequence>"));
 
-        CHECK(match.value().start.pos == 0);
-        CHECK(match.value().start.col == 1);
-        CHECK(match.value().start.line == 1);
-        CHECK(match.value().end.pos > 0);
+        CHECK(match.value().start().pos == 0);
+        CHECK(match.value().start().col == 1);
+        CHECK(match.value().start().line == 1);
+        CHECK(match.value().end().pos > 0);
     }
 }
 
@@ -147,8 +147,8 @@ TEST_CASE("ordered_choice", "[arpeggio]")
         CHECK_THAT(o.str(), Catch::Matchers::Contains("<str_match captured=world>"));
         CHECK_THAT(o.str(), Catch::Matchers::Contains("<ordered_choice>"));
 
-        CHECK(match.value().start.pos == 9);
-        CHECK(match.value().end.pos > 9);
+        CHECK(match.value().start().pos == 9);
+        CHECK(match.value().end().pos > 9);
     }
 }
 
@@ -162,13 +162,13 @@ TEST_CASE("one_or_more", "[arpeggio]")
     {
         auto match = words_pattern(config, text, {});
         REQUIRE(match);
-        CHECK(match.value().type == MatchType::one_or_more);
+        CHECK(match.value().type() == MatchType::one_or_more);
         CHECK(match.value().children.size() == 7);
 
-        CHECK(match.value().start.pos == 0);
-        CHECK(match.value().start.col == 1);
-        CHECK(match.value().start.line == 1);
-        CHECK(match.value().end.pos > 0);
+        CHECK(match.value().start().pos == 0);
+        CHECK(match.value().start().col == 1);
+        CHECK(match.value().start().line == 1);
+        CHECK(match.value().end().pos > 0);
     }
 }
 
@@ -183,13 +183,13 @@ TEST_CASE("zero_or_more", "[arpeggio]")
         {
             auto match = words_pattern(config, text, {});
             REQUIRE(match);
-            CHECK(match.value().type == MatchType::zero_or_more);
+            CHECK(match.value().type() == MatchType::zero_or_more);
             CHECK(match.value().children.size() == 7);
  
-            CHECK(match.value().start.pos == 0);
-            CHECK(match.value().start.col == 1);
-            CHECK(match.value().start.line == 1);
-            CHECK(match.value().end.pos > 0);
+            CHECK(match.value().start().pos == 0);
+            CHECK(match.value().start().col == 1);
+            CHECK(match.value().start().line == 1);
+            CHECK(match.value().end().pos > 0);
         }
     }
     {
@@ -198,7 +198,7 @@ TEST_CASE("zero_or_more", "[arpeggio]")
         {
             auto match = words_pattern(config, text, {});
             REQUIRE(match);
-            CHECK(match.value().type == MatchType::zero_or_more);
+            CHECK(match.value().type() == MatchType::zero_or_more);
             CHECK(match.value().children.size() == 0);
         }
     }
@@ -217,21 +217,21 @@ TEST_CASE("optional", "[arpeggio]")
             auto match = p1(config, text, {});
             CHECK(match);
 
-            CHECK(match.value().start.pos == 0);
-            CHECK(match.value().start.col == 1);
-            CHECK(match.value().start.line == 1);
-            CHECK(match.value().end.pos > 0);
+            CHECK(match.value().start().pos == 0);
+            CHECK(match.value().start().col == 1);
+            CHECK(match.value().start().line == 1);
+            CHECK(match.value().end().pos > 0);
         }
         {
             auto match = p2(config, text, {});
             CHECK(match);
 
-            CHECK(match.value().start.pos == 0);
-            CHECK(match.value().start.col == 1);
-            CHECK(match.value().start.line == 1);
-            CHECK(match.value().end.pos == 0);
-            CHECK(match.value().end.col == 1);
-            CHECK(match.value().end.line == 1);
+            CHECK(match.value().start().pos == 0);
+            CHECK(match.value().start().col == 1);
+            CHECK(match.value().start().line == 1);
+            CHECK(match.value().end().pos == 0);
+            CHECK(match.value().end().col == 1);
+            CHECK(match.value().end().line == 1);
         }
     }
 }
@@ -246,8 +246,8 @@ TEST_CASE("positive_lookahead", "[arpeggio]")
         {
             auto match = test_parse(p, config, "AB", {});
             REQUIRE(match);
-            CHECK(match.value().start.pos == 0);
-            CHECK(match.value().end.pos == 1);
+            CHECK(match.value().start().pos == 0);
+            CHECK(match.value().end().pos == 1);
 
             std::ostringstream o;
             o << match.value();
