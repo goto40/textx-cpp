@@ -1,12 +1,18 @@
 #pragma once
 
+//#define ARPEGGIO_USE_BOOST_FOR_REGEX
+
 #include <cstdlib>
 #include <vector>
 #include <string>
 #include <optional>
 #include <iostream>
 #include <unordered_map>
+#ifdef ARPEGGIO_USE_BOOST_FOR_REGEX
+#include <boost/regex.hpp>
+#else
 #include <regex>
+#endif
 #include <tuple>
 #include <compare>
 
@@ -326,11 +332,20 @@ namespace textx
 
         inline auto regex_match(std::string s)
         {
-            return rule([=, r = std::regex{std::string("^") + s}](const Config &config, ParserState &text, TextPosition pos) -> std::optional<Match>
+#ifdef ARPEGGIO_USE_BOOST_FOR_REGEX
+            using boost::regex;
+            using boost::match_results;
+            using boost::regex_search;
+#else
+            using std::regex;
+            using std::match_results;
+            using std::regex_search;
+#endif
+            return rule([=, r = regex{std::string("^") + s}](const Config &config, ParserState &text, TextPosition pos) -> std::optional<Match>
                         {
                 pos = config.skip_text(text, pos);
-                std::match_results<std::string_view::const_iterator> smatch;
-                if (std::regex_search(text.str().begin() + pos, text.str().end(), smatch, r))
+                match_results<std::string_view::const_iterator> smatch;
+                if (regex_search(text.str().begin() + pos, text.str().end(), smatch, r))
                 {
                     auto res = Match{pos, pos.add(text,smatch.length()), MatchType::regex_match};
                     return res;

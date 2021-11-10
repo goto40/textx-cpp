@@ -16,6 +16,9 @@ endif()
 message("CATCH_INCLUDE_PATH=${CATCH_INCLUDE_PATH}")
 add_definitions(-DCATCH_CONFIG_ENABLE_BENCHMARKING)
 
+FIND_PACKAGE( Boost COMPONENTS regex REQUIRED )
+
+
 include(CTest)
 enable_testing()
 
@@ -25,6 +28,7 @@ file(GLOB EXAMPLES examples/*.cpp)
 
 add_library(${PROJECT_NAME} ${SRC} ${version_file})
 target_include_directories(${PROJECT_NAME} PUBLIC src)
+target_link_libraries(${PROJECT_NAME} Boost::regex)
 
 set(EXE_NAME "${PROJECT_NAME}.exe")
 foreach(CPPFILE ${EXAMPLES})

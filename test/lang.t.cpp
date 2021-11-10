@@ -77,7 +77,10 @@ TEST_CASE("rrel1", "[textx/lang]")
         CHECK(textx_grammar.parse_or_throw("parent(Attribute).(..).attributes.(~type.attributes)*"));
         CHECK(textx_grammar.parse_or_throw("parent(Attribute).(..).attributes.(~type.attributes)*"));
         CHECK(textx_grammar.parse_or_throw("+mp:parent(Attribute).(..).attributes.(~type.attributes)*,parent(Attribute).~type.enum_entries"));
-        CHECK(textx_grammar.parse_or_throw("+mp:\nparent(Attribute).(..).attributes.(~type.attributes)*,\nparent(Attribute).~type.enum_entries"));
+        CHECK(textx_grammar.parse_or_throw(R"(+mp:
+            parent(Attribute).(..).attributes.(~type.attributes)*,
+            parent(Attribute).~type.enum_entries
+        )"));
         CHECK(textx_grammar.parse_or_throw(R"(+mp:
             parent(Attribute).(..).attributes.(~type.attributes)*,
             parent(Attribute).~type.enum_entries,
