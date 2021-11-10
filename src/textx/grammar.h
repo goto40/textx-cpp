@@ -35,7 +35,7 @@ namespace textx
 
         void add_rule(std::string_view name, textx::arpeggio::Pattern p)
         {
-            rules[std::string{name}] = p;
+            rules[std::string{name}] = textx::arpeggio::rule(p);
         }
 
         std::optional<textx::arpeggio::Match> parse(std::string_view text)

@@ -237,27 +237,24 @@ namespace textx
                     chached_state = text.get_cache_reset_indicator();
                     cache = {};
                 }
-                auto res = cache.find(pos.pos);
-                if (res != cache.end())
-                { // recursion breaker (2nd part)
+                if (cache.count(pos.pos)>0)
+                {
                     text.cache_hits++;
-                    return *(res->second);
+                    return cache[pos.pos];
                 }
                 else
                 {
                     text.cache_misses++;
-                    cache[pos.pos] = std::nullopt; // recursion breaker (1st part)
+                    cache[pos.pos] = std::nullopt; // recursion breaker
 
                     auto match = pattern(config, text, pos);
 
                     if (match)
                     {
-                        std::cout << ">>>> " << match.value() << "\n";
                         if (match.value().type() == MatchType::undefined)
                         {
                             std::ostringstream s;
                             s << "unexpected, found undefined result = " << match.value();
-                            std::cout << s.str() << "\n";
                             throw std::runtime_error(s.str());
                         }
                     }
@@ -336,13 +333,11 @@ namespace textx
                 if (std::regex_search(text.str().begin() + pos, text.str().end(), smatch, r))
                 {
                     auto res = Match{pos, pos.add(text,smatch.length()), MatchType::regex_match};
-                    std::cout << ">> " << res << "\n";
                     return res;
                 }
                 else
                 {
                     //text.update_farthest_position(pos,MatchType::regex_match,s);
-                    std::cout << ">> nullopt\n";
                     return std::nullopt;
                 } });
         }
