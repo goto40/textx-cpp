@@ -341,20 +341,22 @@ namespace textx
             using std::match_results;
             using std::regex_search;
 #endif
-            return rule([=, r = regex{std::string("^") + s}](const Config &config, ParserState &text, TextPosition pos) -> std::optional<Match>
+            return rule([=, r = regex{s}](const Config &config, ParserState &text, TextPosition pos) -> std::optional<Match>
                         {
                 pos = config.skip_text(text, pos);
                 match_results<std::string_view::const_iterator> smatch;
                 if (regex_search(text.str().begin() + pos, text.str().end(), smatch, r))
                 {
-                    auto res = Match{pos, pos.add(text,smatch.length()), MatchType::regex_match};
-                    return res;
+                    if (smatch.position() == 0) {
+                        auto res = Match{pos, pos.add(text,smatch.length()), MatchType::regex_match};
+                        return res;
+                    }
                 }
-                else
-                {
-                    //text.update_farthest_position(pos,MatchType::regex_match,s);
-                    return std::nullopt;
-                } });
+                // else - no match as index 0 found, no return so far...
+
+                //text.update_farthest_position(pos,MatchType::regex_match,s);
+                return std::nullopt;
+                });
         }
 
         inline auto sequence(std::vector<Pattern> patterns)

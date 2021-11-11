@@ -84,6 +84,7 @@ TEST_CASE("regex_match", "[arpeggio]")
         CHECK(!test_parse(word_pattern, config, " space and a word", {}));
         CHECK(test_parse(word_pattern, config_skipws, " space and a word", {}));
         CHECK(test_parse(word_pattern, config, " space and a word", {1,1,1}));
+        CHECK(test_parse(word_pattern, config, "\nspace and a word", {1,1,1}));
 
         auto match = word_pattern(config, text, {}).value();
         std::ostringstream o;
@@ -91,6 +92,19 @@ TEST_CASE("regex_match", "[arpeggio]")
         CHECK_THAT(o.str(), Catch::Matchers::Contains("<regex_match captured=hello123>"));
         CHECK(match.start().pos == 0);
         CHECK(match.end().pos == 0+8);
+    }
+}
+
+TEST_CASE("regex_match2", "[arpeggio]")
+{
+    using namespace textx::arpeggio;
+    Config config{};
+
+    auto words_pattern = capture(regex_match(R"(\w+\s+\w+)"));
+    {
+        CHECK(!test_parse(words_pattern, config, " a ", {}));
+        CHECK(test_parse(words_pattern, config, " a b ", {}));
+        CHECK(test_parse(words_pattern, config, " a\nb ", {}));
     }
 }
 
@@ -298,7 +312,8 @@ TEST_CASE("end_of_file", "[arpeggio]")
     CHECK(grammar.parse("ABBABC"));
     CHECK(grammar.parse("C"));
     CHECK(grammar.parse("C "));
-    CHECK(grammar.parse("ABBABC   "));
+    CHECK(grammar.parse("AB BAB C   "));
+    CHECK(grammar.parse("AB \n BAB\nC   "));
     CHECK_THROWS(grammar.get_last_error_position()); // no error --> execption
 
     CHECK(!grammar.parse("AB"));
@@ -344,4 +359,8 @@ TEST_CASE("comments", "[arpeggio]")
     CHECK(grammar.parse("A BB AB /* comment! */ C"));
     CHECK(grammar.parse("C"));
     CHECK(grammar.parse("C "));
+    CHECK(grammar.parse("ABB\nAB// comment!\n C"));
+    CHECK(grammar.parse("A\nBBAB\n // comment!\n C"));
+    CHECK(grammar.parse("ABBAB \n// comment!\n C"));
+    CHECK(grammar.parse("ABBAB\n// comment!\n C"));
 }
