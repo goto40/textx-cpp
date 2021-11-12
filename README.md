@@ -6,7 +6,14 @@ Create an interpreter for textx grammars.
 
 ## Details
 
- * arpeggio.h: `#define ARPEGGIO_USE_BOOST_FOR_REGEX` activates the boost version of regex; else the std-lib version is used. Since the boost is *much* faster, this define is introduced (+CMakeLists.txt adaptations).
+### grammar.h
+
+ * Responsability: container for rules and interface to trigger parsing.
+
+### arpeggio.h
+
+ * Responsability: basic pasrer functionaity, inspirated by [Arpeggio](https://github.com/textX/Arpeggio).
+ * Code config, arpeggio.h: `#define ARPEGGIO_USE_BOOST_FOR_REGEX` activates the boost version of regex; else the std-lib version is used. Since the boost is *much* faster, this define is introduced (+CMakeLists.txt adaptations).
 
 ## Links
 
