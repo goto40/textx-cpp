@@ -14,9 +14,10 @@ namespace {
 
 namespace textx {
 
-    Rule createRuleFromTextxPattern(textx::arpeggio::Match m) {
+    Rule createRuleFromTextxPattern(std::string_view name, textx::arpeggio::Match rule_params, textx::arpeggio::Match rule_body) {
+        std::cout << rule_body << "\n";
         auto p = textx::arpeggio::str_match("");
-        return Rule(p);        
+        return Rule(p);
     }
 
 }

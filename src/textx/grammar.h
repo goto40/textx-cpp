@@ -38,10 +38,10 @@ namespace textx
         void add_rule(std::string_view name, R p)
         {
             if constexpr (std::is_same_v<textx::arpeggio::Pattern, R>) {
-                rules[std::string{name}] = textx::arpeggio::rule(p);
+                rules.emplace(std::string{name}, textx::arpeggio::rule(textx::arpeggio::named(static_cast<std::string>(name), p)));
             }
             else {
-                rules[std::string{name}] = p;
+                rules.emplace(std::string{name}, p);
             }
         }
 

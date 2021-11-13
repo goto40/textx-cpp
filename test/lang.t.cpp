@@ -8,7 +8,7 @@ TEST_CASE("simple0", "[textx/lang]")
     struct MyGrammar : textx::Grammar<> { 
         MyGrammar() {
             namespace ta = textx::arpeggio;
-            set_main_rule(ref("textx_rule"));
+            set_main_rule("textx_rule");
             add_rule("textx_rule", ta::sequence({ref("rule_name"),
                                     ta::str_match(":"),
                                     ref("textx_rule_body"),
@@ -68,7 +68,7 @@ TEST_CASE("rrel1", "[textx/lang]")
         struct MyGrammar : textx::lang::TextxGrammar {
             MyGrammar() {
                 add_rule("main",ta::sequence({ref("rrel_expression"), ta::end_of_file()}));
-                set_main_rule( ref("main") );
+                set_main_rule( "main" );
             }
         } textx_grammar;
         CHECK(textx_grammar.parse_or_throw("a.b.c"));

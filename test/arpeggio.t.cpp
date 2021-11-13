@@ -300,7 +300,7 @@ TEST_CASE("negative_lookahead", "[arpeggio]")
 TEST_CASE("end_of_file", "[arpeggio]")
 {
     using namespace textx::arpeggio;
-    auto grammar = textx::Grammar{capture(sequence({
+    auto grammar = textx::Grammar<textx::arpeggio::Pattern>{capture(sequence({
         zero_or_more(ordered_choice({
             str_match("A"),
             str_match("B"), 
@@ -334,14 +334,14 @@ TEST_CASE("end_of_file", "[arpeggio]")
 TEST_CASE("grammar_no_main_rule", "[arpeggio]")
 {
     using namespace textx;
-    auto grammar = Grammar{};
+    auto grammar = Grammar<textx::arpeggio::Pattern>{};
     CHECK_THROWS(grammar.parse(""));
 }
 
 TEST_CASE("comments", "[arpeggio]")
 {
     using namespace textx::arpeggio;
-    auto grammar = textx::Grammar{capture(sequence({
+    auto grammar = textx::Grammar<textx::arpeggio::Pattern>{capture(sequence({
         zero_or_more(ordered_choice({
             str_match("A"),
             str_match("B"), 
