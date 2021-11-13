@@ -4,7 +4,7 @@
 namespace {
     std::unordered_map<std::string, std::function<textx::arpeggio::Pattern()>> transform_match2rule = {
         {
-            "textx_model",
+            "textx_rule_body",
             [](){
                 return textx::arpeggio::str_match("test");
             }
