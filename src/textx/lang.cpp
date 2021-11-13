@@ -10,7 +10,7 @@ namespace textx
             namespace ta = textx::arpeggio;
 
             // textX grammar
-            set_main_rule(ref("textx_model"));
+            set_main_rule("textx_model");
             get_config().skip_text = textx::arpeggio::skip_text_functions::skip_cpp_style();
 
             add_rule("textx_model", ta::sequence({ta::zero_or_more(ref("import_or_reference_stm")),
@@ -29,9 +29,9 @@ namespace textx
             add_rule("language_alias", ta::sequence({ta::str_match("as"),
                                                      ref("ident")}));
 
-            add_rule("language_name", ta::regex_match(R"((\w|-)+)"));
+            add_rule("language_name", ta::capture(ta::regex_match(R"((\w|-)+)")));
 
-            add_rule("grammar_to_import", ta::regex_match(R"((\w|\.)+)"));
+            add_rule("grammar_to_import", ta::capture(ta::regex_match(R"((\w|\.)+)")));
 
             // Rules
             add_rule("textx_rule", ta::sequence({ref("rule_name"),
@@ -130,16 +130,16 @@ namespace textx
 
             add_rule("str_match", ref("string_value"));
 
-            add_rule("re_match", ta::regex_match(R"(/((?:(?:\\/)|[^/])*)/)"));
+            add_rule("re_match", ta::capture(ta::regex_match(R"(/((?:(?:\\/)|[^/])*)/)")));
 
-            add_rule("ident", ta::regex_match(R"(\w+)"));
+            add_rule("ident", ta::capture(ta::regex_match(R"(\w+)")));
 
-            add_rule("qualified_ident", ta::regex_match(R"(\w+(\.\w+)?)"));
+            add_rule("qualified_ident", ta::capture(ta::regex_match(R"(\w+(\.\w+)?)")));
 
-            add_rule("integer", ta::regex_match(R"([-+]?[0-9]+)"));
+            add_rule("integer", ta::capture(ta::regex_match(R"([-+]?[0-9]+)")));
 
-            add_rule("string_value", ta::ordered_choice({ta::regex_match(R"('((\\')|[^'])*')"),
-                                                         ta::regex_match(R"("((\\")|[^"])*")")}));
+            add_rule("string_value", ta::capture(ta::ordered_choice({ta::regex_match(R"('((\\')|[^'])*')"),
+                                                         ta::regex_match(R"("((\\")|[^"])*")")})));
 
             // Comments
             // add_rule("comment", ta::ordered_choice({ref("comment_line"),
@@ -150,7 +150,7 @@ namespace textx
             // add_rule("comment_block", ta::regex_match(R"(/\*(.|\n)*?\*/)"));
             // TODO?? see above skip_cpp_style
 
-            add_rule("rrel_id", ta::regex_match(R"([^\d\W]\w*\b)")); // from lang.py
+            add_rule("rrel_id", ta::capture(ta::regex_match(R"([^\d\W]\w*\b)"))); // from lang.py
 
             add_rule("rrel_parent", ta::sequence({ta::str_match("parent"),
                                                   ta::str_match("("),
@@ -164,7 +164,7 @@ namespace textx
                                                     ref("rrel_sequence"),
                                                     ta::str_match(")")}));
 
-            add_rule("rrel_dots", ta::regex_match(R"(\.+)"));
+            add_rule("rrel_dots", ta::capture(ta::regex_match(R"(\.+)")));
 
             add_rule("rrel_path_element", ta::ordered_choice({ref("rrel_parent"),
                                                               ref("rrel_brackets"),
@@ -187,7 +187,9 @@ namespace textx
                                                                                    ta::str_match(",")})),
                                                     ref("rrel_path")}));
 
-            add_rule("rrel_expression", ta::sequence({ta::optional(ta::regex_match(R"(\+[mp]+:)")),
+            add_rule("rrel_options", ta::capture(ta::regex_match(R"(\+[mp]+:)")));
+
+            add_rule("rrel_expression", ta::sequence({ta::optional(ref("rrel_options")),
                                                       ref("rrel_sequence")}));
         }
     }

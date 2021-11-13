@@ -5,7 +5,7 @@
 
 TEST_CASE("simple0", "[textx/lang]")
 {
-    struct MyGrammar : textx::Grammar { 
+    struct MyGrammar : textx::Grammar<> { 
         MyGrammar() {
             namespace ta = textx::arpeggio;
             set_main_rule(ref("textx_rule"));

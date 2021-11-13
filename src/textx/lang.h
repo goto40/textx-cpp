@@ -6,7 +6,7 @@ namespace textx
     /** adapted grammar from lang.py */
     namespace lang
     {
-        struct TextxGrammar : textx::Grammar {            
+        struct TextxGrammar : textx::Grammar<> {            
            TextxGrammar();
         };
     }
