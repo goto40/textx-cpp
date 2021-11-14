@@ -52,7 +52,7 @@ namespace textx
 
             add_rule("param_name", ref("ident"));
 
-            add_rule("textx_rule_body", ref("choice"));
+            add_rule("textx_rule_body", copy("choice"));
 
             add_rule("choice", ta::sequence({ref("sequence"), ta::zero_or_more(
                                                                   ta::sequence({ta::str_match("|"),

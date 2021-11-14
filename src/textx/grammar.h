@@ -26,6 +26,17 @@ namespace textx
                 if (rules.find(name)==rules.end()) {
                     throw std::runtime_error(std::string("cannot find ref(\"")+name+"\");");
                 }
+                return rules.at(name)(config, text, pos);
+            }));
+        }
+
+        auto copy(std::string name)
+        {
+            return textx::arpeggio::rule(textx::arpeggio::named(name, [this,name](const textx::arpeggio::Config &config, textx::arpeggio::ParserState &text, textx::arpeggio::TextPosition pos) -> std::optional<textx::arpeggio::Match>
+            {
+                if (rules.find(name)==rules.end()) {
+                    throw std::runtime_error(std::string("cannot find ref(\"")+name+"\");");
+                }
                 auto res = rules.at(name)(config, text, pos);
                 if (res.has_value()) {
                     return textx::arpeggio::Match{

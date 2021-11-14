@@ -27,6 +27,26 @@ namespace {
                 return ta::ordered_choice(c);
             }
         },
+        {
+            "sequence",
+            [](GRAMMAR &grammar, RULE& rule, const textx::arpeggio::Match& match){
+                std::vector<textx::arpeggio::Pattern> c{};
+                for (auto &inner_entry: match.children) {
+                    c.emplace_back( transform_match2pattern( grammar, rule, inner_entry ));
+                }
+                return ta::sequence(c);
+            }
+        },
+        // {
+        //     "repeatable_expr",
+        //     [](GRAMMAR &grammar, RULE& rule, const textx::arpeggio::Match& match){
+        //         std::vector<textx::arpeggio::Pattern> c{};
+        //         for (auto &inner_entry: match.children) {
+        //             c.emplace_back( transform_match2pattern( grammar, rule, inner_entry ));
+        //         }
+        //         return ta::sequence(c);
+        //     }
+        // },
     };
 
     textx::arpeggio::Pattern transform_match2pattern(GRAMMAR &grammar, RULE& rule, const textx::arpeggio::Match& match) {
