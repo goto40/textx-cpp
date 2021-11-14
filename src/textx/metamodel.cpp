@@ -11,6 +11,8 @@ namespace textx {
         assert(root.name && "unexpected: no textx model loaded!!");
         assert(root.name.value()=="textx_model" && "unexpected: no textx model loaded!!");
 
+        //TODO import and refs
+                
         auto &rules = root.children[1];
         bool first = true;
         for (auto&r : rules.children) {
