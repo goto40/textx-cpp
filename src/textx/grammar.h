@@ -26,12 +26,18 @@ namespace textx
                 if (rules.find(name)==rules.end()) {
                     throw std::runtime_error(std::string("cannot find ref(\"")+name+"\");");
                 }
-                // std::cout << "> ref(" << name << ")@" << pos <<"\n";
                 auto res = rules.at(name)(config, text, pos);
-                // if (res) {
-                //     std::cout << "< => ref(" << name << ")@" << pos << " --> " << res.value().start << ".." << res.value().end << ", " << res.value() << "='" << textx::arpeggio::get_str(text.str(),res.value()) << "'\n";
-                // }
-                return res;
+                if (res.has_value()) {
+                    return textx::arpeggio::Match{
+                        res.value().start(),
+                        res.value().end(),
+                        textx::arpeggio::MatchType::custom,
+                        {res.value()}
+                    };
+                }
+                else {
+                    return res;
+                }
             }));
         }
 

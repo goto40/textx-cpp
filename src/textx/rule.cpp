@@ -4,6 +4,7 @@
 namespace {
     using RULE = textx::Rule;
     using GRAMMAR = textx::Grammar<RULE>;
+    namespace ta = textx::arpeggio;
 
     textx::arpeggio::Pattern transform_match2pattern(GRAMMAR &grammar, RULE& rule, const textx::arpeggio::Match& match);
 
@@ -12,6 +13,18 @@ namespace {
             "textx_rule_body",
             [](GRAMMAR &grammar, RULE& rule, const textx::arpeggio::Match& match){
                 return transform_match2pattern(grammar, rule, match.children[0]);
+            }
+        },
+        {
+            "choice",
+            [](GRAMMAR &grammar, RULE& rule, const textx::arpeggio::Match& match){
+                auto seq1 = match.children[0];
+                auto zom_seq2 = match.children[1];
+                std::vector<textx::arpeggio::Pattern> c{ transform_match2pattern(grammar, rule, seq1) };
+                for (auto &inner_seq_with_two_entries: zom_seq2.children) {
+                    c.emplace_back( transform_match2pattern( grammar, rule, inner_seq_with_two_entries.children[1]) );
+                }
+                return ta::ordered_choice(c);
             }
         },
     };

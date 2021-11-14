@@ -34,6 +34,7 @@ namespace textx
             one_or_more,
             zero_or_more,
             optional,
+            custom,
         };
         struct TextPosition
         {
@@ -91,6 +92,24 @@ namespace textx
             auto type() const { return m_type; }
             void update_end(TextPosition e) { m_end=e; }
 
+            const Match& fw(MatchType t = MatchType::custom) const {
+                if (type()!=t) {
+                    std::ostringstream o;
+                    o << "fw(): unexpected type @" << (*this);
+                    throw std::runtime_error(o.str());
+                }
+                if (children.size()!=1) {
+                    std::ostringstream o;
+                    o << "fw(): unexpected nbchildren @" << (*this);
+                    throw std::runtime_error(o.str());
+                }
+                if (children[0].type() == t) {
+                    return children[0].fw(t);
+                }
+                else {
+                    return children[0];
+                }
+            }
             static std::unordered_map<MatchType, std::string> type2str;
             static std::unordered_map<MatchType, bool> is_terminal;
             friend std::ostream &operator<<(std::ostream &o, const Match &match)

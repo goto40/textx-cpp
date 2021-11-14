@@ -16,6 +16,7 @@ namespace textx
             {MatchType::zero_or_more, "zero_or_more"},
             {MatchType::optional, "optional"},
             {MatchType::end_of_file, "end_of_file"},
+            {MatchType::custom, "custom"},
         };
 
         std::unordered_map<MatchType, bool> Match::is_terminal = {
@@ -30,6 +31,7 @@ namespace textx
             {MatchType::zero_or_more, false},
             {MatchType::optional, false},
             {MatchType::end_of_file, true}, // true? special case?
+            {MatchType::custom, false},
         };
 
         size_t ParserState::cache_reset_indicator_source = 1; 
