@@ -15,9 +15,11 @@ namespace {
 namespace textx {
 
     Rule createRuleFromTextxPattern(std::string_view name, textx::arpeggio::Match rule_params, textx::arpeggio::Match rule_body) {
-        std::cout << rule_body << "\n";
-        auto p = textx::arpeggio::str_match("");
-        return Rule(p);
+        //std::cout << rule_body << "\n";
+        Rule rule;
+        auto pattern = textx::arpeggio::str_match("");
+        rule.pattern = pattern;
+        return rule;
     }
 
 }
