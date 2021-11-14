@@ -21,7 +21,7 @@ namespace textx {
                 grammar.set_main_rule(rule_name);
                 first = false;
             }
-            grammar.add_rule(rule_name, textx::createRuleFromTextxPattern(rule_name, rule_params, rule_body));
+            grammar.add_rule(rule_name, textx::createRuleFromTextxPattern(grammar, rule_name, rule_params, rule_body));
         }
     }
 

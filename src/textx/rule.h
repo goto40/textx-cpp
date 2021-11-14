@@ -1,6 +1,7 @@
 #pragma once
 
 #include "arpeggio.h"
+#include "grammar.h"
 #include <unordered_map>
 #include <string>
 #include <variant>
@@ -8,16 +9,13 @@
 
 namespace textx {
 
-    class Rule {
+    struct Rule {
         textx::arpeggio::Pattern pattern;
-        Rule() = default;
-    public:
 
         std::optional<textx::arpeggio::Match> operator()(const textx::arpeggio::Config &config, textx::arpeggio::ParserState &text, textx::arpeggio::TextPosition pos) {
             return pattern(config, text, pos);
         }
-
-        friend Rule createRuleFromTextxPattern(std::string_view name, textx::arpeggio::Match rule_params, textx::arpeggio::Match rule_body);
     };
-    Rule createRuleFromTextxPattern(std::string_view name, textx::arpeggio::Match rule_params, textx::arpeggio::Match rule_body);
+
+    Rule createRuleFromTextxPattern(textx::Grammar<textx::Rule>& grammar, std::string_view name, textx::arpeggio::Match rule_params, textx::arpeggio::Match rule_body);
 }
