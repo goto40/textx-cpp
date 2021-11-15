@@ -364,3 +364,32 @@ TEST_CASE("comments", "[arpeggio]")
     CHECK(grammar.parse("ABBAB \n// comment!\n C"));
     CHECK(grammar.parse("ABBAB\n// comment!\n C"));
 }
+
+TEST_CASE("unordered_group", "[arpeggio]")
+{
+    using namespace textx::arpeggio;
+    auto grammar = textx::Grammar<textx::arpeggio::Pattern>{sequence({
+        unordered_group({        
+            capture(str_match("A")),
+            capture(str_match("B")),
+            capture(str_match("C")),
+        }),
+        end_of_file()
+    })};
+    grammar.get_config().skip_text = textx::arpeggio::skip_text_functions::skip_cpp_style();
+
+    CHECK(grammar.parse_or_throw("ABC"));
+    CHECK(grammar.parse_or_throw("CAB"));
+    CHECK(grammar.parse_or_throw("BCA"));
+    CHECK(grammar.parse_or_throw("BCA"));
+    CHECK(grammar.parse_or_throw("BAC"));
+    CHECK(!grammar.parse("BAA"));
+    CHECK(!grammar.parse("BACA"));
+
+    auto match = grammar.parse("CAB");
+    REQUIRE(match);
+    CHECK(match.value().children[0].children[0].captured.value() == "A"); // order as in grammar
+    CHECK(match.value().children[0].children[1].captured.value() == "B");
+    CHECK(match.value().children[0].children[2].captured.value() == "C");
+
+}

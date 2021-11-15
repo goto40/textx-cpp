@@ -29,6 +29,7 @@ namespace textx
             regex_match,
             sequence,
             ordered_choice,
+            unordered_group,
             negative_lookahead,
             positive_lookahead,
             one_or_more,
@@ -76,13 +77,16 @@ namespace textx
         {
             TextPosition m_start, m_end;
             MatchType m_type;
+
         public:
             std::vector<Match> children = {};
             std::optional<std::string> name = std::nullopt;
             std::optional<std::string> captured = std::nullopt;
 
-            Match(TextPosition s, TextPosition e, MatchType t, std::vector<Match> c={}) :m_start{s}, m_end{e}, m_type{t}, children{c} {
-                if (m_type==MatchType::undefined) {
+            Match(TextPosition s, TextPosition e, MatchType t, std::vector<Match> c = {}) : m_start{s}, m_end{e}, m_type{t}, children{c}
+            {
+                if (m_type == MatchType::undefined)
+                {
                     throw std::runtime_error("unexpected: undefined match type...");
                 }
             }
@@ -90,7 +94,7 @@ namespace textx
             auto start() const { return m_start; }
             auto end() const { return m_end; }
             auto type() const { return m_type; }
-            void update_end(TextPosition e) { m_end=e; }
+            void update_end(TextPosition e) { m_end = e; }
 
             static std::unordered_map<MatchType, std::string> type2str;
             static std::unordered_map<MatchType, bool> is_terminal;
@@ -244,7 +248,7 @@ namespace textx
                     chached_state = text.get_cache_reset_indicator();
                     cache = {};
                 }
-                if (cache.count(pos.pos)>0)
+                if (cache.count(pos.pos) > 0)
                 {
                     text.cache_hits++;
                     return cache[pos.pos];
@@ -334,12 +338,12 @@ namespace textx
         inline auto regex_match(std::string s)
         {
 #ifdef ARPEGGIO_USE_BOOST_FOR_REGEX
-            using boost::regex;
             using boost::match_results;
+            using boost::regex;
             using boost::regex_search;
 #else
-            using std::regex;
             using std::match_results;
+            using std::regex;
             using std::regex_search;
 #endif
             return rule([=, r = regex{s}](const Config &config, ParserState &text, TextPosition pos) -> std::optional<Match>
@@ -356,8 +360,7 @@ namespace textx
                 // else - no match as index 0 found, no return so far...
 
                 //text.update_farthest_position(pos,MatchType::regex_match,s);
-                return std::nullopt;
-                });
+                return std::nullopt; });
         }
 
         inline auto sequence(std::vector<Pattern> patterns)
@@ -394,6 +397,37 @@ namespace textx
                         return Match{match.value().start(),match.value().end(),MatchType::ordered_choice, {match.value()}};
                     }
                 }
+                return std::nullopt; });
+        }
+
+        inline auto unordered_group(std::vector<Pattern> patterns)
+        {
+            return rule([=](const Config &config, ParserState &text, TextPosition pos) -> std::optional<Match>
+                        {
+                Match result{pos,pos,MatchType::unordered_group, {}};
+                for (size_t t=0;t<patterns.size();t++) { // fill with dummy results
+                    result.children.emplace_back(pos,pos,MatchType::unordered_group);
+                }
+                std::vector<bool> used(patterns.size());
+                std::fill(used.begin(), used.end(), false);
+                size_t n = 0;
+
+                for (size_t t=0;t<patterns.size();t++) {
+                    for (size_t i=0;i<patterns.size();i++) {
+                        if (!used[i]) {
+                            auto match = patterns[i](config, text, pos);
+                            if (match)
+                            {
+                                result.children[i] = match.value();
+                                pos = match.value().end();
+                                used[i] = true;
+                                n++;
+                            }
+                        }
+                    }
+                }
+                result.update_end(pos);
+                if (n==patterns.size()) return result;
                 return std::nullopt; });
         }
 
@@ -493,22 +527,21 @@ namespace textx
                     return pos;
                 };
             }
-            inline auto skip_cpp_line_comments() {
+            inline auto skip_cpp_line_comments()
+            {
                 return textx::arpeggio::skip_text_functions::skip_pattern(
-                    textx::arpeggio::regex_match(R"(//.*?(?:$|\n))")
-                );
+                    textx::arpeggio::regex_match(R"(//.*?(?:$|\n))"));
             }
-            inline auto skip_cpp_multiline_comments() {
+            inline auto skip_cpp_multiline_comments()
+            {
                 return textx::arpeggio::skip_text_functions::skip_pattern(
-                    textx::arpeggio::regex_match(R"(/\*(?:.|\n)*?\*/)")
-                );
+                    textx::arpeggio::regex_match(R"(/\*(?:.|\n)*?\*/)"));
             }
-            inline auto skip_cpp_style() {
-                return textx::arpeggio::skip_text_functions::combine({
-                    skipws(),
-                    skip_cpp_line_comments(),
-                    skip_cpp_multiline_comments()
-                });
+            inline auto skip_cpp_style()
+            {
+                return textx::arpeggio::skip_text_functions::combine({skipws(),
+                                                                      skip_cpp_line_comments(),
+                                                                      skip_cpp_multiline_comments()});
             }
 
         }
