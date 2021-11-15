@@ -10,6 +10,6 @@ TEST_CASE("metamodel_simple1", "[textx/metamodel]")
             Model: 'simple model'; // the model is just a fixed string!
         )";
 
-        //textx::Metamodel mm{grammar1};
+        textx::Metamodel mm{grammar1};
     }
 }

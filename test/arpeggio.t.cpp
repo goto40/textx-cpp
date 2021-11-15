@@ -235,6 +235,7 @@ TEST_CASE("optional", "[arpeggio]")
             CHECK(match.value().start().col == 1);
             CHECK(match.value().start().line == 1);
             CHECK(match.value().end().pos > 0);
+            CHECK(match.value().children.size() == 1);
         }
         {
             auto match = p2(config, text, {});
@@ -246,6 +247,7 @@ TEST_CASE("optional", "[arpeggio]")
             CHECK(match.value().end().pos == 0);
             CHECK(match.value().end().col == 1);
             CHECK(match.value().end().line == 1);
+            CHECK(match.value().children.size() == 0);
         }
     }
 }

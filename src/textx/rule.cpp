@@ -37,16 +37,19 @@ namespace {
                 return ta::sequence(c);
             }
         },
-        // {
-        //     "repeatable_expr",
-        //     [](GRAMMAR &grammar, RULE& rule, const textx::arpeggio::Match& match){
-        //         std::vector<textx::arpeggio::Pattern> c{};
-        //         for (auto &inner_entry: match.children) {
-        //             c.emplace_back( transform_match2pattern( grammar, rule, inner_entry ));
-        //         }
-        //         return ta::sequence(c);
-        //     }
-        // },
+        {
+            "repeatable_expr",
+            [](GRAMMAR &grammar, RULE& rule, const textx::arpeggio::Match& match){
+                // expression
+                auto expression = transform_match2pattern( grammar, rule, match.children[0] );
+                // operator *+#?
+                std::string op = match.children[1].captured.value();
+                // modifier [',']
+                // match suppression '-'
+                // create pattern
+                return ta::str_match("TODO");
+            }
+        },
     };
 
     textx::arpeggio::Pattern transform_match2pattern(GRAMMAR &grammar, RULE& rule, const textx::arpeggio::Match& match) {

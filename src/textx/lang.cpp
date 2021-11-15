@@ -61,8 +61,8 @@ namespace textx
             add_rule("sequence", ta::one_or_more(ref("repeatable_expr")));
 
             add_rule("repeatable_expr", ta::sequence({ref("expression"),
-                                                      ta::optional(ref("repeat_operator")),
-                                                      ta::optional(ta::str_match("-"))}));
+                                                      ta::capture(ta::optional(ref("repeat_operator"))),
+                                                      ta::capture(ta::optional(ta::str_match("-")))}));
 
             add_rule("expression", ta::ordered_choice({ref("assignment"),
                                                        ta::sequence({ta::optional(ref("syntactic_predicate")),
