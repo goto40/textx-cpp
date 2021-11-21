@@ -9,16 +9,24 @@ namespace {
     textx::arpeggio::Pattern transform_match2pattern(GRAMMAR &grammar, RULE& rule, const textx::arpeggio::Match& match);
 
     ta::Pattern normal_expression_or_unordered_choice(GRAMMAR &grammar, RULE& rule, const textx::arpeggio::Match& match, bool use_choice) {
-        auto &seq = match.children[0];
-        assert(seq.children[1].type() == ta::MatchType::ordered_choice);
+        auto &expr = match;
+        assert(expr.children[0].children[1].type() == ta::MatchType::ordered_choice);
         ta::Pattern part_of_expression;
         if (use_choice) {
-            part_of_expression = transform_match2pattern(grammar, rule, seq.children[1].children[0]);
+            auto choice = expr.children[0].children[1].children[0];
+            assert(choice.name.value()=="bracketed_choice");
+            auto &seq = choice.children[1].children[0]; // "(" .#1. ")"
+            std::vector<ta::Pattern> patterns;
+            for(auto &c : seq.children) {
+                patterns.push_back(transform_match2pattern( grammar, rule, c ));
+            }
+            part_of_expression = ta::unordered_group(patterns);
         }
         else {
+            part_of_expression = transform_match2pattern(grammar, rule, expr.children[0].children[1].children[0]);
         }
-        if (seq.children[0].children.size()>0) {
-            std::string syntactic_predicate = seq.children[0].children[0].captured.value(); // "!" or "&"
+        if (expr.children[0].children[0].children.size()>0) {
+            std::string syntactic_predicate = expr.children[0].children[0].children[0].captured.value(); // "!" or "&"
             if (syntactic_predicate=="!") {
                 return ta::negative_lookahead(part_of_expression);
             }
@@ -64,9 +72,6 @@ namespace {
         {
             "repeatable_expr",
             [](GRAMMAR &grammar, RULE& rule, const textx::arpeggio::Match& match) -> ta::Pattern {
-                // expression
-                auto expression = transform_match2pattern( grammar, rule, match.children[0] );
-
                 // operator *+#?
                 // repeat modifier [',']
                 assert(match.children[1].captured.has_value());
@@ -81,6 +86,9 @@ namespace {
                 assert(match.children[2].captured.has_value());
                 std::string repeat_modifiers = match.children[1].captured.value(); // match suppression '-'
 
+                // expression
+                auto expression = normal_expression_or_unordered_choice( grammar, rule, match.children[0], op=="#");
+
                 // create pattern
                 if (op=="") {
                     return expression;
@@ -92,16 +100,7 @@ namespace {
                     return ta::one_or_more(expression);
                 }
                 else if (op=="#") {
-                    // discard expression
-                    std::cout << match.children[0].name.value() << "\n";
-                    assert(match.children[0].name.value()=="bracketed_choice");
-                    assert(match.children[0].children.size()==1 && "only one choice element");
-                    auto &seq = match.children[0].children[0];
-                    std::vector<ta::Pattern> patterns;
-                    for(auto &c : seq.children) {
-                        patterns.push_back(transform_match2pattern( grammar, rule, c ));
-                    }
-                    return ta::unordered_group(patterns);
+                    return expression;
                 }
                 else {
                     throw std::runtime_error(std::string("unexpected: op not covered: ")+op);
@@ -111,12 +110,7 @@ namespace {
         {
             "expression",
             [](GRAMMAR &grammar, RULE& rule, const textx::arpeggio::Match& match) -> ta::Pattern {
-                if (match.children[0].type()==ta::MatchType::sequence) {
-                    return normal_expression(grammar, rule, match);
-                }
-                else { // assignment
-                    return transform_match2pattern( grammar, rule, match.children[0] );
-                }
+                return transform_match2pattern( grammar, rule, match.children[0] );
             }
         },
         {
@@ -144,7 +138,14 @@ namespace {
 
     textx::arpeggio::Pattern transform_match2pattern(GRAMMAR &grammar, RULE& rule, const textx::arpeggio::Match& match) {
         if (transform_match2pattern_map.count(match.name.value())==1) {
-            return transform_match2pattern_map[match.name.value()](grammar, rule, match);
+            try {
+                return transform_match2pattern_map[match.name.value()](grammar, rule, match);
+            }
+            catch(std::exception& e) {
+                std::ostringstream o;
+                o << "error near " << match.start() << ".." << match.end() << ":" << e.what();
+                throw std::runtime_error(o.str());
+            }
         }
         else {
             throw std::runtime_error(std::string("unexpected: no entry in transform_match2pattern_map for ")+match.name.value());

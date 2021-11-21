@@ -98,9 +98,10 @@ namespace textx
 
             static std::unordered_map<MatchType, std::string> type2str;
             static std::unordered_map<MatchType, bool> is_terminal;
-            friend std::ostream &operator<<(std::ostream &o, const Match &match)
+            friend void print(std::ostream &o, const Match &match, size_t indent=0)
             {
-                o << "<" << type2str.at(match.type());
+                auto istr = std::string(indent, ' ');
+                o << istr << "<" << type2str.at(match.type());
                 if (match.name.has_value())
                 {
                     o << ":" << match.name.value();
@@ -109,12 +110,16 @@ namespace textx
                 {
                     o << " captured=" << match.captured.value();
                 }
-                o << ">(";
+                o << ">(\n";
                 for (auto &child : match.children)
                 {
-                    o << child;
+                    print(o, child, indent+2);
                 }
-                o << ")";
+                o << istr << ")\n";
+            }
+            friend std::ostream &operator<<(std::ostream &o, const Match &match)
+            {
+                print(o, match);
                 return o;
             }
         };

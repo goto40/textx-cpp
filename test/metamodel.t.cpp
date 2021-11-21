@@ -51,7 +51,7 @@ TEST_CASE("metamodel_simple_expression4", "[textx/metamodel]")
 {
     {
         auto grammar1 = R"(
-            Model: ('A'|'B'|'C')#;
+            Model: ('A' 'B' 'C')#;
         )";
 
         textx::Metamodel mm{grammar1};
