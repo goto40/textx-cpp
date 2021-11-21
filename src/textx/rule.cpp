@@ -87,8 +87,13 @@ namespace {
                 }
                 
                 // match suppression
-                assert(match.children[2].captured.has_value());
-                std::string repeat_modifiers = match.children[1].captured.value(); // match suppression '-'
+                assert(match.children[2].captured.has_value()); // match suppression '-'
+                bool has_match_suppression = (match.children[2].captured.value()=="-");
+                // TODO: use has_match_suppression
+
+                // repeat modifiers
+                std::string repeat_modifiers = match.children[1].captured.value(); 
+                // TODO eval, use...
 
                 // expression
                 auto expression = normal_expression_or_unordered_choice( grammar, rule, match.children[0], op=="#");
