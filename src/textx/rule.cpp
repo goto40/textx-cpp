@@ -29,6 +29,7 @@ namespace {
             part_of_expression = transform_match2pattern(grammar, rule, expr.children[0].children[1].children[0]);
         }
         if (expr.children[0].children[0].children.size()>0) {
+            assert(expr.children[0].children[0].children.size()==1);
             std::string syntactic_predicate = expr.children[0].children[0].children[0].captured.value(); // "!" or "&"
             if (syntactic_predicate=="!") {
                 return ta::negative_lookahead(part_of_expression);
@@ -129,6 +130,15 @@ namespace {
                 assert(str.size()>=2);
                 str = str.substr(1,str.size()-2);
                 return ta::str_match(str);
+            }
+        },
+        {
+            "re_match",
+            [](GRAMMAR &grammar, RULE& rule, const textx::arpeggio::Match& match) -> ta::Pattern {
+                std::string str = match.captured.value();
+                assert(str.size()>=2);
+                str = str.substr(1,str.size()-2);
+                return ta::capture(ta::regex_match(str));
             }
         },
         {

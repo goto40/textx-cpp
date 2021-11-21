@@ -87,8 +87,8 @@ namespace textx
                                                                                ta::str_match("eolterm")})),
                                                        ta::str_match("]")}));
 
-            add_rule("syntactic_predicate", ta::ordered_choice({ta::str_match("!"),
-                                                                ta::str_match("&")}));
+            add_rule("syntactic_predicate", ta::capture(ta::ordered_choice({ta::str_match("!"),
+                                                                            ta::str_match("&")})));
 
             add_rule("simple_match", ta::ordered_choice({ref("str_match"),
                                                          ref("re_match")}));

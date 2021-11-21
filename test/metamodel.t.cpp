@@ -63,3 +63,46 @@ TEST_CASE("metamodel_simple_expression4", "[textx/metamodel]")
         CHECK_THROWS(mm.model_from_str("C"));
     }
 }
+
+TEST_CASE("metamodel_simple_expression5_regex", "[textx/metamodel]")
+{
+    {
+        auto grammar1 = R"(
+            Model: "[" /\w+/ "]";
+        )";
+
+        textx::Metamodel mm{grammar1};
+        CHECK(mm.model_from_str("[hello]"));
+        CHECK_THROWS(mm.model_from_str("[hello world]"));
+        CHECK_THROWS(mm.model_from_str("[]"));
+    }
+}
+
+TEST_CASE("metamodel_simple_expression6_neg_lookahead", "[textx/metamodel]")
+{
+    {
+        auto grammar1 = R"(
+            Model: "[" !'key' /\w+/ "]";
+        )";
+
+        textx::Metamodel mm{grammar1};
+        CHECK(mm.model_from_str("[hello]"));
+        CHECK_THROWS(mm.model_from_str("[key]"));
+    }
+}
+
+TEST_CASE("metamodel_simple_expression6_pos_lookahead", "[textx/metamodel]")
+{
+    {
+        auto grammar1 = R"(
+            Model: "[" &('a'|'b'|'extra') /\w+/ "]";
+        )";
+
+        textx::Metamodel mm{grammar1};
+        CHECK(mm.model_from_str("[a]"));
+        CHECK(mm.model_from_str("[best]"));
+        CHECK(mm.model_from_str("[extra]"));
+        CHECK(mm.model_from_str("[extra123]"));
+        CHECK_THROWS(mm.model_from_str("[xyz]"));
+    }
+}
