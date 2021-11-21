@@ -14,12 +14,12 @@ namespace textx {
         //TODO import and refs
                 
         auto &rules = root.children[1];
-        std::cout << "children: " << rules.children.size() << "\n";
+        //std::cout << "children: " << rules.children.size() << "\n";
 
         bool first = true;
         for (auto&r : rules.children) {
             auto &rule_name = r.children[0].captured.value();
-            std::cout << "r: " << rule_name << "\n";
+            //std::cout << "r: " << rule_name << "\n";
             auto &rule_params = r.children[1];
             auto &rule_body = r.children[3];
             if (first) {

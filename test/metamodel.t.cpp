@@ -15,3 +15,17 @@ TEST_CASE("metamodel_simple1", "[textx/metamodel]")
         CHECK_THROWS(mm.model_from_str("no model"));
     }
 }
+
+TEST_CASE("metamodel_simple2", "[textx/metamodel]")
+{
+    {
+        auto grammar1 = R"(
+            Model: 'A' 'B'* 'C'+; // the model is just a fixed string!
+        )";
+
+        textx::Metamodel mm{grammar1};
+        CHECK(mm.model_from_str("ACCC"));
+        CHECK(mm.model_from_str("ABBBC"));
+        CHECK_THROWS(mm.model_from_str("A"));
+    }
+}

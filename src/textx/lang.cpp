@@ -74,11 +74,12 @@ namespace textx
                                                        ref("choice"),
                                                        ta::str_match(")")}));
 
-            add_rule("repeat_operator", ta::sequence({ta::ordered_choice({ta::str_match("*"),
-                                                                          ta::str_match("?"),
-                                                                          ta::str_match("+"),
-                                                                          ta::str_match("#")}),
+            add_rule("repeat_operator", ta::sequence({ref("repeat_operator_text"),
                                                       ta::optional(ref("repeat_modifiers"))}));
+            add_rule("repeat_operator_text",ta::capture(ta::ordered_choice({ta::str_match("*"),
+                                                                            ta::str_match("?"),
+                                                                            ta::str_match("+"),
+                                                                            ta::str_match("#")})));
 
             add_rule("repeat_modifiers", ta::sequence({ta::str_match("["),
                                                        ta::one_or_more(

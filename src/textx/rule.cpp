@@ -42,13 +42,34 @@ namespace {
             [](GRAMMAR &grammar, RULE& rule, const textx::arpeggio::Match& match) -> ta::Pattern {
                 // expression
                 auto expression = transform_match2pattern( grammar, rule, match.children[0] );
+
                 // operator *+#?
+                // repeat modifier [',']
                 assert(match.children[1].captured.has_value());
-                std::string op = match.children[1].captured.value();
-                // modifier [',']
-                // match suppression '-'
+                std::string op = "";
+                if (match.children[1].children.size()>0) {
+                    assert(match.children[1].children[0].name.value() == "repeat_operator");
+                    assert(match.children[1].children[0].children[0].name.value() == "repeat_operator_text");
+                    op = match.children[1].children[0].children[0].captured.value(); // operator *+#?
+                }
+                
+                // match suppression
+                assert(match.children[2].captured.has_value());
+                std::string repeat_modifiers = match.children[1].captured.value(); // match suppression '-'
+
                 // create pattern
-                return ta::str_match("TODO");
+                if (op=="") {
+                    return expression;
+                }
+                else if (op=="*") {
+                    return ta::zero_or_more(expression);
+                }
+                else if (op=="+") {
+                    return ta::one_or_more(expression);
+                }
+                else {
+                    throw std::runtime_error(std::string("unexpected: op not covered: ")+op);
+                }
             }
         },
         {
@@ -107,7 +128,7 @@ namespace {
 namespace textx {
 
     Rule createRuleFromTextxPattern(textx::Grammar<textx::Rule>& grammar, std::string_view name, textx::arpeggio::Match rule_params, const textx::arpeggio::Match& rule_body) {
-        std::cout << rule_body << "\n";
+        // << rule_body << "\n";
         Rule rule;
         rule.pattern = transform_match2pattern(grammar, rule, rule_body);
         return rule;
