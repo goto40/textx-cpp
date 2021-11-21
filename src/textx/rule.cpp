@@ -15,6 +15,9 @@ namespace {
         if (use_choice) {
             auto choice = expr.children[0].children[1].children[0];
             assert(choice.name.value()=="bracketed_choice");
+            assert(choice.children[1].type() == ta::MatchType::sequence);
+            assert(choice.children[1].children.size()==2);
+            assert(choice.children[1].children[1].children.size()==0); // only one entry + 0*zero_or_more
             auto &seq = choice.children[1].children[0]; // "(" .#1. ")"
             std::vector<ta::Pattern> patterns;
             for(auto &c : seq.children) {
