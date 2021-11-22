@@ -7,6 +7,8 @@ namespace {
     namespace ta = textx::arpeggio;
 
     textx::arpeggio::Pattern transform_match2pattern(GRAMMAR &grammar, RULE& rule, const textx::arpeggio::Match& match);
+    struct Eolterm{};
+    using Repeat_modifiers = std::optional<std::variant<ta::Pattern, Eolterm>>;   
 
     ta::Pattern normal_expression_or_unordered_choice(GRAMMAR &grammar, RULE& rule, const textx::arpeggio::Match& match, bool use_choice) {
         auto &expr = match;
@@ -48,6 +50,12 @@ namespace {
             }
         }
     }
+
+    // Repeat_modifiers analze_repeat_modifies(const ta::Match &m) {
+    //     assert(m.name.has_value());
+    //     assert(m.name.value()=="repeat_modifies");
+    //     //TODO
+    // }
 
     std::unordered_map<std::string, std::function<textx::arpeggio::Pattern(GRAMMAR &grammar, RULE& rule, const textx::arpeggio::Match& match)>> transform_match2pattern_map = {
         {

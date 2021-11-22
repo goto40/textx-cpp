@@ -134,3 +134,18 @@ TEST_CASE("metamodel_simple_assignment2", "[textx/metamodel]")
         CHECK(mm.model_from_str("value=Hello World"));
     }
 }
+
+TEST_CASE("metamodel_simple_assignment3", "[textx/metamodel]")
+{
+    {
+        auto grammar1 = R"(
+            Model: 'value' '=' value=/\w+/+[','];
+        )";
+
+        textx::Metamodel mm{grammar1};
+        CHECK_THROWS(mm.model_from_str("value="));
+        CHECK(mm.model_from_str("value=Hello"));
+        CHECK(mm.model_from_str("value=Hello, World"));
+        CHECK_THROWS(mm.model_from_str("value=Hello World"));
+    }
+}
