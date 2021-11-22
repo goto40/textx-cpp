@@ -106,3 +106,15 @@ TEST_CASE("metamodel_simple_expression6_pos_lookahead", "[textx/metamodel]")
         CHECK_THROWS(mm.model_from_str("[xyz]"));
     }
 }
+
+TEST_CASE("metamodel_simple_asignment1", "[textx/metamodel]")
+{
+    {
+        auto grammar1 = R"(
+            Model: 'value' '=' value=/\w+/;
+        )";
+
+        textx::Metamodel mm{grammar1};
+        CHECK(mm.model_from_str("value=Hello"));
+    }
+}

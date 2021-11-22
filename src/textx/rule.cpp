@@ -10,37 +10,42 @@ namespace {
 
     ta::Pattern normal_expression_or_unordered_choice(GRAMMAR &grammar, RULE& rule, const textx::arpeggio::Match& match, bool use_choice) {
         auto &expr = match;
-        assert(expr.children[0].children[1].type() == ta::MatchType::ordered_choice);
-        ta::Pattern part_of_expression;
-        if (use_choice) {
-            auto choice = expr.children[0].children[1].children[0];
-            assert(choice.name.value()=="bracketed_choice");
-            assert(choice.children[1].type() == ta::MatchType::sequence);
-            assert(choice.children[1].children.size()==2);
-            assert(choice.children[1].children[1].children.size()==0); // only one entry + 0*zero_or_more
-            auto &seq = choice.children[1].children[0]; // "(" .#1. ")"
-            std::vector<ta::Pattern> patterns;
-            for(auto &c : seq.children) {
-                patterns.push_back(transform_match2pattern( grammar, rule, c ));
-            }
-            part_of_expression = ta::unordered_group(patterns);
+        if(expr.children[0].name.has_value() && expr.children[0].name.value() == "assignment") {
+            return transform_match2pattern(grammar, rule, expr.children[0]);
         }
         else {
-            part_of_expression = transform_match2pattern(grammar, rule, expr.children[0].children[1].children[0]);
-        }
-        if (expr.children[0].children[0].children.size()>0) {
-            assert(expr.children[0].children[0].children.size()==1);
-            std::string syntactic_predicate = expr.children[0].children[0].children[0].captured.value(); // "!" or "&"
-            if (syntactic_predicate=="!") {
-                return ta::negative_lookahead(part_of_expression);
+            assert(expr.children[0].children[1].type() == ta::MatchType::ordered_choice);
+            ta::Pattern part_of_expression;
+            if (use_choice) {
+                auto choice = expr.children[0].children[1].children[0];
+                assert(choice.name.value()=="bracketed_choice");
+                assert(choice.children[1].type() == ta::MatchType::sequence);
+                assert(choice.children[1].children.size()==2);
+                assert(choice.children[1].children[1].children.size()==0); // only one entry + 0*zero_or_more
+                auto &seq = choice.children[1].children[0]; // "(" .#1. ")"
+                std::vector<ta::Pattern> patterns;
+                for(auto &c : seq.children) {
+                    patterns.push_back(transform_match2pattern( grammar, rule, c ));
+                }
+                part_of_expression = ta::unordered_group(patterns);
             }
             else {
-                assert(syntactic_predicate=="&");
-                return ta::positive_lookahead(part_of_expression);
+                part_of_expression = transform_match2pattern(grammar, rule, expr.children[0].children[1].children[0]);
             }
-        }
-        else {
-            return part_of_expression;
+            if (expr.children[0].children[0].children.size()>0) {
+                assert(expr.children[0].children[0].children.size()==1);
+                std::string syntactic_predicate = expr.children[0].children[0].children[0].captured.value(); // "!" or "&"
+                if (syntactic_predicate=="!") {
+                    return ta::negative_lookahead(part_of_expression);
+                }
+                else {
+                    assert(syntactic_predicate=="&");
+                    return ta::positive_lookahead(part_of_expression);
+                }
+            }
+            else {
+                return part_of_expression;
+            }
         }
     }
 
@@ -93,7 +98,7 @@ namespace {
 
                 // repeat modifiers
                 std::string repeat_modifiers = match.children[1].captured.value(); 
-                // TODO eval, use...
+                // TODO eval, use... a[','] / a[eolterm]
 
                 // expression
                 auto expression = normal_expression_or_unordered_choice( grammar, rule, match.children[0], op=="#");
@@ -150,6 +155,16 @@ namespace {
             "bracketed_choice",
             [](GRAMMAR &grammar, RULE& rule, const textx::arpeggio::Match& match) -> ta::Pattern {
                 return transform_match2pattern( grammar, rule, match.children[1] );
+            }
+        },
+        {
+            "assignment",
+            [](GRAMMAR &grammar, RULE& rule, const textx::arpeggio::Match& match) -> ta::Pattern {
+                auto attribute = transform_match2pattern( grammar, rule, match.children[0] );
+                auto assignment_op = transform_match2pattern( grammar, rule, match.children[1] );
+                auto assignment_rhs = transform_match2pattern( grammar, rule, match.children[2] );
+                // TODO handle assignmen
+                return ta::sequence({attribute, assignment_op, assignment_rhs});
             }
         },
     };
