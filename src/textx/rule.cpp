@@ -160,11 +160,40 @@ namespace {
         {
             "assignment",
             [](GRAMMAR &grammar, RULE& rule, const textx::arpeggio::Match& match) -> ta::Pattern {
-                auto attribute = transform_match2pattern( grammar, rule, match.children[0] );
-                auto assignment_op = transform_match2pattern( grammar, rule, match.children[1] );
-                auto assignment_rhs = transform_match2pattern( grammar, rule, match.children[2] );
-                // TODO handle assignmen
-                return ta::sequence({attribute, assignment_op, assignment_rhs});
+                assert(match.children.size()==3 && "assignment must have 3 children");
+                assert(match.children[0].captured.has_value() && "assignment name");
+                assert(match.children[1].captured.has_value() && "asisgnment op");
+                auto attribute = match.children[0].captured.value();
+                auto assignment_op = match.children[1].captured.value();
+ 
+                auto &choice = match.children[2].children[0];
+                auto assignment_rhs_content = transform_match2pattern( grammar, rule, choice.children[0] ); 
+                //TODO
+                //std::string assignment_rhs_repeat_modifiers = match.children[2].children[1].captured.value(); 
+
+                if (assignment_op=="=") {
+                    // TODO handle assignment
+                    assert(match.children[2].children[1].children.size()==0); //no mods
+                    return assignment_rhs_content;
+                }
+                else if (assignment_op=="*=") {
+                    // TODO handle assignment
+                    // TODO repeat modifiers
+                    return ta::zero_or_more(assignment_rhs_content);
+                }
+                else if (assignment_op=="+=") {
+                    // TODO handle assignment
+                    // TODO repeat modifiers
+                    return ta::one_or_more(assignment_rhs_content);
+                }
+                else if (assignment_op=="?=") {
+                    // TODO handle assignment
+                    // TODO repeat modifiers
+                    return ta::optional(assignment_rhs_content);
+                }
+                else {
+                    throw std::runtime_error("unexpected assignment_op");
+                }
             }
         },
     };

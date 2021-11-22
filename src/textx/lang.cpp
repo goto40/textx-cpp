@@ -100,10 +100,10 @@ namespace textx
 
             add_rule("attribute", ref("ident"));
 
-            add_rule("assignment_op", ta::ordered_choice({ta::str_match("="),
-                                                          ta::str_match("*="),
-                                                          ta::str_match("+="),
-                                                          ta::str_match("?=")}));
+            add_rule("assignment_op", ta::capture(ta::ordered_choice({ta::str_match("="),
+                                                                      ta::str_match("*="),
+                                                                      ta::str_match("+="),
+                                                                      ta::str_match("?=")})));
 
             add_rule("assignment_rhs", ta::sequence({ta::ordered_choice({ref("simple_match"),
                                                                          ref("reference")}),

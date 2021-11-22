@@ -107,7 +107,7 @@ TEST_CASE("metamodel_simple_expression6_pos_lookahead", "[textx/metamodel]")
     }
 }
 
-TEST_CASE("metamodel_simple_asignment1", "[textx/metamodel]")
+TEST_CASE("metamodel_simple_assignment1", "[textx/metamodel]")
 {
     {
         auto grammar1 = R"(
@@ -115,6 +115,22 @@ TEST_CASE("metamodel_simple_asignment1", "[textx/metamodel]")
         )";
 
         textx::Metamodel mm{grammar1};
+        CHECK_THROWS(mm.model_from_str("value="));
         CHECK(mm.model_from_str("value=Hello"));
+        CHECK_THROWS(mm.model_from_str("value=Hello World"));
+    }
+}
+
+TEST_CASE("metamodel_simple_assignment2", "[textx/metamodel]")
+{
+    {
+        auto grammar1 = R"(
+            Model: 'value' '=' value=/\w+/+;
+        )";
+
+        textx::Metamodel mm{grammar1};
+        CHECK_THROWS(mm.model_from_str("value="));
+        CHECK(mm.model_from_str("value=Hello"));
+        CHECK(mm.model_from_str("value=Hello World"));
     }
 }
