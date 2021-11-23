@@ -7,9 +7,13 @@ namespace {
     using GRAMMAR = textx::Grammar<RULE>;
     namespace ta = textx::arpeggio;
 
+    template<class... Ts> struct overloaded : Ts... { using Ts::operator()...; };
+    template<class... Ts> overloaded(Ts...) -> overloaded<Ts...>;
+
     textx::arpeggio::Pattern transform_match2pattern(GRAMMAR &grammar, RULE& rule, const textx::arpeggio::Match& match);
     struct Eolterm{};
-    using Repeat_modifiers = std::optional<std::variant<ta::Pattern, Eolterm>>;   
+    struct None{};
+    using Repeat_modifiers = std::variant<ta::Pattern, Eolterm, None>;
     Repeat_modifiers get_repeat_modifiers(GRAMMAR &grammar, RULE& rule, const ta::Match& m);
 
     ta::Pattern normal_expression_or_unordered_choice(GRAMMAR &grammar, RULE& rule, const textx::arpeggio::Match& match, bool use_choice) {
@@ -18,14 +22,14 @@ namespace {
             return transform_match2pattern(grammar, rule, expr.children[0]);
         }
         else {
-            assert(expr.children[0].children[1].type() == ta::MatchType::ordered_choice);
+            TEXTX_ASSERT_EQUAL(expr.children[0].children[1].type(), ta::MatchType::ordered_choice);
             ta::Pattern part_of_expression;
             if (use_choice) {
                 auto choice = expr.children[0].children[1].children[0];
-                assert(choice.name.value()=="bracketed_choice");
-                assert(choice.children[1].type() == ta::MatchType::sequence);
-                assert(choice.children[1].children.size()==2);
-                assert(choice.children[1].children[1].children.size()==0); // only one entry + 0*zero_or_more
+                TEXTX_ASSERT_EQUAL(choice.name.value(),"bracketed_choice");
+                TEXTX_ASSERT_EQUAL(choice.children[1].type(), ta::MatchType::sequence);
+                TEXTX_ASSERT_EQUAL(choice.children[1].children.size(),2);
+                TEXTX_ASSERT_EQUAL(choice.children[1].children[1].children.size(),0); // only one entry + 0*zero_or_more
                 auto &seq = choice.children[1].children[0]; // "(" .#1. ")"
                 std::vector<ta::Pattern> patterns;
                 for(auto &c : seq.children) {
@@ -37,13 +41,13 @@ namespace {
                 part_of_expression = transform_match2pattern(grammar, rule, expr.children[0].children[1].children[0]);
             }
             if (expr.children[0].children[0].children.size()>0) {
-                assert(expr.children[0].children[0].children.size()==1);
+                TEXTX_ASSERT_EQUAL(expr.children[0].children[0].children.size(), 1);
                 std::string syntactic_predicate = expr.children[0].children[0].children[0].captured.value(); // "!" or "&"
                 if (syntactic_predicate=="!") {
                     return ta::negative_lookahead(part_of_expression);
                 }
                 else {
-                    assert(syntactic_predicate=="&");
+                    TEXTX_ASSERT_EQUAL(syntactic_predicate,"&");
                     return ta::positive_lookahead(part_of_expression);
                 }
             }
@@ -87,11 +91,11 @@ namespace {
             [](GRAMMAR &grammar, RULE& rule, const textx::arpeggio::Match& match) -> ta::Pattern {
                 // operator *+#?
                 // repeat modifier [',']
-                assert(match.children[1].captured.has_value());
+                TEXTX_ASSERT(match.children[1].captured.has_value());
                 std::string op = "";
                 if (match.children[1].children.size()>0) {
-                    assert(match.children[1].children[0].name.value() == "repeat_operator");
-                    assert(match.children[1].children[0].children[0].name.value() == "repeat_operator_text");
+                    TEXTX_ASSERT_EQUAL(match.children[1].children[0].name.value(), "repeat_operator");
+                    TEXTX_ASSERT_EQUAL(match.children[1].children[0].children[0].name.value(), "repeat_operator_text");
                     op = match.children[1].children[0].children[0].captured.value(); // operator *+#?
 
                     // // repeat modifiers
@@ -104,7 +108,7 @@ namespace {
                 }
                 
                 // match suppression
-                assert(match.children[2].captured.has_value()); // match suppression '-'
+                TEXTX_ASSERT(match.children[2].captured.has_value()); // match suppression '-'
                 bool has_match_suppression = (match.children[2].captured.value()=="-");
                 // TODO: use has_match_suppression
 
@@ -145,7 +149,7 @@ namespace {
             "str_match",
             [](GRAMMAR &grammar, RULE& rule, const textx::arpeggio::Match& match) -> ta::Pattern {
                 std::string str = match.captured.value();
-                assert(str.size()>=2);
+                TEXTX_ASSERT(str.size()>=2);
                 str = str.substr(1,str.size()-2);
                 return ta::str_match(str);
             }
@@ -154,7 +158,7 @@ namespace {
             "re_match",
             [](GRAMMAR &grammar, RULE& rule, const textx::arpeggio::Match& match) -> ta::Pattern {
                 std::string str = match.captured.value();
-                assert(str.size()>=2);
+                TEXTX_ASSERT(str.size()>=2);
                 str = str.substr(1,str.size()-2);
                 return ta::capture(ta::regex_match(str));
             }
@@ -168,9 +172,9 @@ namespace {
         {
             "assignment",
             [](GRAMMAR &grammar, RULE& rule, const textx::arpeggio::Match& match) -> ta::Pattern {
-                assert(match.children.size()==3 && "assignment must have 3 children");
-                assert(match.children[0].captured.has_value() && "assignment name");
-                assert(match.children[1].captured.has_value() && "asisgnment op");
+                TEXTX_ASSERT_EQUAL(match.children.size(),3 , "assignment must have 3 children");
+                TEXTX_ASSERT(match.children[0].captured.has_value(), "assignment name");
+                TEXTX_ASSERT(match.children[1].captured.has_value(), "asisgnment op");
                 auto attribute = match.children[0].captured.value();
                 auto assignment_op = match.children[1].captured.value();
  
@@ -180,27 +184,36 @@ namespace {
                 //std::string assignment_rhs_repeat_modifiers = match.children[2].children[1].captured.value(); 
 
                 // repeat modifiers
-                auto repeat_modifiers = match.children[2].children[1]; 
-                if (repeat_modifiers.children.size()>0) {
-                    assert(repeat_modifiers.children.size()<=1 && "repeat modifiers must containe ONE modifier");
-                    auto repeat_modifiers_val = get_repeat_modifiers(grammar, rule, repeat_modifiers.children[0]);
-                    // TODO eval, use... a[','] / a[eolterm]
+                Repeat_modifiers repeat_modifiers = None{};
+                auto repeat_modifiers_match = match.children[2].children[1]; 
+                if (repeat_modifiers_match.children.size()>0) {
+                    TEXTX_ASSERT(repeat_modifiers_match.children.size()<=1, "repeat modifiers must containe ONE modifier");
+                    repeat_modifiers = get_repeat_modifiers(grammar, rule, repeat_modifiers_match.children[0]);
                 }
+                // TODO eval, use... a[','] / a[eolterm]
 
                 if (assignment_op=="=") {
                     // TODO handle assignment
-                    assert(match.children[2].children[1].children.size()==0); //no mods
+                    TEXTX_ASSERT_EQUAL(match.children[2].children[1].children.size(), 0); //no mods
+                    TEXTX_ASSERT(std::holds_alternative<None>(repeat_modifiers)); //no mods
                     return assignment_rhs_content;
                 }
                 else if (assignment_op=="*=") {
                     // TODO handle assignment
-                    // TODO repeat modifiers
-                    return ta::zero_or_more(assignment_rhs_content);
+                    return std::visit(overloaded{
+                        [&](ta::Pattern&p) -> ta::Pattern { return ta::zero_or_more(assignment_rhs_content); },
+                        [&](Eolterm&) -> ta::Pattern { ta::raise(repeat_modifiers_match.start(), "TODO eolterm"); },
+                        [&](None&) -> ta::Pattern { return ta::zero_or_more(assignment_rhs_content); }
+                    }, repeat_modifiers);
                 }
                 else if (assignment_op=="+=") {
                     // TODO handle assignment
-                    // TODO repeat modifiers
-                    return ta::one_or_more(assignment_rhs_content);
+                    std::cout << "+= ..." << repeat_modifiers.index() << "\n";
+                    return std::visit(overloaded{
+                        [&](ta::Pattern&p) -> ta::Pattern { return ta::one_or_more_sep(assignment_rhs_content, p); },
+                        [&](Eolterm&) -> ta::Pattern { ta::raise(repeat_modifiers_match.start(), "TODO eolterm"); },
+                        [&](None&) -> ta::Pattern { return ta::one_or_more(assignment_rhs_content); }
+                    }, repeat_modifiers);
                 }
                 else if (assignment_op=="?=") {
                     // TODO handle assignment
@@ -210,7 +223,6 @@ namespace {
                 else {
                     ta::raise(match.start(),"unexpected assignment_op");
                 }
-                //return ta::str_match("todo");
             }
         },
     };

@@ -125,7 +125,7 @@ TEST_CASE("metamodel_simple_assignment2", "[textx/metamodel]")
 {
     {
         auto grammar1 = R"(
-            Model: 'value' '=' value=/\w+/+;
+            Model: 'value' '=' value+=/\w+/;
         )";
 
         textx::Metamodel mm{grammar1};
@@ -139,7 +139,7 @@ TEST_CASE("metamodel_simple_assignment3", "[textx/metamodel]")
 {
     {
         auto grammar1 = R"(
-            Model: 'value' '=' value=/\w+/+[','];
+            Model: 'value' '=' value=/\w+/[','];
         )";
 
         textx::Metamodel mm{grammar1};

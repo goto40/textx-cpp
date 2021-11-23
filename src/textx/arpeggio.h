@@ -67,7 +67,7 @@ namespace textx
                 return me;
             }
 
-            friend std::ostream &operator<<(std::ostream &o, const TextPosition &pos)
+            friend inline std::ostream &operator<<(std::ostream &o, const TextPosition &pos)
             {
                 o << pos.line << ":" << pos.col;
                 return o;
@@ -135,12 +135,17 @@ namespace textx
                 }
                 o << istr << ")\n";
             }
-            friend std::ostream &operator<<(std::ostream &o, const Match &match)
+            friend inline std::ostream &operator<<(std::ostream &o, const Match &match)
             {
                 print(o, match);
                 return o;
             }
         };
+
+        inline std::ostream& operator<<(std::ostream& o, MatchType t) {
+            o<< Match::type2str.at(t);
+            return o;
+        }
 
         struct AnnotatedTextPosition
         {
@@ -149,7 +154,7 @@ namespace textx
             auto operator<=>(const AnnotatedTextPosition &b) const noexcept { return text_position <=> b.text_position; }
             operator TextPosition() { return text_position; }
 
-            friend std::ostream &operator<<(std::ostream &o, const AnnotatedTextPosition &pos)
+            friend inline std::ostream &operator<<(std::ostream &o, const AnnotatedTextPosition &pos)
             {
                 for (auto &i : pos.info)
                 {
@@ -499,6 +504,33 @@ namespace textx
                     pos = match.end();
                     while (auto next_match = pattern(config, text, pos))
                     {
+                        match.children.push_back(next_match.value());
+                        pos = next_match.value().end();
+                        match.update_end(pos);
+                    }
+                    return match;
+                } });
+        }
+
+        inline auto one_or_more_sep(Pattern pattern,Pattern sep)
+        {
+            return rule([=](const Config &config, ParserState &text, TextPosition pos) -> std::optional<Match>
+                        {
+                auto sub_match = pattern(config, text, pos);
+                if (!sub_match)
+                {
+                    return std::nullopt;
+                }
+                else
+                {
+                    auto match = Match{sub_match.value().start(), sub_match.value().end(), MatchType::one_or_more, {sub_match.value()}};
+                    pos = match.end();
+                    while (auto sep_match = sep(config, text, pos))
+                    {
+                        auto next_match = pattern(config, text, sep_match->end());
+                        if (!next_match) {
+                            return std::nullopt;
+                        }
                         match.children.push_back(next_match.value());
                         pos = next_match.value().end();
                         match.update_end(pos);
