@@ -125,7 +125,7 @@ namespace {
                     return expression;
                 }
                 else {
-                    throw std::runtime_error(std::string("unexpected: op not covered: ")+op);
+                    ta::raise(match.start(), std::string("unexpected: op not covered: ")+op);
                 }
             }
         },
@@ -200,7 +200,7 @@ namespace {
                     return ta::optional(assignment_rhs_content);
                 }
                 else {
-                    throw std::runtime_error("unexpected assignment_op");
+                    ta::raise(match.start(),"unexpected assignment_op");
                 }
             }
         },
@@ -211,14 +211,17 @@ namespace {
             try {
                 return transform_match2pattern_map[match.name.value()](grammar, rule, match);
             }
+            catch(ta::Exception& e) {
+                throw;
+            }
             catch(std::exception& e) {
                 std::ostringstream o;
                 o << "error near " << match.start() << ".." << match.end() << ":" << e.what();
-                throw std::runtime_error(o.str());
+                ta::raise(match.start(), o.str());
             }
         }
         else {
-            throw std::runtime_error(std::string("unexpected: no entry in transform_match2pattern_map for ")+match.name.value());
+            ta::raise(match.start(), "unexpected: no entry in transform_match2pattern_map for ", match.name.value());
         }
     }
 }

@@ -7,7 +7,9 @@
 #include <string>
 #include <optional>
 #include <iostream>
+#include <sstream>
 #include <unordered_map>
+#include <stdexcept>
 #ifdef ARPEGGIO_USE_BOOST_FOR_REGEX
 #include <boost/regex.hpp>
 #else
@@ -20,7 +22,6 @@ namespace textx
 {
     namespace arpeggio
     {
-
         enum class MatchType
         {
             undefined,
@@ -73,6 +74,23 @@ namespace textx
             }
         };
 
+        struct Exception : std::exception {
+            TextPosition pos;
+            std::string error;
+            Exception(TextPosition pos, std::string error) : pos{pos}, error{error} {}
+            const char* what() const noexcept override {
+                return error.c_str();
+            }
+        };
+
+        template<class ...T>
+        [[noreturn]] void raise(TextPosition pos, T... params) {
+            std::ostringstream o;
+            o << pos << ": ";
+            (o << ... << params) << "\n";
+            throw Exception{pos, o.str()};
+        }
+
         class Match
         {
             TextPosition m_start, m_end;
@@ -87,7 +105,7 @@ namespace textx
             {
                 if (m_type == MatchType::undefined)
                 {
-                    throw std::runtime_error("unexpected: undefined match type...");
+                    raise(s, "unexpected: undefined match type...");
                 }
             }
 
@@ -271,7 +289,7 @@ namespace textx
                         {
                             std::ostringstream s;
                             s << "unexpected, found undefined result = " << match.value();
-                            throw std::runtime_error(s.str());
+                            raise(match->start(), s.str());
                         }
                     }
                     cache[pos.pos] = match;
