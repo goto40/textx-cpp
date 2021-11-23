@@ -1,6 +1,7 @@
 #include "textx/rule.h"
 #include <unordered_map>
-#include <cassert>
+#include "textx/assert.h"
+
 namespace {
     using RULE = textx::Rule;
     using GRAMMAR = textx::Grammar<RULE>;
@@ -52,12 +53,6 @@ namespace {
         }
     }
 
-    // Repeat_modifiers analze_repeat_modifies(const ta::Match &m) {
-    //     assert(m.name.has_value());
-    //     assert(m.name.value()=="repeat_modifies");
-    //     //TODO
-    // }
-
     std::unordered_map<std::string, std::function<textx::arpeggio::Pattern(GRAMMAR &grammar, RULE& rule, const textx::arpeggio::Match& match)>> transform_match2pattern_map = {
         {
             "textx_rule_body",
@@ -98,20 +93,20 @@ namespace {
                     assert(match.children[1].children[0].name.value() == "repeat_operator");
                     assert(match.children[1].children[0].children[0].name.value() == "repeat_operator_text");
                     op = match.children[1].children[0].children[0].captured.value(); // operator *+#?
+
+                    // // repeat modifiers
+                    // auto repeat_modifiers = match.children[1].children[0].children[1]; 
+                    // if (repeat_modifiers.children.size()>0) {
+                    //     assert(repeat_modifiers.children.size()<=1 && "repeat modifiers must containe ONE modifier");
+                    //     auto repeat_modifiers_val = get_repeat_modifiers(grammar, rule, repeat_modifiers.children[0]);
+                    //     // TODO eval, use... a[','] / a[eolterm]
+                    // }
                 }
                 
                 // match suppression
                 assert(match.children[2].captured.has_value()); // match suppression '-'
                 bool has_match_suppression = (match.children[2].captured.value()=="-");
                 // TODO: use has_match_suppression
-
-                // repeat modifiers
-                auto repeat_modifiers = match.children[1]; 
-                if (repeat_modifiers.children.size()>0) {
-                    assert(repeat_modifiers.children.size()<=1 && "repeat modifiers must containe ONE modifier");
-                    auto repeat_modifiers_val = get_repeat_modifiers(grammar, rule, repeat_modifiers.children[0]);
-                    // TODO eval, use... a[','] / a[eolterm]
-                }
 
                 // expression
                 auto expression = normal_expression_or_unordered_choice( grammar, rule, match.children[0], op=="#");
@@ -184,6 +179,14 @@ namespace {
                 //TODO
                 //std::string assignment_rhs_repeat_modifiers = match.children[2].children[1].captured.value(); 
 
+                // repeat modifiers
+                auto repeat_modifiers = match.children[2].children[1]; 
+                if (repeat_modifiers.children.size()>0) {
+                    assert(repeat_modifiers.children.size()<=1 && "repeat modifiers must containe ONE modifier");
+                    auto repeat_modifiers_val = get_repeat_modifiers(grammar, rule, repeat_modifiers.children[0]);
+                    // TODO eval, use... a[','] / a[eolterm]
+                }
+
                 if (assignment_op=="=") {
                     // TODO handle assignment
                     assert(match.children[2].children[1].children.size()==0); //no mods
@@ -207,13 +210,14 @@ namespace {
                 else {
                     ta::raise(match.start(),"unexpected assignment_op");
                 }
+                //return ta::str_match("todo");
             }
         },
     };
 
     Repeat_modifiers get_repeat_modifiers(GRAMMAR &grammar, RULE& rule, const ta::Match& m) {
-        assert(m.name.has_value());
-        assert(m.name.value()=="repeat_modifiers");
+        TEXTX_ASSERT(m.name.has_value(), "has_name expected");
+        TEXTX_ASSERT_EQUAL(m.name.value(), "repeat_modifiers");
         auto second = m.children[1];
         if (second.captured.value()=="eolterm") {
             return Eolterm{};
