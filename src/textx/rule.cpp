@@ -9,6 +9,7 @@ namespace {
     textx::arpeggio::Pattern transform_match2pattern(GRAMMAR &grammar, RULE& rule, const textx::arpeggio::Match& match);
     struct Eolterm{};
     using Repeat_modifiers = std::optional<std::variant<ta::Pattern, Eolterm>>;   
+    Repeat_modifiers get_repeat_modifiers(GRAMMAR &grammar, RULE& rule, const ta::Match& m);
 
     ta::Pattern normal_expression_or_unordered_choice(GRAMMAR &grammar, RULE& rule, const textx::arpeggio::Match& match, bool use_choice) {
         auto &expr = match;
@@ -105,8 +106,12 @@ namespace {
                 // TODO: use has_match_suppression
 
                 // repeat modifiers
-                std::string repeat_modifiers = match.children[1].captured.value(); 
-                // TODO eval, use... a[','] / a[eolterm]
+                auto repeat_modifiers = match.children[1]; 
+                if (repeat_modifiers.children.size()>0) {
+                    assert(repeat_modifiers.children.size()<=1 && "repeat modifiers must containe ONE modifier");
+                    auto repeat_modifiers_val = get_repeat_modifiers(grammar, rule, repeat_modifiers.children[0]);
+                    // TODO eval, use... a[','] / a[eolterm]
+                }
 
                 // expression
                 auto expression = normal_expression_or_unordered_choice( grammar, rule, match.children[0], op=="#");
@@ -206,7 +211,19 @@ namespace {
         },
     };
 
-    textx::arpeggio::Pattern transform_match2pattern(GRAMMAR &grammar, RULE& rule, const textx::arpeggio::Match& match) {
+    Repeat_modifiers get_repeat_modifiers(GRAMMAR &grammar, RULE& rule, const ta::Match& m) {
+        assert(m.name.has_value());
+        assert(m.name.value()=="repeat_modifiers");
+        auto second = m.children[1];
+        if (second.captured.value()=="eolterm") {
+            return Eolterm{};
+        }
+        else {
+            return transform_match2pattern(grammar, rule, second.children[0]);
+        }
+    }
+
+   textx::arpeggio::Pattern transform_match2pattern(GRAMMAR &grammar, RULE& rule, const textx::arpeggio::Match& match) {
         if (transform_match2pattern_map.count(match.name.value())==1) {
             try {
                 return transform_match2pattern_map[match.name.value()](grammar, rule, match);

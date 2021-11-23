@@ -82,9 +82,9 @@ namespace textx
                                                                             ta::str_match("#")})));
 
             add_rule("repeat_modifiers", ta::sequence({ta::str_match("["),
-                                                       ta::one_or_more(
+                                                       ta::capture(ta::one_or_more(
                                                            ta::ordered_choice({ref("simple_match"),
-                                                                               ta::str_match("eolterm")})),
+                                                                               ta::str_match("eolterm")}))),
                                                        ta::str_match("]")}));
 
             add_rule("syntactic_predicate", ta::capture(ta::ordered_choice({ta::str_match("!"),
