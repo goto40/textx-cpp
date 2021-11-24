@@ -124,6 +124,23 @@ TEST_CASE("metamodel_simple_assignment1", "[textx/metamodel]")
     }
 }
 
+TEST_CASE("metamodel_simple_assignment1_repeated", "[textx/metamodel]")
+{
+    {
+        auto grammar1 = R"(
+            Model: 'value' '=' (value=/\w+/)*;
+        )";
+
+        textx::Metamodel mm{grammar1};
+        CHECK(mm.model_from_str("value="));
+        CHECK(mm.model_from_str("value=Hello"));
+        CHECK(mm.model_from_str("value=Hello World"));
+
+        CHECK(mm["Model"]["value"].cardinality == textx::AttributeCardinality::list);
+        //std::cout << mm << "\n";
+    }
+}
+
 TEST_CASE("metamodel_simple_assignment2", "[textx/metamodel]")
 {
     {
