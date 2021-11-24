@@ -17,6 +17,18 @@ namespace textx {
             return grammar.parse_or_throw(model_txt);
         }
 
+        Rule& operator[](std::string name) {
+            return grammar[name];
+        }
+
+        inline friend std::ostream& operator<<(std::ostream &o, const Metamodel& mm) {
+            for(auto& [k,v]: mm.grammar.get_rules()) {
+                //o << "RULE[\"" << k << "\"]:\n";
+                o << v << "\n";
+            }
+            return o;
+        }
+
     };
 
 }

@@ -52,6 +52,16 @@ namespace textx
             }));
         }
 
+        R& operator[](std::string name)
+        {
+            if (rules.find(name)==rules.end()) {
+                throw std::runtime_error(std::string("cannot find rule \"")+std::string(name)+"\"");
+            }
+            return rules[name];
+        }
+
+        const auto& get_rules() const { return rules; }
+
         void add_rule(std::string_view name, R p)
         {
             if constexpr (std::is_same_v<textx::arpeggio::Pattern, R>) {

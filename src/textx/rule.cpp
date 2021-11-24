@@ -10,7 +10,8 @@ namespace {
     template<class... Ts> struct overloaded : Ts... { using Ts::operator()...; };
     template<class... Ts> overloaded(Ts...) -> overloaded<Ts...>;
 
-    textx::arpeggio::Pattern transform_match2pattern(GRAMMAR &grammar, RULE& rule, const textx::arpeggio::Match& match);
+    ta::Pattern transform_match2pattern(GRAMMAR &grammar, RULE& rule, const ta::Match& match, textx::AttributeCardinality cardinality);
+
     struct Eolterm{};
     struct None{};
     using Repeat_modifiers = std::variant<ta::Pattern, Eolterm, None>;
@@ -29,10 +30,10 @@ namespace {
     }
 
     /** preprocess an expression with a special case for unordered_groups */
-    ta::Pattern normal_expression_or_unordered_choice(GRAMMAR &grammar, RULE& rule, const textx::arpeggio::Match& match, bool use_choice, const Repeat_modifiers &repeat_modifiers) {
+    ta::Pattern normal_expression_or_unordered_choice(GRAMMAR &grammar, RULE& rule, const ta::Match& match, textx::AttributeCardinality cardinality, bool use_choice, const Repeat_modifiers &repeat_modifiers) {
         auto &expr = match;
         if(expr.children[0].name.has_value() && expr.children[0].name.value() == "assignment") {
-            return transform_match2pattern(grammar, rule, expr.children[0]);
+            return transform_match2pattern(grammar, rule, expr.children[0], cardinality);
         }
         else {
             TEXTX_ASSERT_EQUAL(expr.children[0].children[1].type(), ta::MatchType::ordered_choice);
@@ -46,7 +47,7 @@ namespace {
                 auto &seq = choice.children[1].children[0]; // "(" .#1. ")"
                 std::vector<ta::Pattern> patterns;
                 for(auto &c : seq.children) {
-                    patterns.push_back(transform_match2pattern( grammar, rule, c ));
+                    patterns.push_back(transform_match2pattern( grammar, rule, c, cardinality ));
                 }
                 if (std::holds_alternative<ta::Pattern>(repeat_modifiers)) {
                     part_of_expression = ta::unordered_group(patterns, std::get<ta::Pattern>(repeat_modifiers));
@@ -56,7 +57,7 @@ namespace {
                 }
             }
             else {
-                part_of_expression = transform_match2pattern(grammar, rule, expr.children[0].children[1].children[0]);
+                part_of_expression = transform_match2pattern(grammar, rule, expr.children[0].children[1].children[0], cardinality);
             }
             if (expr.children[0].children[0].children.size()>0) {
                 TEXTX_ASSERT_EQUAL(expr.children[0].children[0].children.size(), 1);
@@ -76,38 +77,38 @@ namespace {
     }
 
     /** normal node "visitors" */
-    std::unordered_map<std::string, std::function<textx::arpeggio::Pattern(GRAMMAR &grammar, RULE& rule, const textx::arpeggio::Match& match)>> transform_match2pattern_map = {
+    std::unordered_map<std::string, std::function<ta::Pattern(GRAMMAR &grammar, RULE& rule, const ta::Match& match, textx::AttributeCardinality cardinality)>> transform_match2pattern_map = {
         {
             "textx_rule_body",
-            [](GRAMMAR &grammar, RULE& rule, const textx::arpeggio::Match& match) -> ta::Pattern {
-                return transform_match2pattern(grammar, rule, match.children[0]);
+            [](GRAMMAR &grammar, RULE& rule, const ta::Match& match, textx::AttributeCardinality cardinality) -> ta::Pattern {
+                return transform_match2pattern(grammar, rule, match.children[0], cardinality);
             }
         },
         {
             "choice",
-            [](GRAMMAR &grammar, RULE& rule, const textx::arpeggio::Match& match) -> ta::Pattern {
+            [](GRAMMAR &grammar, RULE& rule, const ta::Match& match, textx::AttributeCardinality cardinality) -> ta::Pattern {
                 auto seq1 = match.children[0];
                 auto zom_seq2 = match.children[1];
-                std::vector<textx::arpeggio::Pattern> c{ transform_match2pattern(grammar, rule, seq1) };
+                std::vector<ta::Pattern> c{ transform_match2pattern(grammar, rule, seq1, cardinality) };
                 for (auto &inner_seq_with_two_entries: zom_seq2.children) {
-                    c.emplace_back( transform_match2pattern( grammar, rule, inner_seq_with_two_entries.children[1]) );
+                    c.emplace_back( transform_match2pattern( grammar, rule, inner_seq_with_two_entries.children[1], cardinality) );
                 }
                 return ta::ordered_choice(c);
             }
         },
         {
             "sequence",
-            [](GRAMMAR &grammar, RULE& rule, const textx::arpeggio::Match& match) -> ta::Pattern {
-                std::vector<textx::arpeggio::Pattern> c{};
+            [](GRAMMAR &grammar, RULE& rule, const ta::Match& match, textx::AttributeCardinality cardinality) -> ta::Pattern {
+                std::vector<ta::Pattern> c{};
                 for (auto &inner_entry: match.children) {
-                    c.emplace_back( transform_match2pattern( grammar, rule, inner_entry ));
+                    c.emplace_back( transform_match2pattern( grammar, rule, inner_entry, cardinality ));
                 }
                 return ta::sequence(c);
             }
         },
         {
             "repeatable_expr",
-            [](GRAMMAR &grammar, RULE& rule, const textx::arpeggio::Match& match) -> ta::Pattern {
+            [](GRAMMAR &grammar, RULE& rule, const ta::Match& match, textx::AttributeCardinality cardinality) -> ta::Pattern {
                 // operator *+#?
                 TEXTX_ASSERT(match.children[1].captured.has_value());
                 std::string op = "";
@@ -128,8 +129,12 @@ namespace {
                 bool has_match_suppression = (match.children[2].captured.value()=="-");
                 // TODO: use has_match_suppression
 
+                if (op=="*" || op=="+") {
+                    cardinality = textx::AttributeCardinality::list;
+                }
+
                 // expression
-                auto expression = normal_expression_or_unordered_choice( grammar, rule, match.children[0], op=="#", repeat_modifiers);
+                auto expression = normal_expression_or_unordered_choice( grammar, rule, match.children[0], cardinality, op=="#", repeat_modifiers);
 
                 // create pattern
                 if (op=="") {
@@ -159,19 +164,19 @@ namespace {
         },
         {
             "expression",
-            [](GRAMMAR &grammar, RULE& rule, const textx::arpeggio::Match& match) -> ta::Pattern {
-                return transform_match2pattern( grammar, rule, match.children[0] );
+            [](GRAMMAR &grammar, RULE& rule, const ta::Match& match, textx::AttributeCardinality cardinality) -> ta::Pattern {
+                return transform_match2pattern( grammar, rule, match.children[0], cardinality );
             }
         },
         {
             "simple_match",
-            [](GRAMMAR &grammar, RULE& rule, const textx::arpeggio::Match& match) -> ta::Pattern {
-                return transform_match2pattern( grammar, rule, match.children[0] );
+            [](GRAMMAR &grammar, RULE& rule, const ta::Match& match, textx::AttributeCardinality cardinality) -> ta::Pattern {
+                return transform_match2pattern( grammar, rule, match.children[0], cardinality );
             }
         },
         {
             "str_match",
-            [](GRAMMAR &grammar, RULE& rule, const textx::arpeggio::Match& match) -> ta::Pattern {
+            [](GRAMMAR &grammar, RULE& rule, const ta::Match& match, textx::AttributeCardinality cardinality) -> ta::Pattern {
                 std::string str = match.captured.value();
                 TEXTX_ASSERT(str.size()>=2);
                 str = str.substr(1,str.size()-2);
@@ -180,7 +185,7 @@ namespace {
         },
         {
             "re_match",
-            [](GRAMMAR &grammar, RULE& rule, const textx::arpeggio::Match& match) -> ta::Pattern {
+            [](GRAMMAR &grammar, RULE& rule, const ta::Match& match, textx::AttributeCardinality cardinality) -> ta::Pattern {
                 std::string str = match.captured.value();
                 TEXTX_ASSERT(str.size()>=2);
                 str = str.substr(1,str.size()-2);
@@ -189,26 +194,35 @@ namespace {
         },
         {
             "bracketed_choice",
-            [](GRAMMAR &grammar, RULE& rule, const textx::arpeggio::Match& match) -> ta::Pattern {
-                return transform_match2pattern( grammar, rule, match.children[1] );
+            [](GRAMMAR &grammar, RULE& rule, const ta::Match& match, textx::AttributeCardinality cardinality) -> ta::Pattern {
+                return transform_match2pattern( grammar, rule, match.children[1], cardinality );
             }
         },
         {
             "assignment",
-            [](GRAMMAR &grammar, RULE& rule, const textx::arpeggio::Match& match) -> ta::Pattern {
+            [](GRAMMAR &grammar, RULE& rule, const ta::Match& match, textx::AttributeCardinality cardinality) -> ta::Pattern {
                 TEXTX_ASSERT_EQUAL(match.children.size(),3 , "assignment must have 3 children");
                 TEXTX_ASSERT(match.children[0].captured.has_value(), "assignment name");
                 TEXTX_ASSERT(match.children[1].captured.has_value(), "asisgnment op");
-                auto attribute = match.children[0].captured.value();
+                auto attribute_name = match.children[0].captured.value();
                 auto assignment_op = match.children[1].captured.value();
- 
+
+                if (assignment_op=="*=" || assignment_op=="+=") {
+                    cardinality = textx::AttributeCardinality::list;
+                }
+
                 auto &choice = match.children[2].children[0];
-                auto assignment_rhs_content = transform_match2pattern( grammar, rule, choice.children[0] ); 
+                auto assignment_rhs_content = transform_match2pattern( grammar, rule, choice.children[0], cardinality ); 
 
                 // repeat modifiers
                 auto repeat_modifiers_match = match.children[2].children[1]; 
                 Repeat_modifiers repeat_modifiers = extract_repeat_modifiers(grammar, rule, repeat_modifiers_match);
                 // TODO eval, use... a[','] / a[eolterm]
+
+                // TODO extract "type" / terminal
+
+                // register attribute
+                rule.add_attribute(attribute_name, {cardinality}); // add type here
 
                 if (assignment_op=="=") {
                     // TODO handle assignment
@@ -251,14 +265,14 @@ namespace {
             return Eolterm{};
         }
         else {
-            return transform_match2pattern(grammar, rule, second.children[0].children[0]);
+            return transform_match2pattern(grammar, rule, second.children[0].children[0], textx::AttributeCardinality::scalar); // no further attributes expected here (default/unused cardinality: scalar)
         }
     }
 
-   textx::arpeggio::Pattern transform_match2pattern(GRAMMAR &grammar, RULE& rule, const textx::arpeggio::Match& match) {
+   ta::Pattern transform_match2pattern(GRAMMAR &grammar, RULE& rule, const ta::Match& match, textx::AttributeCardinality cardinality) {
         if (transform_match2pattern_map.count(match.name.value())==1) {
             try {
-                return transform_match2pattern_map[match.name.value()](grammar, rule, match);
+                return transform_match2pattern_map[match.name.value()](grammar, rule, match, cardinality);
             }
             catch(ta::Exception& e) {
                 throw;
@@ -277,10 +291,11 @@ namespace {
 
 namespace textx {
 
-    Rule createRuleFromTextxPattern(textx::Grammar<textx::Rule>& grammar, std::string_view name, textx::arpeggio::Match rule_params, const textx::arpeggio::Match& rule_body, bool add_eof) {
+    Rule createRuleFromTextxPattern(textx::Grammar<textx::Rule>& grammar, std::string_view name, ta::Match rule_params, const ta::Match& rule_body, bool add_eof) {
         // << rule_body << "\n";
         Rule rule;
-        rule.pattern = transform_match2pattern(grammar, rule, rule_body);
+        rule.name = name;
+        rule.pattern = transform_match2pattern(grammar, rule, rule_body, AttributeCardinality::scalar);
         if (add_eof) {
             rule.pattern = ta::sequence({rule.pattern, ta::end_of_file()});
         }

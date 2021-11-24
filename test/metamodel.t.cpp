@@ -118,6 +118,9 @@ TEST_CASE("metamodel_simple_assignment1", "[textx/metamodel]")
         CHECK_THROWS(mm.model_from_str("value="));
         CHECK(mm.model_from_str("value=Hello"));
         CHECK_THROWS(mm.model_from_str("value=Hello World"));
+
+        CHECK(mm["Model"]["value"].cardinality == textx::AttributeCardinality::scalar);
+        //std::cout << mm << "\n";
     }
 }
 
@@ -132,6 +135,9 @@ TEST_CASE("metamodel_simple_assignment2", "[textx/metamodel]")
         CHECK_THROWS(mm.model_from_str("value="));
         CHECK(mm.model_from_str("value=Hello"));
         CHECK(mm.model_from_str("value=Hello World"));
+
+        //std::cout << mm << "\n";
+        CHECK(mm["Model"]["value"].cardinality == textx::AttributeCardinality::list);
     }
 }
 
@@ -148,6 +154,8 @@ TEST_CASE("metamodel_simple_assignment3", "[textx/metamodel]")
         CHECK(mm.model_from_str("value=Hello"));
         CHECK(mm.model_from_str("value=Hello, World"));
         CHECK_THROWS(mm.model_from_str("value=Hello World"));
+
+        CHECK(mm["Model"]["value"].cardinality == textx::AttributeCardinality::list);
     }
     {
         auto grammar1 = R"(
@@ -160,6 +168,8 @@ TEST_CASE("metamodel_simple_assignment3", "[textx/metamodel]")
         CHECK(mm.model_from_str("value=Hello"));
         CHECK(mm.model_from_str("value=Hello, World"));
         CHECK_THROWS(mm.model_from_str("value=Hello World"));
+
+        CHECK(mm["Model"]["value"].cardinality == textx::AttributeCardinality::list);
     }
 }
 
