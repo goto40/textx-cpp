@@ -194,30 +194,28 @@ namespace {
 
                 if (assignment_op=="=") {
                     // TODO handle assignment
-                    TEXTX_ASSERT_EQUAL(match.children[2].children[1].children.size(), 0); //no mods
-                    TEXTX_ASSERT(std::holds_alternative<None>(repeat_modifiers)); //no mods
+                    TEXTX_ASSERT(std::holds_alternative<None>(repeat_modifiers),"no repeat modifiers allowed for an assignment");
                     return assignment_rhs_content;
                 }
                 else if (assignment_op=="*=") {
                     // TODO handle assignment
                     return std::visit(overloaded{
-                        [&](ta::Pattern&p) -> ta::Pattern { return ta::zero_or_more(assignment_rhs_content); },
+                        [&](ta::Pattern&p) -> ta::Pattern { return ta::optional(ta::sequence({assignment_rhs_content, ta::zero_or_more(ta::sequence({p, assignment_rhs_content}))})); },
                         [&](Eolterm&) -> ta::Pattern { ta::raise(repeat_modifiers_match.start(), "TODO eolterm"); },
                         [&](None&) -> ta::Pattern { return ta::zero_or_more(assignment_rhs_content); }
                     }, repeat_modifiers);
                 }
                 else if (assignment_op=="+=") {
                     // TODO handle assignment
-                    std::cout << "+= ..." << repeat_modifiers.index() << "\n";
                     return std::visit(overloaded{
-                        [&](ta::Pattern&p) -> ta::Pattern { return ta::one_or_more_sep(assignment_rhs_content, p); },
+                        [&](ta::Pattern&p) -> ta::Pattern { return ta::sequence({assignment_rhs_content, ta::zero_or_more(ta::sequence({p, assignment_rhs_content}))}); },
                         [&](Eolterm&) -> ta::Pattern { ta::raise(repeat_modifiers_match.start(), "TODO eolterm"); },
                         [&](None&) -> ta::Pattern { return ta::one_or_more(assignment_rhs_content); }
                     }, repeat_modifiers);
                 }
                 else if (assignment_op=="?=") {
                     // TODO handle assignment
-                    // TODO repeat modifiers
+                    TEXTX_ASSERT(std::holds_alternative<None>(repeat_modifiers),"no repeat modifiers allowed for a boolean assignment");
                     return ta::optional(assignment_rhs_content);
                 }
                 else {
@@ -235,7 +233,7 @@ namespace {
             return Eolterm{};
         }
         else {
-            return transform_match2pattern(grammar, rule, second.children[0]);
+            return transform_match2pattern(grammar, rule, second.children[0].children[0]);
         }
     }
 

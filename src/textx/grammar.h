@@ -103,12 +103,7 @@ namespace textx
             std::ostringstream s;
             auto pos = get_last_error_position();
             if (text) {
-                const size_t p = pos.text_position.pos;
-                const size_t n = std::min<size_t>(p, 30);
-                const size_t m = std::min<size_t>(text.value().length()-p, 30);
-                s << "..." << text.value().substr(pos.text_position.pos-n,n);
-                s << "*\n" << text.value().substr(pos.text_position.pos,m);
-                s << "...\n";
+                textx::arpeggio::print_error_position(s, text.value(), pos.text_position);
             }
             s << pos.text_position.line << ":" << pos.text_position.col << ":"
               << "expected\n" << pos;

@@ -147,6 +147,15 @@ namespace textx
             return o;
         }
 
+        inline void print_error_position(std::ostream& s, std::string_view text, TextPosition pos) {
+            const size_t p = pos.pos;
+            const size_t n = std::min<size_t>(p, 30);
+            const size_t m = std::min<size_t>(text.length()-p, 30);
+            s << "..." << text.substr(pos.pos-n,n);
+            s << "*\n" << text.substr(pos.pos,m);
+            s << "...\n";
+        }
+
         struct AnnotatedTextPosition
         {
             TextPosition text_position = {};
@@ -511,34 +520,7 @@ namespace textx
                     return match;
                 } });
         }
-
-        inline auto one_or_more_sep(Pattern pattern,Pattern sep)
-        {
-            return rule([=](const Config &config, ParserState &text, TextPosition pos) -> std::optional<Match>
-                        {
-                auto sub_match = pattern(config, text, pos);
-                if (!sub_match)
-                {
-                    return std::nullopt;
-                }
-                else
-                {
-                    auto match = Match{sub_match.value().start(), sub_match.value().end(), MatchType::one_or_more, {sub_match.value()}};
-                    pos = match.end();
-                    while (auto sep_match = sep(config, text, pos))
-                    {
-                        auto next_match = pattern(config, text, sep_match->end());
-                        if (!next_match) {
-                            return std::nullopt;
-                        }
-                        match.children.push_back(next_match.value());
-                        pos = next_match.value().end();
-                        match.update_end(pos);
-                    }
-                    return match;
-                } });
-        }
-
+ 
         inline auto zero_or_more(Pattern pattern)
         {
             return rule([=](const Config &config, ParserState &text, TextPosition pos) -> std::optional<Match>
