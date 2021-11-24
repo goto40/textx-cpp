@@ -16,7 +16,20 @@ namespace {
     using Repeat_modifiers = std::variant<ta::Pattern, Eolterm, None>;
     Repeat_modifiers get_repeat_modifiers(GRAMMAR &grammar, RULE& rule, const ta::Match& m);
 
-    ta::Pattern normal_expression_or_unordered_choice(GRAMMAR &grammar, RULE& rule, const textx::arpeggio::Match& match, bool use_choice) {
+    /** get the repat modifiers info from a Match from ta::optional(ref("repeat_modifiers")) */
+    Repeat_modifiers extract_repeat_modifiers(GRAMMAR &grammar, RULE& rule, const ta::Match& repeat_modifiers_match) {
+        Repeat_modifiers repeat_modifiers = None{};
+        if (repeat_modifiers_match.children.size()>0) {
+            TEXTX_ASSERT(repeat_modifiers_match.children[0].name.has_value());
+            TEXTX_ASSERT_EQUAL(repeat_modifiers_match.children[0].name.value(), "repeat_modifiers");
+            TEXTX_ASSERT(repeat_modifiers_match.children.size()<=1, "repeat modifiers must containe ONE modifier");
+            repeat_modifiers = get_repeat_modifiers(grammar, rule, repeat_modifiers_match.children[0]);
+        }
+        return repeat_modifiers;
+    }
+
+    /** preprocess an expression with a special case for unordered_groups */
+    ta::Pattern normal_expression_or_unordered_choice(GRAMMAR &grammar, RULE& rule, const textx::arpeggio::Match& match, bool use_choice, const Repeat_modifiers &repeat_modifiers) {
         auto &expr = match;
         if(expr.children[0].name.has_value() && expr.children[0].name.value() == "assignment") {
             return transform_match2pattern(grammar, rule, expr.children[0]);
@@ -35,7 +48,12 @@ namespace {
                 for(auto &c : seq.children) {
                     patterns.push_back(transform_match2pattern( grammar, rule, c ));
                 }
-                part_of_expression = ta::unordered_group(patterns);
+                if (std::holds_alternative<ta::Pattern>(repeat_modifiers)) {
+                    part_of_expression = ta::unordered_group(patterns, std::get<ta::Pattern>(repeat_modifiers));
+                }
+                else {
+                    part_of_expression = ta::unordered_group(patterns);
+                }
             }
             else {
                 part_of_expression = transform_match2pattern(grammar, rule, expr.children[0].children[1].children[0]);
@@ -57,6 +75,7 @@ namespace {
         }
     }
 
+    /** normal node "visitors" */
     std::unordered_map<std::string, std::function<textx::arpeggio::Pattern(GRAMMAR &grammar, RULE& rule, const textx::arpeggio::Match& match)>> transform_match2pattern_map = {
         {
             "textx_rule_body",
@@ -90,21 +109,18 @@ namespace {
             "repeatable_expr",
             [](GRAMMAR &grammar, RULE& rule, const textx::arpeggio::Match& match) -> ta::Pattern {
                 // operator *+#?
-                // repeat modifier [',']
                 TEXTX_ASSERT(match.children[1].captured.has_value());
                 std::string op = "";
+                Repeat_modifiers repeat_modifiers = None{};
                 if (match.children[1].children.size()>0) {
                     TEXTX_ASSERT_EQUAL(match.children[1].children[0].name.value(), "repeat_operator");
                     TEXTX_ASSERT_EQUAL(match.children[1].children[0].children[0].name.value(), "repeat_operator_text");
                     op = match.children[1].children[0].children[0].captured.value(); // operator *+#?
 
-                    // // repeat modifiers
-                    // auto repeat_modifiers = match.children[1].children[0].children[1]; 
-                    // if (repeat_modifiers.children.size()>0) {
-                    //     assert(repeat_modifiers.children.size()<=1 && "repeat modifiers must containe ONE modifier");
-                    //     auto repeat_modifiers_val = get_repeat_modifiers(grammar, rule, repeat_modifiers.children[0]);
-                    //     // TODO eval, use... a[','] / a[eolterm]
-                    // }
+                    // repeat modifiers
+                    auto repeat_modifiers_match = match.children[1].children[0].children[1];
+                    repeat_modifiers = extract_repeat_modifiers(grammar, rule, repeat_modifiers_match);
+                    // TODO eval, use... a[','] / a[eolterm]
                 }
                 
                 // match suppression
@@ -113,17 +129,25 @@ namespace {
                 // TODO: use has_match_suppression
 
                 // expression
-                auto expression = normal_expression_or_unordered_choice( grammar, rule, match.children[0], op=="#");
+                auto expression = normal_expression_or_unordered_choice( grammar, rule, match.children[0], op=="#", repeat_modifiers);
 
                 // create pattern
                 if (op=="") {
                     return expression;
                 }
                 else if (op=="*") {
-                    return ta::zero_or_more(expression);
+                   return std::visit(overloaded{
+                        [&](ta::Pattern&p) -> ta::Pattern { return ta::optional(ta::sequence({expression, ta::zero_or_more(ta::sequence({p, expression}))})); },
+                        [&](Eolterm&) -> ta::Pattern { ta::raise(match.start(), "TODO eolterm"); },
+                        [&](None&) -> ta::Pattern { return ta::zero_or_more(expression); }
+                    }, repeat_modifiers);
                 }
                 else if (op=="+") {
-                    return ta::one_or_more(expression);
+                   return std::visit(overloaded{
+                        [&](ta::Pattern&p) -> ta::Pattern { return ta::sequence({expression, ta::zero_or_more(ta::sequence({p, expression}))}); },
+                        [&](Eolterm&) -> ta::Pattern { ta::raise(match.start(), "TODO eolterm"); },
+                        [&](None&) -> ta::Pattern { return ta::one_or_more(expression); }
+                    }, repeat_modifiers);
                 }
                 else if (op=="#") {
                     return expression;
@@ -180,16 +204,10 @@ namespace {
  
                 auto &choice = match.children[2].children[0];
                 auto assignment_rhs_content = transform_match2pattern( grammar, rule, choice.children[0] ); 
-                //TODO
-                //std::string assignment_rhs_repeat_modifiers = match.children[2].children[1].captured.value(); 
 
                 // repeat modifiers
-                Repeat_modifiers repeat_modifiers = None{};
                 auto repeat_modifiers_match = match.children[2].children[1]; 
-                if (repeat_modifiers_match.children.size()>0) {
-                    TEXTX_ASSERT(repeat_modifiers_match.children.size()<=1, "repeat modifiers must containe ONE modifier");
-                    repeat_modifiers = get_repeat_modifiers(grammar, rule, repeat_modifiers_match.children[0]);
-                }
+                Repeat_modifiers repeat_modifiers = extract_repeat_modifiers(grammar, rule, repeat_modifiers_match);
                 // TODO eval, use... a[','] / a[eolterm]
 
                 if (assignment_op=="=") {

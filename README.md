@@ -22,6 +22,6 @@ Create an interpreter for textx grammars.
 
 ## Open Points
 
- * "eolterm" not used/interpreted
- * is it correct that either "eolterm", or a repeat modifier, but not both are allowed...? test in textx...
- 
+ * "eolterm" not used/interpreted (for repeat_operator and assignment)
+ * is it correct that either "eolterm", or a repeat modifier, but not both are allowed...? test in textx... (for repeat_operator and assignment)
+ * TODO: use has_match_suppression

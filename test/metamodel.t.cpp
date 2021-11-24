@@ -162,3 +162,56 @@ TEST_CASE("metamodel_simple_assignment3", "[textx/metamodel]")
         CHECK_THROWS(mm.model_from_str("value=Hello World"));
     }
 }
+
+TEST_CASE("metamodel_simple_unordered_group_test1", "[textx/metamodel]")
+{
+    {
+        auto grammar1 = R"(
+            Model: ('A' 'B' 'C')#;
+        )";
+
+        textx::Metamodel mm{grammar1};
+
+        CHECK_THROWS(mm.model_from_str("AB"));
+        CHECK(mm.model_from_str("ABC"));
+        CHECK(mm.model_from_str("BCA"));
+        CHECK(mm.model_from_str("C B A"));
+        CHECK_THROWS(mm.model_from_str("A,B,C"));
+    }
+}
+
+TEST_CASE("metamodel_simple_unordered_group_test2", "[textx/metamodel]")
+{
+    {
+        auto grammar1 = R"(
+            Model: ('A' 'B' 'C')#[','];
+        )";
+
+        textx::Metamodel mm{grammar1};
+        
+        CHECK_THROWS(mm.model_from_str("A,B"));
+        CHECK_THROWS(mm.model_from_str("ABC"));
+        CHECK(mm.model_from_str("A,B,C"));
+        CHECK(mm.model_from_str("B,C,A"));
+        CHECK(mm.model_from_str("C,B,A"));
+        CHECK_THROWS(mm.model_from_str("A,B,"));
+    }
+}
+
+TEST_CASE("metamodel_simple_unordered_group_test3", "[textx/metamodel]")
+{
+    {
+        auto grammar1 = R"(
+            Model: ('A' 'B' 'C')#[/\d*/];
+        )";
+
+        textx::Metamodel mm{grammar1};
+        
+        CHECK_THROWS(mm.model_from_str("A1B"));
+        CHECK(mm.model_from_str("ABC"));
+        CHECK(mm.model_from_str("A1B2C"));
+        CHECK(mm.model_from_str("B3C123A"));
+        CHECK(mm.model_from_str("CB1A"));
+        CHECK_THROWS(mm.model_from_str("A1B2"));
+    }
+}

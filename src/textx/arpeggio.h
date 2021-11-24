@@ -437,7 +437,7 @@ namespace textx
                 return std::nullopt; });
         }
 
-        inline auto unordered_group(std::vector<Pattern> patterns)
+        inline auto unordered_group(std::vector<Pattern> patterns, std::optional<Pattern> separator=std::nullopt)
         {
             return rule([=](const Config &config, ParserState &text, TextPosition pos) -> std::optional<Match>
                         {
@@ -452,13 +452,26 @@ namespace textx
                 for (size_t t=0;t<patterns.size();t++) {
                     for (size_t i=0;i<patterns.size();i++) {
                         if (!used[i]) {
-                            auto match = patterns[i](config, text, pos);
-                            if (match)
-                            {
-                                result.children[i] = match.value();
-                                pos = match.value().end();
-                                used[i] = true;
-                                n++;
+                            bool ok = true;
+                            TextPosition npos = pos;
+                            if (n>0 && separator.has_value()) {
+                                auto sep_match = separator.value()(config, text, pos);
+                                if (sep_match) {
+                                    npos = sep_match.value().end(); 
+                                }
+                                else {
+                                    ok = false;
+                                }
+                            }
+                            if (ok) {
+                                auto match = patterns[i](config, text, npos);
+                                if (match)
+                                {
+                                    result.children[i] = match.value();
+                                    pos = match.value().end();
+                                    used[i] = true;
+                                    n++;
+                                }
                             }
                         }
                     }
