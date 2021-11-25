@@ -48,6 +48,7 @@ namespace textx {
         }
 
         void add_attribute(std::string name, AttributeInfo base_info) {
+            // TODO if target type is a matching rule, create a str-output/terminal-output
             if (attribute_info.count(name)==0) {
                 attribute_info[name] = base_info;
             }
