@@ -280,3 +280,26 @@ TEST_CASE("metamodel_simple_assignment_and_rule_ref1", "[textx/metamodel]")
         //std::cout << mm << "\n";
     }
 }
+
+TEST_CASE("metamodel_simple_abstract_rule1", "[textx/metamodel]")
+{
+    {
+        auto grammar1 = R"(
+            Model: 'value' '=' value=A;
+            A: A1|A2;
+            A1: 'a1';
+            A2: 'a2';
+        )";
+
+        textx::Metamodel mm{grammar1};
+        CHECK_THROWS(mm.parsetree_from_str("value="));
+        CHECK(mm.parsetree_from_str("value=a1"));
+        CHECK(mm.parsetree_from_str("value=a2"));
+
+        CHECK(mm["Model"]["value"].cardinality == textx::AttributeCardinality::scalar);
+        CHECK(mm["A1"].type() == textx::RuleType::match);
+        CHECK(mm["A2"].type() == textx::RuleType::match);
+        CHECK(mm["A"].type() == textx::RuleType::abstract);
+        //std::cout << mm << "\n";
+    }
+}
