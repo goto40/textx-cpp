@@ -262,6 +262,12 @@ namespace {
                 return mm.ref(match.captured.value());
             }
         },
+        {
+            "reference",
+            [](METAMODEL &mm, RULE& rule, const ta::Match& match, textx::AttributeCardinality cardinality) -> ta::Pattern {
+                return transform_match2pattern(mm, rule, match.children[0], cardinality);
+            }
+        },
     };
 
     Repeat_modifiers get_repeat_modifiers(METAMODEL &mm, RULE& rule, const ta::Match& m) {

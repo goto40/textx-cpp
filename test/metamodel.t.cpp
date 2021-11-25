@@ -260,3 +260,22 @@ TEST_CASE("metamodel_simple_rule_ref", "[textx/metamodel]")
         CHECK(mm.parsetree_from_str("abbc"));
     }
 }
+
+TEST_CASE("metamodel_simple_assignment_and_rule_ref1", "[textx/metamodel]")
+{
+    {
+        auto grammar1 = R"(
+            Model: 'value' '=' value=MYID;
+            MYID: /[^\d\W]\w*\b/;
+        )";
+
+        textx::Metamodel mm{grammar1};
+        CHECK_THROWS(mm.parsetree_from_str("value="));
+        CHECK(mm.parsetree_from_str("value=Hello123"));
+        CHECK_THROWS(mm.parsetree_from_str("value=Hello World"));
+        CHECK_THROWS(mm.parsetree_from_str("value=123Hello"));
+
+        CHECK(mm["Model"]["value"].cardinality == textx::AttributeCardinality::scalar);
+        //std::cout << mm << "\n";
+    }
+}
