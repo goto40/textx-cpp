@@ -242,3 +242,21 @@ TEST_CASE("metamodel_simple_unordered_group_test3", "[textx/metamodel]")
         CHECK_THROWS(mm.parsetree_from_str("A1B2"));
     }
 }
+
+TEST_CASE("metamodel_simple_rule_ref", "[textx/metamodel]")
+{
+    {
+        auto grammar1 = R"(
+            Model: A B+ C;
+            A: 'a';
+            B: 'b';
+            C: 'c';
+        )";
+
+        textx::Metamodel mm{grammar1};
+        
+        CHECK_THROWS(mm.parsetree_from_str("ac"));
+        CHECK(mm.parsetree_from_str("abc"));
+        CHECK(mm.parsetree_from_str("abbc"));
+    }
+}

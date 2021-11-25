@@ -113,7 +113,7 @@ namespace textx
             add_rule("reference", ta::ordered_choice({ref("rule_ref"),
                                                       ref("obj_ref")}));
 
-            add_rule("rule_ref", ref("ident"));
+            add_rule("rule_ref", ta::capture(ref("ident")));
 
             add_rule("obj_ref", ta::sequence({ta::str_match("["),
                                               ref("class_name"),

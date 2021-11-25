@@ -255,6 +255,12 @@ namespace {
                 }
             }
         },
+        {
+            "rule_ref",
+            [](GRAMMAR &grammar, RULE& rule, const ta::Match& match, textx::AttributeCardinality cardinality) -> ta::Pattern {
+                return grammar.ref(match.captured.value());
+            }
+        },
     };
 
     Repeat_modifiers get_repeat_modifiers(GRAMMAR &grammar, RULE& rule, const ta::Match& m) {
