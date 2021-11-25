@@ -10,11 +10,14 @@
 namespace textx {
 
     enum class AttributeCardinality {scalar, list};
+    enum class RuleType {common, abstract, match};
+
     struct AttributeInfo {
         AttributeCardinality cardinality = AttributeCardinality::scalar;
         std::optional<std::string> type = std::nullopt;
         bool is_terminal() const { return !type.has_value(); }
     };
+
     inline std::ostream& operator<<(std::ostream &o, const AttributeInfo& ai) {
         switch(ai.cardinality) {
             case AttributeCardinality::scalar: o << "scalar"; break;
@@ -30,11 +33,26 @@ namespace textx {
         return o;
     }
 
-    struct Rule {
+    inline std::ostream& operator<<(std::ostream &o, const RuleType& rt) {
+        switch(rt) {
+            case RuleType::common: o << "common"; break;
+            case RuleType::match: o << "match"; break;
+            case RuleType::abstract: o << "abstract"; break;
+            default: throw std::runtime_error("unknown RuleType");
+        }
+        return o;
+    }
+
+    class Metamodel;
+
+    class Rule {
         textx::arpeggio::Pattern pattern;
         std::string name = "unnamed";
         std::unordered_map<std::string, AttributeInfo> attribute_info; 
-
+        RuleType m_type = RuleType::common;
+    public:
+        RuleType type() { return m_type; }
+    
         std::optional<textx::arpeggio::Match> operator()(const textx::arpeggio::Config &config, textx::arpeggio::ParserState &text, textx::arpeggio::TextPosition pos) {
             return pattern(config, text, pos);
         }
@@ -67,8 +85,8 @@ namespace textx {
             return attribute_info[name];
         }
 
+        friend Rule createRuleFromTextxPattern(textx::Metamodel& mm, std::string_view name, textx::arpeggio::Match rule_params, const textx::arpeggio::Match& rule_body, bool add_eof);
     };
 
-    class Metamodel;
     Rule createRuleFromTextxPattern(textx::Metamodel& mm, std::string_view name, textx::arpeggio::Match rule_params, const textx::arpeggio::Match& rule_body, bool add_eof);
 }

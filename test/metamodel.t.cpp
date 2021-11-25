@@ -276,6 +276,7 @@ TEST_CASE("metamodel_simple_assignment_and_rule_ref1", "[textx/metamodel]")
         CHECK_THROWS(mm.parsetree_from_str("value=123Hello"));
 
         CHECK(mm["Model"]["value"].cardinality == textx::AttributeCardinality::scalar);
+        CHECK(mm["MYID"].type() == textx::RuleType::match);
         //std::cout << mm << "\n";
     }
 }
