@@ -77,6 +77,10 @@ namespace textx {
             }
         }
 
+        const auto& get_attribute_info() const {
+            return attribute_info;
+        }
+
         AttributeInfo& operator[](std::string name)
         {
             if (attribute_info.find(name)==attribute_info.end()) {

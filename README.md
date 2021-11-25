@@ -31,3 +31,4 @@ Create an interpreter for textx grammars.
  * TODO: use has_match_suppression
  * include/reference other metamodels
  * TODO handle referenced/included metamodels, in Metamodel::ref
+ * // TODO determine_rule_type, see http://textx.github.io/textX/stable/grammar/#rule-types, rule.cpp

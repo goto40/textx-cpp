@@ -302,6 +302,17 @@ namespace {
     }
 }
 
+namespace {
+    textx::RuleType determine_rule_type(const textx::Rule &rule) {
+        // TODO determine_rule_type, see http://textx.github.io/textX/stable/grammar/#rule-types
+        if (rule.get_attribute_info().size()>0) {
+            return textx::RuleType::common;
+        }
+        else {
+            return textx::RuleType::match;
+        }
+    }
+}
 namespace textx {
 
     Rule createRuleFromTextxPattern(textx::Metamodel& mm, std::string_view name, ta::Match rule_params, const ta::Match& rule_body, bool add_eof) {
@@ -312,6 +323,7 @@ namespace textx {
         if (add_eof) {
             rule.pattern = ta::sequence({rule.pattern, ta::end_of_file()});
         }
+        rule.m_type = determine_rule_type(rule);
         return rule;
     }
 
