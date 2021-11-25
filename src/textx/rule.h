@@ -15,7 +15,7 @@ namespace textx {
     struct AttributeInfo {
         AttributeCardinality cardinality = AttributeCardinality::scalar;
         std::optional<std::string> type = std::nullopt;
-        bool is_terminal() const { return !type.has_value(); }
+        bool is_text() const { return !type.has_value(); }
     };
 
     inline std::ostream& operator<<(std::ostream &o, const AttributeInfo& ai) {
@@ -24,8 +24,8 @@ namespace textx {
             case AttributeCardinality::list: o << "list"; break;
             default: throw std::runtime_error("unknown AttributeInfo");
         }
-        if (ai.is_terminal()) {
-            o << "/terminal";
+        if (ai.is_text()) {
+            o << "/text";
         }
         else {
             o << "/type(" << ai.type.value() << ")";
