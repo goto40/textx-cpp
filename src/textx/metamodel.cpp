@@ -23,7 +23,7 @@ namespace textx {
                 //std::cout << "r: " << rule_name << "\n";
                 auto &rule_params = r.children[1];
                 auto &rule_body = r.children[3];
-                auto new_rule = textx::createRuleFromTextxPattern(grammar, rule_name, rule_params, rule_body, first);
+                auto new_rule = textx::createRuleFromTextxPattern(*this, rule_name, rule_params, rule_body, first);
                 if (first) {
                     grammar.set_main_rule(rule_name);
                     first = false;

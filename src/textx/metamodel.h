@@ -26,6 +26,11 @@ namespace textx {
             return grammar[name];
         }
 
+        auto ref(std::string name) {
+            //TODO handle referenced/included metamodels
+            return grammar.ref(name);
+        }
+
         inline friend std::ostream& operator<<(std::ostream &o, const Metamodel& mm) {
             for(auto& [k,v]: mm.grammar.get_rules()) {
                 //o << "RULE[\"" << k << "\"]:\n";
