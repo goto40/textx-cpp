@@ -116,7 +116,7 @@ namespace textx
             add_rule("rule_ref", ta::capture(ref("ident")));
 
             add_rule("obj_ref", ta::sequence({ta::str_match("["),
-                                              ref("class_name"),
+                                              ta::capture(ref("class_name")),
                                               ta::optional(ta::sequence({ta::str_match("|"),
                                                                          ref("obj_ref_rule"),
                                                                          ta::optional(ta::sequence({ta::str_match("|"),

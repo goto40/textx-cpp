@@ -1,6 +1,7 @@
 #include "textx/metamodel.h"
 #include "textx/rule.h"
 #include <cassert>
+#include <unordered_set>
 
 namespace textx {
 
@@ -29,6 +30,16 @@ namespace textx {
                     first = false;
                 }
                 grammar.add_rule(rule_name, new_rule);
+            }
+            std::unordered_set<std::string> recursion_stopper{};
+            for (auto&[name,r] : grammar) {
+                r.set_rule_type( r.determine_rule_type(recursion_stopper, *this) );
+            }
+            for (auto&[name,r] : grammar) {
+                r.fix_tx_inh_by(*this);
+            }
+            for (auto&[name,r] : grammar) {
+                r.fix_attribute_types(*this);
             }
         }
         catch(textx::arpeggio::Exception &e) {

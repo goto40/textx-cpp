@@ -26,6 +26,10 @@ namespace textx {
             return grammar[name];
         }
 
+        const Rule& operator[](std::string name) const {
+            return grammar[name];
+        }
+
         auto ref(std::string name) {
             //TODO handle referenced/included metamodels
             return grammar.ref(name);

@@ -60,7 +60,21 @@ namespace textx
             return rules[name];
         }
 
+        const R& operator[](std::string name) const
+        {
+            auto f=rules.find(name);
+            if (f==rules.end()) {
+                throw std::runtime_error(std::string("cannot find rule \"")+std::string(name)+"\"");
+            }
+            return f->second;
+        }
+
         const auto& get_rules() const { return rules; }
+
+        auto begin() { return rules.begin(); }
+        auto begin() const { return rules.begin(); }
+        auto end() { return rules.end(); }
+        auto end() const { return rules.end(); }
 
         void add_rule(std::string_view name, R p)
         {

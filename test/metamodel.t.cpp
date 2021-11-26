@@ -288,7 +288,7 @@ TEST_CASE("metamodel_simple_abstract_rule1", "[textx/metamodel]")
             Model: 'value' '=' value=A;
             A: A1|A2;
             A1: x='a1';
-            A2: x='a2';
+            A2: 'a2';
         )";
 
         textx::Metamodel mm{grammar1};
@@ -297,7 +297,7 @@ TEST_CASE("metamodel_simple_abstract_rule1", "[textx/metamodel]")
         CHECK(mm.parsetree_from_str("value=a2"));
 
         CHECK(mm["Model"]["value"].cardinality == textx::AttributeCardinality::scalar);
-        CHECK(mm["A1"].type() == textx::RuleType::match);
+        CHECK(mm["A1"].type() == textx::RuleType::common);
         CHECK(mm["A2"].type() == textx::RuleType::match);
         CHECK(mm["A"].type() == textx::RuleType::abstract);
         CHECK(mm["Model"]["value"].is_text() == false);

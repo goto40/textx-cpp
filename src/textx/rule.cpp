@@ -4,6 +4,12 @@
 #include "textx/metamodel.h"
 
 namespace {
+
+    struct OnExit {
+        std::function<void()> f;
+        ~OnExit() { f(); }
+    };
+
     using RULE = textx::Rule;
     using METAMODEL = textx::Metamodel;
     namespace ta = textx::arpeggio;
@@ -223,7 +229,15 @@ namespace {
                 // TODO extract "type" / terminal
 
                 // register attribute
-                rule.add_attribute(attribute_name, {cardinality}); // add type here
+                if (choice.children[0].name.value()=="reference" && choice.children[0].children[0].name.value()=="obj_ref") {
+                    rule.add_attribute(attribute_name, {cardinality,{choice.children[0].children[0].children[1].captured.value()}}); // add type here
+                }
+                else if (choice.children[0].name.value()=="reference" && choice.children[0].children[0].name.value()=="rule_ref") {
+                    rule.add_attribute(attribute_name, {cardinality,{choice.children[0].children[0].captured.value()}});
+                }
+                else {
+                    rule.add_attribute(attribute_name, {cardinality,{}}); // add type here
+                }
 
                 if (assignment_op=="=") {
                     // TODO handle assignment
@@ -259,7 +273,9 @@ namespace {
         {
             "rule_ref",
             [](METAMODEL &mm, RULE& rule, const ta::Match& match, textx::AttributeCardinality cardinality) -> ta::Pattern {
-                return mm.ref(match.captured.value());
+                auto ref_rule_name = match.captured.value();
+                rule.add_tx_inh_by(ref_rule_name);
+                return mm.ref(ref_rule_name);
             }
         },
         {
@@ -302,17 +318,6 @@ namespace {
     }
 }
 
-namespace {
-    textx::RuleType determine_rule_type(const textx::Rule &rule) {
-        // TODO determine_rule_type, see http://textx.github.io/textX/stable/grammar/#rule-types
-        if (rule.get_attribute_info().size()>0) {
-            return textx::RuleType::common;
-        }
-        else {
-            return textx::RuleType::match;
-        }
-    }
-}
 namespace textx {
 
     Rule createRuleFromTextxPattern(textx::Metamodel& mm, std::string_view name, ta::Match rule_params, const ta::Match& rule_body, bool add_eof) {
@@ -323,8 +328,88 @@ namespace textx {
         if (add_eof) {
             rule.pattern = ta::sequence({rule.pattern, ta::end_of_file()});
         }
-        rule.m_type = determine_rule_type(rule);
+        rule.m_type = RuleType::illegal;
         return rule;
+    }
+
+    void Rule::fix_tx_inh_by(textx::Metamodel& mm) {
+        // remove_match_types_from
+        std::erase_if(tx_inh_by, [&](auto&x){ return mm[x].type()==RuleType::match; });
+        // adjust bases
+        for (auto& n: tx_inh_by ) {
+            mm[n].tx_bases.insert(name); // add myself as base class
+        }
+    }
+
+    void Rule::fix_attribute_types(const textx::Metamodel& mm) {
+        for (auto& [name, info]: attribute_info) {
+            std::function<bool(std::string,std::string)> is_inherited_from;
+            is_inherited_from = [&](std::string t1, std::string t2) -> bool {
+                if (t1==t2) return true;
+                for (auto &b: mm[t1].tx_bases) {
+                    if (is_inherited_from(b,t2)) return true;
+                }
+                return false;
+            };
+            auto common = [&](std::string t1, std::string t2) -> std::string {
+                if (t1==t2) return t1;
+                if (is_inherited_from(t1,t2)) return t2;
+                std::unordered_set<std::string> bases1={t2};
+                std::unordered_set<std::string> bases2={};
+                while(bases1.size()>0) {
+                    for (auto &b: bases1) {
+                       for (auto &n: mm[b].tx_bases) {
+                            bases2.insert(n);
+                            if (is_inherited_from(t1,n)) return n;
+                       }
+                    }
+                    std::swap(bases1, bases2);
+                }
+                return "OBJECT";
+            };
+
+            // remove doubles
+            auto u = std::unique(info.types.begin(), info.types.end());
+            info.types.erase(u,info.types.end());
+            // remove match rules
+            std::erase_if(info.types, [&](auto&x){ return mm[x].type()==RuleType::match; });
+            // now find common rule
+            if (info.types.size()>0) {
+                info.type = info.types[0];
+                for (auto&t: info.types) {
+                    info.type = common(info.type.value(),t);
+                }
+            }
+            else {
+                // nothing to do (no type)
+                info.type = std::nullopt;
+            }
+        }
+    }
+
+
+    textx::RuleType Rule::determine_rule_type(std::unordered_set<std::string> &recursion_stopper, const textx::Metamodel& mm) const {
+        if (recursion_stopper.count(name)>0) {
+            throw std::runtime_error("detected circular abstract rule reference");
+        }
+        recursion_stopper.insert(name);
+        OnExit onexit{ [&](){ recursion_stopper.erase(name); } };
+
+        // TODO determine_rule_type, see http://textx.github.io/textX/stable/grammar/#rule-types
+        if (get_attribute_info().size()>0) {
+            return textx::RuleType::common;
+        }
+        else if (std::count_if(
+            tx_inh_by.begin(),
+            tx_inh_by.end(),
+            [&](auto &n){
+                return mm[n].determine_rule_type(recursion_stopper, mm) != RuleType::match;
+            })>0) {
+            return textx::RuleType::abstract;
+        }
+        else {
+            return textx::RuleType::match;
+        }
     }
 
 }
