@@ -301,6 +301,36 @@ TEST_CASE("metamodel_simple_abstract_rule1", "[textx/metamodel]")
         CHECK(mm["A2"].type() == textx::RuleType::match);
         CHECK(mm["A"].type() == textx::RuleType::abstract);
         CHECK(mm["Model"]["value"].is_text() == false);
+        CHECK(mm["Model"]["value"].type.value() == "A");
+        //std::cout << mm << "\n";
+    }
+}
+
+TEST_CASE("metamodel_simple_abstract_rule2", "[textx/metamodel]")
+{
+    {
+        auto grammar1 = R"(
+            Model: 'value' '=' (a=A1|a=A2) a1=A1 a2=A2;
+            A: A1|A2;
+            A1: x='a1';
+            A2: x='a2';
+        )";
+
+        textx::Metamodel mm{grammar1};
+        CHECK_THROWS(mm.parsetree_from_str("value="));
+        CHECK(mm.parsetree_from_str("value=a1 a1 a2"));
+        CHECK(mm.parsetree_from_str("value=a2 a1 a2"));
+
+        CHECK(mm["Model"]["a"].cardinality == textx::AttributeCardinality::scalar);
+        CHECK(mm["A1"].type() == textx::RuleType::common);
+        CHECK(mm["A2"].type() == textx::RuleType::match);
+        CHECK(mm["A"].type() == textx::RuleType::abstract);
+        CHECK(mm["Model"]["a"].is_text() == false);
+        CHECK(mm["Model"]["a"].type.value() == "A");
+        CHECK(mm["Model"]["a1"].is_text() == false);
+        CHECK(mm["Model"]["a1"].type.value() == "A1");
+        CHECK(mm["Model"]["a2"].is_text() == false);
+        CHECK(mm["Model"]["a2"].type.value() == "A2");
         //std::cout << mm << "\n";
     }
 }
