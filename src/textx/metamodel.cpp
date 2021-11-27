@@ -6,8 +6,8 @@
 namespace textx {
 
     Metamodel::Metamodel(std::string_view grammar_text) {
-        grammar_root = textx_grammar.parse_or_throw(grammar_text);        
-        auto &root = grammar_root.value();
+        grammar_parsetree.root = textx_grammar.parse_or_throw(grammar_text);        
+        auto &root = grammar_parsetree.root.value();
 
         assert(root.name && "unexpected: no textx model loaded!!");
         assert(root.name.value()=="textx_model" && "unexpected: no textx model loaded!!");
@@ -24,22 +24,25 @@ namespace textx {
                 //std::cout << "r: " << rule_name << "\n";
                 auto &rule_params = r.children[1];
                 auto &rule_body = r.children[3];
-                auto new_rule = textx::createRuleFromTextxPattern(*this, rule_name, rule_params, rule_body, first);
+                auto rule_info = textx::parsetree::RuleInfo{r,rule_name};
+                auto new_rule = textx::createRuleFromTextxPattern(*this, rule_name, rule_params, rule_body, rule_info, first);
                 if (first) {
                     grammar.set_main_rule(rule_name);
                     first = false;
                 }
                 grammar.add_rule(rule_name, new_rule);
+                grammar_parsetree.rule_info.emplace(rule_name, rule_info);
             }
-            std::unordered_set<std::string> recursion_stopper{};
-            for (auto&[name,r] : grammar) {
-                r.set_rule_type( r.determine_rule_type(recursion_stopper, *this) );
-            }
-            for (auto&[name,r] : grammar) {
-                r.fix_tx_inh_by(*this);
-            }
-            for (auto&[name,r] : grammar) {
-                r.fix_attribute_types(*this);
+
+            grammar_parsetree.finalize_rule_info();
+
+            for (auto&[name,r] : grammar_parsetree.rule_info) {
+                auto &rule = grammar[name];
+                rule.m_type = r.rule_type;
+                rule.tx_inh_by = r.tx_inh_by;
+                for(auto& [name, info]: r.attribute_info) {
+                    rule.attribute_info[name].type = info.type; 
+                }
             }
         }
         catch(textx::arpeggio::Exception &e) {

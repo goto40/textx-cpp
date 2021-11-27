@@ -2,6 +2,7 @@
 #include "textx/lang.h"
 #include "textx/grammar.h"
 #include "textx/rule.h"
+#include "textx/parsetree.h"
 #include <string>
 
 namespace textx {
@@ -9,7 +10,8 @@ namespace textx {
     class Metamodel {
         textx::lang::TextxGrammar textx_grammar={};
         textx::Grammar<textx::Rule> grammar={};
-        std::optional<textx::arpeggio::Match> grammar_root=std::nullopt;
+        textx::parsetree::ParseTree grammar_parsetree;
+
         public:
         Metamodel(std::string_view grammar);
 
