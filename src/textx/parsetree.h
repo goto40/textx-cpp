@@ -58,6 +58,9 @@ namespace textx::parsetree {
         void add_attribute(std::string name, std::string type) {
             attribute_info[name].types.push_back(type);
         }
+        void add_attribute(std::string name) {
+            attribute_info[name].type = std::nullopt; // dummy access
+        }
 
         textx::RuleType determine_rule_type(std::unordered_set<std::string> &recursion_stopper, const ParseTree& p) const;
     };

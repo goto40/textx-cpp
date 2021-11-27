@@ -223,7 +223,7 @@ namespace {
                     rule.add_attribute(attribute_name, choice.children[0].children[0].captured.value());
                 }
                 else {
-                    rule.add_attribute(attribute_name, {{},{}}); // add type here
+                    rule.add_attribute(attribute_name); // add type here
                 }
 
                 if (assignment_op=="=") {
