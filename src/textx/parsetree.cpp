@@ -16,11 +16,9 @@ namespace textx::parsetree {
 
     void RuleInfo::fix_attribute_types(const ParseTree& p) {
         for (auto& [name, info]: attribute_info) {
-            TEXTX_ASSERT(name!="");
             std::function<bool(std::string,std::string)> is_inherited_from;
             is_inherited_from = [&](std::string t1, std::string t2) -> bool {
                 if (t1==t2) return true;
-                TEXTX_ASSERT(t1!="");
                 for (auto &b: p[t1].tx_bases) {
                     if (is_inherited_from(b,t2)) return true;
                 }
@@ -33,7 +31,6 @@ namespace textx::parsetree {
                 std::unordered_set<std::string> bases2={};
                 while(bases1.size()>0) {
                     for (auto &b: bases1) {
-                        TEXTX_ASSERT(b!="");
                         for (auto &n: p[b].tx_bases) {
                             bases2.insert(n);
                             if (is_inherited_from(t1,n)) return n;
@@ -48,9 +45,6 @@ namespace textx::parsetree {
             auto u = std::unique(info.types.begin(), info.types.end());
             info.types.erase(u,info.types.end());
             // remove match rules
-            for(auto& t: info.types) {
-                TEXTX_ASSERT(t!="");
-            }
             std::erase_if(info.types, [&](auto&x){ return p[x].rule_type==RuleType::match; });
             // now find common rule
             if (info.types.size()>0) {

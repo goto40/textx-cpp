@@ -50,7 +50,6 @@ namespace textx::parsetree {
         RuleInfo(textx::arpeggio::Match &match, std::string name) :match{match}, name(name) {}
 
         void add_tx_inh_by(std::string name) {
-            TEXTX_ASSERT(name!="");
             tx_inh_by.insert(name);
         }
         void fix_tx_inh_by(ParseTree& p);
@@ -72,7 +71,9 @@ namespace textx::parsetree {
         {
             auto f=rule_info.find(name);
             if (f==rule_info.end()) {
-                throw std::runtime_error(std::string("cannot find rule info \"")+name+"\"");
+                std::ostringstream o;
+                o << "cannot find rule_info \"" << name << "\"";
+                throw std::runtime_error(o.str());
             }
             return f->second;
         }
@@ -81,7 +82,9 @@ namespace textx::parsetree {
         {
             auto f=rule_info.find(name);
             if (f==rule_info.end()) {
-                throw std::runtime_error(std::string("cannot find rule info \"")+name+"\"");
+                std::ostringstream o;
+                o << "cannot find rule_info \"" << name << "\"";
+                throw std::runtime_error(o.str());
             }
             return f->second;
         }
