@@ -17,7 +17,7 @@ namespace {
     template<class... Ts> struct overloaded : Ts... { using Ts::operator()...; };
     template<class... Ts> overloaded(Ts...) -> overloaded<Ts...>;
 
-    ta::Pattern transform_match2pattern(METAMODEL &mm, RULE& rule, const ta::Match& match, textx::AttributeCardinality cardinality);
+    ta::Pattern transform_match2pattern(METAMODEL &mm, RULE& rule, const ta::Match& match);
 
     struct Eolterm{};
     struct None{};
@@ -37,10 +37,10 @@ namespace {
     }
 
     /** preprocess an expression with a special case for unordered_groups */
-    ta::Pattern normal_expression_or_unordered_choice(METAMODEL &mm, RULE& rule, const ta::Match& match, textx::AttributeCardinality cardinality, bool use_choice, const Repeat_modifiers &repeat_modifiers) {
+    ta::Pattern normal_expression_or_unordered_choice(METAMODEL &mm, RULE& rule, const ta::Match& match, bool use_choice, const Repeat_modifiers &repeat_modifiers) {
         auto &expr = match;
         if(expr.children[0].name.has_value() && expr.children[0].name.value() == "assignment") {
-            return transform_match2pattern(mm, rule, expr.children[0], cardinality);
+            return transform_match2pattern(mm, rule, expr.children[0]);
         }
         else {
             TEXTX_ASSERT_EQUAL(expr.children[0].children[1].type(), ta::MatchType::ordered_choice);
@@ -54,7 +54,7 @@ namespace {
                 auto &seq = choice.children[1].children[0]; // "(" .#1. ")"
                 std::vector<ta::Pattern> patterns;
                 for(auto &c : seq.children) {
-                    patterns.push_back(transform_match2pattern( mm, rule, c, cardinality ));
+                    patterns.push_back(transform_match2pattern( mm, rule, c));
                 }
                 if (std::holds_alternative<ta::Pattern>(repeat_modifiers)) {
                     part_of_expression = ta::unordered_group(patterns, std::get<ta::Pattern>(repeat_modifiers));
@@ -64,7 +64,7 @@ namespace {
                 }
             }
             else {
-                part_of_expression = transform_match2pattern(mm, rule, expr.children[0].children[1].children[0], cardinality);
+                part_of_expression = transform_match2pattern(mm, rule, expr.children[0].children[1].children[0]);
             }
             if (expr.children[0].children[0].children.size()>0) {
                 TEXTX_ASSERT_EQUAL(expr.children[0].children[0].children.size(), 1);
@@ -84,38 +84,38 @@ namespace {
     }
 
     /** normal node "visitors" */
-    std::unordered_map<std::string, std::function<ta::Pattern(METAMODEL &mm, RULE& rule, const ta::Match& match, textx::AttributeCardinality cardinality)>> transform_match2pattern_map = {
+    std::unordered_map<std::string, std::function<ta::Pattern(METAMODEL &mm, RULE& rule, const ta::Match& match)>> transform_match2pattern_map = {
         {
             "textx_rule_body",
-            [](METAMODEL &mm, RULE& rule, const ta::Match& match, textx::AttributeCardinality cardinality) -> ta::Pattern {
-                return transform_match2pattern(mm, rule, match.children[0], cardinality);
+            [](METAMODEL &mm, RULE& rule, const ta::Match& match) -> ta::Pattern {
+                return transform_match2pattern(mm, rule, match.children[0]);
             }
         },
         {
             "choice",
-            [](METAMODEL &mm, RULE& rule, const ta::Match& match, textx::AttributeCardinality cardinality) -> ta::Pattern {
+            [](METAMODEL &mm, RULE& rule, const ta::Match& match) -> ta::Pattern {
                 auto seq1 = match.children[0];
                 auto zom_seq2 = match.children[1];
-                std::vector<ta::Pattern> c{ transform_match2pattern(mm, rule, seq1, cardinality) };
+                std::vector<ta::Pattern> c{ transform_match2pattern(mm, rule, seq1) };
                 for (auto &inner_seq_with_two_entries: zom_seq2.children) {
-                    c.emplace_back( transform_match2pattern( mm, rule, inner_seq_with_two_entries.children[1], cardinality) );
+                    c.emplace_back( transform_match2pattern( mm, rule, inner_seq_with_two_entries.children[1]) );
                 }
                 return ta::ordered_choice(c);
             }
         },
         {
             "sequence",
-            [](METAMODEL &mm, RULE& rule, const ta::Match& match, textx::AttributeCardinality cardinality) -> ta::Pattern {
+            [](METAMODEL &mm, RULE& rule, const ta::Match& match) -> ta::Pattern {
                 std::vector<ta::Pattern> c{};
                 for (auto &inner_entry: match.children) {
-                    c.emplace_back( transform_match2pattern( mm, rule, inner_entry, cardinality ));
+                    c.emplace_back( transform_match2pattern( mm, rule, inner_entry));
                 }
                 return ta::sequence(c);
             }
         },
         {
             "repeatable_expr",
-            [](METAMODEL &mm, RULE& rule, const ta::Match& match, textx::AttributeCardinality cardinality) -> ta::Pattern {
+            [](METAMODEL &mm, RULE& rule, const ta::Match& match) -> ta::Pattern {
                 // operator *+#?
                 TEXTX_ASSERT(match.children[1].captured.has_value());
                 std::string op = "";
@@ -136,12 +136,8 @@ namespace {
                 bool has_match_suppression = (match.children[2].captured.value()=="-");
                 // TODO: use has_match_suppression
 
-                if (op=="*" || op=="+") {
-                    cardinality = textx::AttributeCardinality::list;
-                }
-
                 // expression
-                auto expression = normal_expression_or_unordered_choice( mm, rule, match.children[0], cardinality, op=="#", repeat_modifiers);
+                auto expression = normal_expression_or_unordered_choice( mm, rule, match.children[0], op=="#", repeat_modifiers);
 
                 // create pattern
                 if (op=="") {
@@ -171,19 +167,19 @@ namespace {
         },
         {
             "expression",
-            [](METAMODEL &mm, RULE& rule, const ta::Match& match, textx::AttributeCardinality cardinality) -> ta::Pattern {
-                return transform_match2pattern( mm, rule, match.children[0], cardinality );
+            [](METAMODEL &mm, RULE& rule, const ta::Match& match) -> ta::Pattern {
+                return transform_match2pattern( mm, rule, match.children[0]);
             }
         },
         {
             "simple_match",
-            [](METAMODEL &mm, RULE& rule, const ta::Match& match, textx::AttributeCardinality cardinality) -> ta::Pattern {
-                return transform_match2pattern( mm, rule, match.children[0], cardinality );
+            [](METAMODEL &mm, RULE& rule, const ta::Match& match) -> ta::Pattern {
+                return transform_match2pattern( mm, rule, match.children[0]);
             }
         },
         {
             "str_match",
-            [](METAMODEL &mm, RULE& rule, const ta::Match& match, textx::AttributeCardinality cardinality) -> ta::Pattern {
+            [](METAMODEL &mm, RULE& rule, const ta::Match& match) -> ta::Pattern {
                 std::string str = match.captured.value();
                 TEXTX_ASSERT(str.size()>=2);
                 str = str.substr(1,str.size()-2);
@@ -192,7 +188,7 @@ namespace {
         },
         {
             "re_match",
-            [](METAMODEL &mm, RULE& rule, const ta::Match& match, textx::AttributeCardinality cardinality) -> ta::Pattern {
+            [](METAMODEL &mm, RULE& rule, const ta::Match& match) -> ta::Pattern {
                 std::string str = match.captured.value();
                 TEXTX_ASSERT(str.size()>=2);
                 str = str.substr(1,str.size()-2);
@@ -201,25 +197,21 @@ namespace {
         },
         {
             "bracketed_choice",
-            [](METAMODEL &mm, RULE& rule, const ta::Match& match, textx::AttributeCardinality cardinality) -> ta::Pattern {
-                return transform_match2pattern( mm, rule, match.children[1], cardinality );
+            [](METAMODEL &mm, RULE& rule, const ta::Match& match) -> ta::Pattern {
+                return transform_match2pattern( mm, rule, match.children[1]);
             }
         },
         {
             "assignment",
-            [](METAMODEL &mm, RULE& rule, const ta::Match& match, textx::AttributeCardinality cardinality) -> ta::Pattern {
+            [](METAMODEL &mm, RULE& rule, const ta::Match& match) -> ta::Pattern {
                 TEXTX_ASSERT_EQUAL(match.children.size(),3 , "assignment must have 3 children");
                 TEXTX_ASSERT(match.children[0].captured.has_value(), "assignment name");
                 TEXTX_ASSERT(match.children[1].captured.has_value(), "asisgnment op");
                 auto attribute_name = match.children[0].captured.value();
                 auto assignment_op = match.children[1].captured.value();
 
-                if (assignment_op=="*=" || assignment_op=="+=") {
-                    cardinality = textx::AttributeCardinality::list;
-                }
-
                 auto &choice = match.children[2].children[0];
-                auto assignment_rhs_content = transform_match2pattern( mm, rule, choice.children[0], cardinality ); 
+                auto assignment_rhs_content = transform_match2pattern( mm, rule, choice.children[0]); 
 
                 // repeat modifiers
                 auto repeat_modifiers_match = match.children[2].children[1]; 
@@ -230,13 +222,13 @@ namespace {
 
                 // register attribute
                 if (choice.children[0].name.value()=="reference" && choice.children[0].children[0].name.value()=="obj_ref") {
-                    rule.add_attribute(attribute_name, {cardinality,{choice.children[0].children[0].children[1].captured.value()}}); // add type here
+                    rule.add_attribute(attribute_name, {{},{choice.children[0].children[0].children[1].captured.value()}}); // add type here
                 }
                 else if (choice.children[0].name.value()=="reference" && choice.children[0].children[0].name.value()=="rule_ref") {
-                    rule.add_attribute(attribute_name, {cardinality,{choice.children[0].children[0].captured.value()}});
+                    rule.add_attribute(attribute_name, {{},{choice.children[0].children[0].captured.value()}});
                 }
                 else {
-                    rule.add_attribute(attribute_name, {cardinality,{}}); // add type here
+                    rule.add_attribute(attribute_name, {{},{}}); // add type here
                 }
 
                 if (assignment_op=="=") {
@@ -272,7 +264,7 @@ namespace {
         },
         {
             "rule_ref",
-            [](METAMODEL &mm, RULE& rule, const ta::Match& match, textx::AttributeCardinality cardinality) -> ta::Pattern {
+            [](METAMODEL &mm, RULE& rule, const ta::Match& match) -> ta::Pattern {
                 auto ref_rule_name = match.captured.value();
                 rule.add_tx_inh_by(ref_rule_name);
                 return mm.ref(ref_rule_name);
@@ -280,8 +272,8 @@ namespace {
         },
         {
             "reference",
-            [](METAMODEL &mm, RULE& rule, const ta::Match& match, textx::AttributeCardinality cardinality) -> ta::Pattern {
-                return transform_match2pattern(mm, rule, match.children[0], cardinality);
+            [](METAMODEL &mm, RULE& rule, const ta::Match& match) -> ta::Pattern {
+                return transform_match2pattern(mm, rule, match.children[0]);
             }
         },
     };
@@ -294,14 +286,14 @@ namespace {
             return Eolterm{};
         }
         else {
-            return transform_match2pattern(mm, rule, second.children[0].children[0], textx::AttributeCardinality::scalar); // no further attributes expected here (default/unused cardinality: scalar)
+            return transform_match2pattern(mm, rule, second.children[0].children[0]);
         }
     }
 
-   ta::Pattern transform_match2pattern(METAMODEL &mm, RULE& rule, const ta::Match& match, textx::AttributeCardinality cardinality) {
+   ta::Pattern transform_match2pattern(METAMODEL &mm, RULE& rule, const ta::Match& match) {
         if (transform_match2pattern_map.count(match.name.value())==1) {
             try {
-                return transform_match2pattern_map[match.name.value()](mm, rule, match, cardinality);
+                return transform_match2pattern_map[match.name.value()](mm, rule, match);
             }
             catch(ta::Exception& e) {
                 throw;
@@ -324,7 +316,7 @@ namespace textx {
         // << rule_body << "\n";
         Rule rule;
         rule.name = name;
-        rule.pattern = transform_match2pattern(mm, rule, rule_body, AttributeCardinality::scalar);
+        rule.pattern = transform_match2pattern(mm, rule, rule_body);
         if (add_eof) {
             rule.pattern = ta::sequence({rule.pattern, ta::end_of_file()});
         }
