@@ -1,6 +1,7 @@
 #pragma once
 
-#include "arpeggio.h"
+#include "textx/arpeggio.h"
+#include "textx/assert.h"
 #include <unordered_map>
 #include <unordered_set>
 
@@ -49,6 +50,7 @@ namespace textx::parsetree {
         RuleInfo(textx::arpeggio::Match &match, std::string name) :match{match}, name(name) {}
 
         void add_tx_inh_by(std::string name) {
+            TEXTX_ASSERT(name!="");
             tx_inh_by.insert(name);
         }
         void fix_tx_inh_by(ParseTree& p);
@@ -70,7 +72,7 @@ namespace textx::parsetree {
         {
             auto f=rule_info.find(name);
             if (f==rule_info.end()) {
-                throw std::runtime_error(std::string("cannot find rule info \"")+std::string(name)+"\"");
+                throw std::runtime_error(std::string("cannot find rule info \"")+name+"\"");
             }
             return f->second;
         }
@@ -79,7 +81,7 @@ namespace textx::parsetree {
         {
             auto f=rule_info.find(name);
             if (f==rule_info.end()) {
-                throw std::runtime_error(std::string("cannot find rule info \"")+std::string(name)+"\"");
+                throw std::runtime_error(std::string("cannot find rule info \"")+name+"\"");
             }
             return f->second;
         }
