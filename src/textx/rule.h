@@ -58,7 +58,7 @@ namespace textx {
 
         RuleType type() const { return m_type; }
     
-        std::optional<textx::arpeggio::Match> operator()(const textx::arpeggio::Config &config, textx::arpeggio::ParserState &text, textx::arpeggio::TextPosition pos) {
+        std::optional<textx::arpeggio::Match> operator()(const textx::arpeggio::Config &config, textx::arpeggio::ParserState &text, textx::arpeggio::TextPosition pos) const {
             return pattern(config, text, pos);
         }
 

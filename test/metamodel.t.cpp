@@ -365,19 +365,20 @@ TEST_CASE("metamodel_simple_obj_ref1", "[textx/metamodel]")
 {
     {
         auto grammar1 = R"(
-            Model: 'value' '=' (a=[A1|MYID]|a=[A2|MYID]) a1=[A1|MYID] a2*=[A2|MYID];
+            Model: 'value' '=' (a=[A1]|a=[A2]) a1=[A1] a2*=[A2|MYID];
             A: A1|A2;
             A1: x='a1';
             A2: x='a2';
-            MYID: /[^\d\W]\w*\b/;
+            MYID: /\d+\b/;
         )";
 
         textx::Metamodel mm{grammar1};
         CHECK_THROWS(mm.parsetree_from_str("value="));
-        CHECK(mm.parsetree_from_str("value=t1 t1 t2"));
-        CHECK(mm.parsetree_from_str("value=t2 t1 t2 t3 t4"));
+        CHECK(mm.parsetree_from_str("value=t1 t1 2"));
+        CHECK(mm.parsetree_from_str("value=t2 t1 2 3 4"));
         CHECK(mm.parsetree_from_str("value=t1 t1"));
-        CHECK_THROWS(mm.parsetree_from_str("value=1t2 t1 t2"));
+        CHECK_THROWS(mm.parsetree_from_str("value=1 t1 2"));
+        CHECK_THROWS(mm.parsetree_from_str("value=t1 t1 t2"));
 
         CHECK(mm["Model"]["a"].cardinality == textx::AttributeCardinality::scalar);
         CHECK(mm["Model"]["a1"].cardinality == textx::AttributeCardinality::scalar);

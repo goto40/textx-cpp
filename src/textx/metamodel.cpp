@@ -5,7 +5,7 @@
 
 namespace textx {
 
-    Metamodel::Metamodel(std::string_view grammar_text) {
+    Metamodel::Metamodel(std::string_view grammar_text, bool is_main_grammar) {
         grammar_parsetree.root = textx_grammar.parse_or_throw(grammar_text);        
         auto &root = grammar_parsetree.root.value();
 
@@ -25,7 +25,8 @@ namespace textx {
                 auto &rule_params = r.children[1];
                 auto &rule_body = r.children[3];
                 auto rule_info = textx::parsetree::RuleInfo{r,rule_name};
-                auto new_rule = textx::createRuleFromTextxPattern(*this, rule_name, rule_params, rule_body, rule_info, first);
+                bool add_eof = first && is_main_grammar;
+                auto new_rule = textx::createRuleFromTextxPattern(*this, rule_name, rule_params, rule_body, rule_info, add_eof);
                 if (first) {
                     grammar.set_main_rule(rule_name);
                     first = false;
@@ -55,5 +56,17 @@ namespace textx {
         }
     }
 
-
+    Metamodel& Metamodel::get_basic_metamodel() {
+        static Metamodel mm{R"(
+            ID: /[^\d\W]\w*\b/;
+            //BOOL: /(True|true|False|false|0|1)\b/;
+            //INT: /[-+]?[0-9]+\b/;
+            //FLOAT: /[+-]?(\d+(\.\d*)?|\.\d+)([eE][+-]?\d+)?(?<=[\w\.])(?![\w\.])/;
+            //STRICTFLOAT: /[+-]?(((\d+\.(\d*)?|\.\d+)([eE][+-]?\d+)?)|((\d+)([eE][+-]?\d+)))(?<=[\w\.])(?![\w\.])/;
+            //STRING: /("(\"|[^"])*")|('(\'|[^'])*')/;
+            //NUMBER: STRICTFLOAT|INT;
+            //BASETYPE: NUMBER|FLOAT|BOOL|ID|STRING;
+        )", false};
+        return mm;
+    };
 }
