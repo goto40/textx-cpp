@@ -280,7 +280,7 @@ namespace {
                 if (optional_format.children.size()>0) {
                     ref_rule_name = optional_format.children[0].children[1].captured.value();
                 }
-                mm.ref(ref_rule_name);
+                return mm.ref(ref_rule_name);
             }
         },
         {
