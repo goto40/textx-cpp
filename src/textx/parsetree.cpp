@@ -29,8 +29,16 @@ namespace textx {
         if (match.name.has_value()) {
             if (match.name.value() == "assignment") {
                 auto attribute_name = match.children[0].captured.value();
+                //std::cout << "CHECK " << attribute_name << "==" << name << "\n"; 
                 return attribute_name == name;
             }
+        }
+        return false;
+    }
+
+    bool is_rule(textx::arpeggio::Match &match, std::string name) {
+        if (match.name.has_value()) {
+            return (match.name.value() == name);
         }
         return false;
     }
@@ -131,25 +139,38 @@ namespace textx::parsetree {
 
     textx::AttributeCardinality RuleInfo::get_attribute_cardinality(std::string name) {
         TEXTX_ASSERT(attribute_info.count(name));
-        std::function<textx::AttributeCardinality(textx::arpeggio::Match&,textx::AttributeCardinality)> traverse;
-        traverse = [&](textx::arpeggio::Match& m,textx::AttributeCardinality c) {
+        std::function<size_t(textx::arpeggio::Match&,size_t)> traverse;
+        traverse = [&](textx::arpeggio::Match& m,size_t c) -> size_t {
             if (get_multiplicity(m)==AttributeCardinality::list) {
-                c = AttributeCardinality::list;
+                c = 2; // more than 1 --> list
             }
             if (textx::is_assignment_to_attribute(m,name)) {
+                //std::cout << "found assignment " << name << " with " << c << "\n";
                 return c;
             }
             else {
-                AttributeCardinality ret = AttributeCardinality::scalar;
-                for (auto &child: m.children) {
-                    if (traverse(child,c) == AttributeCardinality::list) {
-                        return AttributeCardinality::list;
+                size_t ret = 0; // no assignment
+                if (textx::is_rule(m,"choice")) {
+                    for (auto &child: m.children) {
+                        ret = std::max(ret, traverse(child,c));
                     }
                 }
-                return AttributeCardinality::scalar;
+                else {
+                    for (auto &child: m.children) {
+                        ret += traverse(child,c);
+                    }
+                }
+                return ret;
             }
         };
-        return traverse(match, AttributeCardinality::scalar);
+        size_t ret = traverse(match, 1);
+        //std::cout << match << "\n=="<< ret << " for " << name << "\n\n";
+        if (ret>1) {
+            return AttributeCardinality::list;
+        }
+        else {
+            return AttributeCardinality::scalar;
+        }
     }
 
 }

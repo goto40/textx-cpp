@@ -334,3 +334,29 @@ TEST_CASE("metamodel_simple_abstract_rule2", "[textx/metamodel]")
         //std::cout << mm << "\n";
     }
 }
+
+TEST_CASE("metamodel_simple_assignment_multiplicity1", "[textx/metamodel]")
+{
+    {
+        auto grammar1 = R"(
+            A1: x='a1' x='a2';             // multi
+            A2: (x='a2' | x='a3') x='a1';  // multi
+            A3: (x='a2' | x='a3');         // single
+        )";
+
+        textx::Metamodel mm{grammar1};
+
+        CHECK(mm["A1"].type() == textx::RuleType::common);
+        CHECK(mm["A2"].type() == textx::RuleType::common);
+        CHECK(mm["A3"].type() == textx::RuleType::common);
+        CHECK(mm["A1"]["x"].is_text() == true);
+        CHECK(mm["A2"]["x"].is_text() == true);
+        CHECK(mm["A3"]["x"].is_text() == true);
+        CHECK(!mm["A1"]["x"].type.has_value());
+        CHECK(!mm["A2"]["x"].type.has_value());
+        CHECK(!mm["A3"]["x"].type.has_value());
+        CHECK(mm["A1"]["x"].cardinality == textx::AttributeCardinality::list);
+        CHECK(mm["A2"]["x"].cardinality == textx::AttributeCardinality::list);
+        CHECK(mm["A3"]["x"].cardinality == textx::AttributeCardinality::scalar);
+    }
+}
