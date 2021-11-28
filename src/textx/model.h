@@ -5,9 +5,9 @@
 namespace textx::model {
 
     class Model {
-        std::shared_ptr<textx::object::Object> root;
-        textx::parsetree::ParseTree parsetree;
-
-        Model(textx::parsetree::ParseTree parsetree);
+        textx::object::Value root;
+        textx::object::Value create_model(const textx::arpeggio::Match &m);
+    public:
+        Model(const textx::arpeggio::Match &parsetree);
     };
 }

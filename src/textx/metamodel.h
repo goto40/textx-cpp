@@ -64,11 +64,11 @@ namespace textx {
             return o;
         }
 
-        // textx::model::Model model_from_str(std::string_view text) {
-        //     auto parsetree = parsetree_from_str(text);
-        //     textx::model::Model m{parsetree};
-        //     return m;
-        // }
+        textx::model::Model model_from_str(std::string_view text) {
+            auto parsetree = parsetree_from_str(text);
+            textx::model::Model m{*parsetree};
+            return m;
+        }
 
     };
 

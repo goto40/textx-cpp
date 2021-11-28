@@ -2,9 +2,12 @@
 
 namespace textx::model {
 
-    Model::Model(textx::parsetree::ParseTree parsetree) : parsetree(std::move(parsetree)) {
-        
+    Model::Model(const textx::arpeggio::Match& parsetree) {
+        root = create_model(parsetree);
     } 
 
+    textx::object::Value Model::create_model(const textx::arpeggio::Match &m) {
+        
+    }
 
 }
