@@ -3,6 +3,7 @@
 #include "textx/grammar.h"
 #include "textx/rule.h"
 #include "textx/parsetree.h"
+#include "textx/model.h"
 #include <string>
 
 namespace textx {
@@ -19,11 +20,6 @@ namespace textx {
         std::optional<textx::arpeggio::Match> parsetree_from_str(std::string_view model_txt) {
             return grammar.parse_or_throw(model_txt);
         }
-
-        // std::optional<textx::arpeggio::Match> model_from_str(std::string_view model_txt) {
-        //     auto parsetree = parsetree_from_str(model_txt);
-        //     return xxx;
-        // }
 
         Rule& operator[](std::string name) {
             return grammar[name];
@@ -66,6 +62,12 @@ namespace textx {
                 o << v << "\n";
             }
             return o;
+        }
+
+        textx::model::Model model_from_str(std::string_view text) {
+            auto parsetree = parsetree_from_str(text);
+            textx::model::Model m{};
+            return m;
         }
 
     };
