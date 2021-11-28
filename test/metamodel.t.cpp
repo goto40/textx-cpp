@@ -360,3 +360,36 @@ TEST_CASE("metamodel_simple_assignment_multiplicity1", "[textx/metamodel]")
         CHECK(mm["A3"]["x"].cardinality == textx::AttributeCardinality::scalar);
     }
 }
+
+TEST_CASE("metamodel_simple_obj_ref1", "[textx/metamodel]")
+{
+    {
+        auto grammar1 = R"(
+            Model: 'value' '=' (a=[A1|MYID]|a=[A2|MYID]) a1=[A1|MYID] a2*=[A2|MYID];
+            A: A1|A2;
+            A1: x='a1';
+            A2: x='a2';
+            MYID: /[^\d\W]\w*\b/;
+        )";
+
+        textx::Metamodel mm{grammar1};
+        CHECK_THROWS(mm.parsetree_from_str("value="));
+        CHECK(mm.parsetree_from_str("value=t1 t1 t2"));
+        CHECK(mm.parsetree_from_str("value=t2 t1 t2 t3 t4"));
+        CHECK(mm.parsetree_from_str("value=t1 t1"));
+        CHECK_THROWS(mm.parsetree_from_str("value=1t2 t1 t2"));
+
+        CHECK(mm["Model"]["a"].cardinality == textx::AttributeCardinality::scalar);
+        CHECK(mm["Model"]["a1"].cardinality == textx::AttributeCardinality::scalar);
+        CHECK(mm["Model"]["a2"].cardinality == textx::AttributeCardinality::list);
+        CHECK(mm["A1"].type() == textx::RuleType::common);
+        CHECK(mm["A2"].type() == textx::RuleType::common);
+        CHECK(mm["A"].type() == textx::RuleType::abstract);
+        CHECK(mm["Model"]["a"].is_text() == false);
+        CHECK(mm["Model"]["a"].type.value() == "A");
+        CHECK(mm["Model"]["a1"].is_text() == false);
+        CHECK(mm["Model"]["a1"].type.value() == "A1");
+        CHECK(mm["Model"]["a2"].is_text() == false);
+        CHECK(mm["Model"]["a2"].type.value() == "A2");
+    }
+}

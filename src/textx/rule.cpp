@@ -273,6 +273,17 @@ namespace {
             }
         },
         {
+            "obj_ref",
+            [](ParseState parsestate, METAMODEL &mm, RULE& rule, const ta::Match& match) -> ta::Pattern {
+                auto &optional_format = match.children[2];
+                std::string ref_rule_name = "ID";
+                if (optional_format.children.size()>0) {
+                    ref_rule_name = optional_format.children[0].children[1].captured.value();
+                }
+                mm.ref(ref_rule_name);
+            }
+        },
+        {
             "reference",
             [](ParseState parsestate, METAMODEL &mm, RULE& rule, const ta::Match& match) -> ta::Pattern {
                 return transform_match2pattern(parsestate, mm, rule, match.children[0]);
