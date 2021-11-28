@@ -41,7 +41,8 @@ namespace textx {
                 rule.m_type = r.rule_type;
                 rule.tx_inh_by = r.tx_inh_by;
                 for(auto& [name, info]: r.attribute_info) {
-                    rule.attribute_info[name].type = info.type; 
+                    rule.attribute_info[name].type = info.type;
+                    rule.attribute_info[name].cardinality = r.get_attribute_cardinality(name);
                 }
             }
         }

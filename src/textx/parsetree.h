@@ -29,6 +29,9 @@ namespace textx {
      * match rules: 
      *  - These rules can be used in match references only (i.e., you can't link to these rules as they don't exists as objects)
      */
+
+    AttributeCardinality get_multiplicity(textx::arpeggio::Match &match);
+    bool is_assignment_to_attribute(textx::arpeggio::Match &match, std::string name);
 }
 
 namespace textx::parsetree {
@@ -65,6 +68,7 @@ namespace textx::parsetree {
             }
         }
 
+        textx::AttributeCardinality get_attribute_cardinality(std::string name);
         textx::RuleType determine_rule_type(std::unordered_set<std::string> &recursion_stopper, const ParseTree& p) const;
     };
 

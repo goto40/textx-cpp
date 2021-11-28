@@ -1,7 +1,41 @@
 #include "textx/parsetree.h"
 #include "textx/metamodel.h"
+#include "textx/arpeggio.h"
 #include "textx/tools.h"
 #include "textx/assert.h"
+
+namespace textx {
+    AttributeCardinality get_multiplicity(textx::arpeggio::Match &match) {
+        if (match.name.has_value()) {
+            if (match.name.value() == "assignment") {
+                auto assignment_op = match.children[1].captured.value();
+                if (assignment_op=="*=" || assignment_op=="+=") {
+                    return textx::AttributeCardinality::list;
+                }
+            }
+            if (match.name.value() == "repeatable_expr") {
+                if (match.children[1].children.size()>0) {
+                    std::string op = match.children[1].children[0].children[0].captured.value(); // operator *+#?
+                    if (op=="*" || op=="+") {
+                        return textx::AttributeCardinality::list;
+                    }
+                }
+            }
+        }
+        return textx::AttributeCardinality::scalar;
+    }
+
+    bool is_assignment_to_attribute(textx::arpeggio::Match &match, std::string name) {
+        if (match.name.has_value()) {
+            if (match.name.value() == "assignment") {
+                auto attribute_name = match.children[0].captured.value();
+                return attribute_name == name;
+            }
+        }
+        return false;
+    }
+
+}
 
 namespace textx::parsetree {
 
@@ -94,4 +128,28 @@ namespace textx::parsetree {
             r.fix_attribute_types(*this);
         }
     }
+
+    textx::AttributeCardinality RuleInfo::get_attribute_cardinality(std::string name) {
+        TEXTX_ASSERT(attribute_info.count(name));
+        std::function<textx::AttributeCardinality(textx::arpeggio::Match&,textx::AttributeCardinality)> traverse;
+        traverse = [&](textx::arpeggio::Match& m,textx::AttributeCardinality c) {
+            if (get_multiplicity(m)==AttributeCardinality::list) {
+                c = AttributeCardinality::list;
+            }
+            if (textx::is_assignment_to_attribute(m,name)) {
+                return c;
+            }
+            else {
+                AttributeCardinality ret = AttributeCardinality::scalar;
+                for (auto &child: m.children) {
+                    if (traverse(child,c) == AttributeCardinality::list) {
+                        return AttributeCardinality::list;
+                    }
+                }
+                return AttributeCardinality::scalar;
+            }
+        };
+        return traverse(match, AttributeCardinality::scalar);
+    }
+
 }

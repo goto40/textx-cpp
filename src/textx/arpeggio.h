@@ -113,6 +113,11 @@ namespace textx
             auto end() const { return m_end; }
             auto type() const { return m_type; }
             void update_end(TextPosition e) { m_end = e; }
+            template<class F>
+            void traverse(F f) {
+                f(*this);
+                for (auto& c: children) c.traverse(f);
+            }
 
             static std::unordered_map<MatchType, std::string> type2str;
             static std::unordered_map<MatchType, bool> is_terminal;
