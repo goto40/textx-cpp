@@ -9,6 +9,7 @@ namespace textx::model {
     class Model;
     class Metamodel;
     class Object;
+    struct AttributeValue;
 
     struct ObjectRef {
         std::weak_ptr<Model> tx_model;
@@ -60,6 +61,8 @@ namespace textx::model {
             return std::stoull(str(), nullptr, 0);
         }
 
+        const AttributeValue& operator[](std::string name) const;
+        AttributeValue& operator[](std::string name);
     };
     struct AttributeValue {
         std::variant<Value, std::vector<Value>> data;
@@ -114,24 +117,22 @@ namespace textx::model {
             return std::stoull(str(), nullptr, 0);
         }
 
-        const Value& operator[](size_t idx) const {
-            TEXTX_ASSERT(std::holds_alternative<std::vector<Value>>(data));
-            return std::get<std::vector<Value>>(data)[idx];
-        }
-        Value& operator[](size_t idx) {
-            TEXTX_ASSERT(std::holds_alternative<std::vector<Value>>(data));
-            return std::get<std::vector<Value>>(data)[idx];
-        }
-        size_t size() const {
-            TEXTX_ASSERT(std::holds_alternative<std::vector<Value>>(data));
-            return std::get<std::vector<Value>>(data).size();
-        }
+        const AttributeValue& operator[](std::string name) const;
+        AttributeValue& operator[](std::string name);
+        const Value& operator[](size_t idx) const;
+        Value& operator[](size_t idx);
+        size_t size() const;
     };
+
     struct Object {
         std::string type;
         std::weak_ptr<Model> tx_model;
         std::unordered_map<std::string, AttributeValue> attributes;
+
+        const AttributeValue& operator[](std::string name) const;
+        AttributeValue& operator[](std::string name);
     };
+
     class Model {
         std::weak_ptr<Metamodel> tx_model;
         std::shared_ptr<Object> root;
