@@ -15,12 +15,122 @@ namespace textx::model {
         std::string name;
         std::weak_ptr<Object> obj;
     };
-    using Value = std::variant<std::string, std::shared_ptr<Object>, std::shared_ptr<ObjectRef>>;
-    using AttributeValue = std::variant<Value, std::vector<Value>>;
+    struct Value {
+        std::variant<std::string, std::shared_ptr<Object>, std::shared_ptr<ObjectRef>> data;
+
+        std::shared_ptr<Object> obj() {
+            if (std::holds_alternative<std::shared_ptr<Object>>(data)) {
+                return std::get<std::shared_ptr<Object>>(data);
+            }
+            else {
+                TEXTX_ASSERT(std::holds_alternative<std::shared_ptr<ObjectRef>>(data));
+                return std::get<std::shared_ptr<ObjectRef>>(data)->obj.lock();
+            }
+        }
+
+        std::shared_ptr<const Object> obj() const {
+            if (std::holds_alternative<std::shared_ptr<Object>>(data)) {
+                return std::get<std::shared_ptr<Object>>(data);
+            }
+            else {
+                TEXTX_ASSERT(std::holds_alternative<std::shared_ptr<ObjectRef>>(data));
+                return std::get<std::shared_ptr<ObjectRef>>(data)->obj.lock();
+            }
+        }
+
+        std::string& str() {
+            TEXTX_ASSERT(std::holds_alternative<std::string>(data));
+            return std::get<std::string>(data);
+        }
+
+        const std::string& str() const {
+            TEXTX_ASSERT(std::holds_alternative<std::string>(data));
+            return std::get<std::string>(data);
+        }
+
+        long double f() {
+            return std::stold(str());
+        }
+
+        long long i() {
+            return std::stoll(str(), nullptr, 0);
+        }
+
+        unsigned long long u() {
+            return std::stoull(str(), nullptr, 0);
+        }
+
+    };
+    struct AttributeValue {
+        std::variant<Value, std::vector<Value>> data;
+
+        std::shared_ptr<Object> obj() {
+            TEXTX_ASSERT(std::holds_alternative<Value>(data));
+            auto &value = std::get<Value>(data);
+            if (std::holds_alternative<std::shared_ptr<Object>>(value.data)) {
+                return std::get<std::shared_ptr<Object>>(value.data);
+            }
+            else {
+                TEXTX_ASSERT(std::holds_alternative<std::shared_ptr<ObjectRef>>(value.data));
+                return std::get<std::shared_ptr<ObjectRef>>(value.data)->obj.lock();
+            }
+        }
+
+        std::shared_ptr<const Object> obj() const {
+            TEXTX_ASSERT(std::holds_alternative<Value>(data));
+            auto &value = std::get<Value>(data);
+            if (std::holds_alternative<std::shared_ptr<Object>>(value.data)) {
+                return std::get<std::shared_ptr<Object>>(value.data);
+            }
+            else {
+                TEXTX_ASSERT(std::holds_alternative<std::shared_ptr<ObjectRef>>(value.data));
+                return std::get<std::shared_ptr<ObjectRef>>(value.data)->obj.lock();
+            }
+        }
+
+        std::string& str() {
+            TEXTX_ASSERT(std::holds_alternative<Value>(data));
+            auto &value = std::get<Value>(data);
+            TEXTX_ASSERT(std::holds_alternative<std::string>(value.data));
+            return std::get<std::string>(value.data);
+        }
+
+        const std::string& str() const {
+            TEXTX_ASSERT(std::holds_alternative<Value>(data));
+            auto &value = std::get<Value>(data);
+            TEXTX_ASSERT(std::holds_alternative<std::string>(value.data));
+            return std::get<std::string>(value.data);
+        }
+
+        long double f() {
+            return std::stold(str());
+        }
+
+        long long i() {
+            return std::stoll(str(), nullptr, 0);
+        }
+
+        unsigned long long u() {
+            return std::stoull(str(), nullptr, 0);
+        }
+
+        const Value& operator[](size_t idx) const {
+            TEXTX_ASSERT(std::holds_alternative<std::vector<Value>>(data));
+            return std::get<std::vector<Value>>(data)[idx];
+        }
+        Value& operator[](size_t idx) {
+            TEXTX_ASSERT(std::holds_alternative<std::vector<Value>>(data));
+            return std::get<std::vector<Value>>(data)[idx];
+        }
+        size_t size() const {
+            TEXTX_ASSERT(std::holds_alternative<std::vector<Value>>(data));
+            return std::get<std::vector<Value>>(data).size();
+        }
+    };
     struct Object {
         std::string type;
         std::weak_ptr<Model> tx_model;
-        std::unordered_map<std::string, Value> attributes;
+        std::unordered_map<std::string, AttributeValue> attributes;
     };
     class Model {
         std::weak_ptr<Metamodel> tx_model;
