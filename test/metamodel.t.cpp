@@ -323,7 +323,7 @@ TEST_CASE("metamodel_simple_abstract_rule2", "[textx/metamodel]")
 
         CHECK(mm["Model"]["a"].cardinality == textx::AttributeCardinality::scalar);
         CHECK(mm["A1"].type() == textx::RuleType::common);
-        CHECK(mm["A2"].type() == textx::RuleType::match);
+        CHECK(mm["A2"].type() == textx::RuleType::common);
         CHECK(mm["A"].type() == textx::RuleType::abstract);
         CHECK(mm["Model"]["a"].is_text() == false);
         CHECK(mm["Model"]["a"].type.value() == "A");

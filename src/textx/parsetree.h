@@ -50,6 +50,7 @@ namespace textx::parsetree {
         RuleInfo(textx::arpeggio::Match &match, std::string name) :match{match}, name(name) {}
 
         void add_tx_inh_by(std::string name) {
+            //std::cout << this->name << " is inherited by " << name << "\n";
             tx_inh_by.insert(name);
         }
         void fix_tx_inh_by(ParseTree& p);
@@ -59,7 +60,9 @@ namespace textx::parsetree {
             attribute_info[name].types.push_back(type);
         }
         void add_attribute(std::string name) {
-            attribute_info[name].type = std::nullopt; // dummy access
+            if (attribute_info.count(name)==0) {
+                attribute_info[name] = {};
+            }
         }
 
         textx::RuleType determine_rule_type(std::unordered_set<std::string> &recursion_stopper, const ParseTree& p) const;
