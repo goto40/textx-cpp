@@ -8,8 +8,8 @@ namespace textx {
         root = create_model(parsetree, *mm);
     } 
 
-    textx::object::Value create_model(const textx::arpeggio::Match &m, textx::Metamodel& mm) {
-        if (m.name.has_value() && m.name.value().starts_with("rule://")) {
+    textx::object::Value Model::create_model(const textx::arpeggio::Match &m, textx::Metamodel &mm) {
+         if (m.name.has_value() && m.name.value().starts_with("rule://")) {
             std::string rule_name = m.name.value().substr(7);
             auto &rule = mm[rule_name];
             return {};
