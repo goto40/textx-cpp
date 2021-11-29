@@ -28,7 +28,7 @@ namespace {
         Repeat_modifiers repeat_modifiers = None{};
         if (repeat_modifiers_match.children.size()>0) {
             TEXTX_ASSERT(repeat_modifiers_match.children[0].name.has_value());
-            TEXTX_ASSERT_EQUAL(repeat_modifiers_match.children[0].name.value(), "repeat_modifiers");
+            TEXTX_ASSERT_EQUAL(repeat_modifiers_match.children[0].name.value(), "rule://repeat_modifiers");
             TEXTX_ASSERT(repeat_modifiers_match.children.size()<=1, "repeat modifiers must containe ONE modifier");
             repeat_modifiers = get_repeat_modifiers(parsestate, mm, rule, repeat_modifiers_match.children[0]);
         }
@@ -38,7 +38,7 @@ namespace {
     /** preprocess an expression with a special case for unordered_groups */
     ta::Pattern normal_expression_or_unordered_choice(ParseState parsestate, METAMODEL &mm, RULE& rule, const ta::Match& match, bool use_choice, const Repeat_modifiers &repeat_modifiers) {
         auto &expr = match;
-        if(expr.children[0].name.has_value() && expr.children[0].name.value() == "assignment") {
+        if(expr.children[0].name.has_value() && expr.children[0].name.value() == "rule://assignment") {
             return transform_match2pattern(parsestate, mm, rule, expr.children[0]);
         }
         else {
@@ -46,7 +46,7 @@ namespace {
             ta::Pattern part_of_expression;
             if (use_choice) {
                 auto choice = expr.children[0].children[1].children[0];
-                TEXTX_ASSERT_EQUAL(choice.name.value(),"bracketed_choice");
+                TEXTX_ASSERT_EQUAL(choice.name.value(),"rule://bracketed_choice");
                 TEXTX_ASSERT_EQUAL(choice.children[1].type(), ta::MatchType::sequence);
                 TEXTX_ASSERT_EQUAL(choice.children[1].children.size(),2);
                 TEXTX_ASSERT_EQUAL(choice.children[1].children[1].children.size(),0); // only one entry + 0*zero_or_more
@@ -85,13 +85,13 @@ namespace {
     /** normal node "visitors" */
     std::unordered_map<std::string, std::function<ta::Pattern(ParseState parsestate, METAMODEL &mm, RULE& rule, const ta::Match& match)>> transform_match2pattern_map = {
         {
-            "textx_rule_body",
+            "rule://textx_rule_body",
             [](ParseState parsestate, METAMODEL &mm, RULE& rule, const ta::Match& match) -> ta::Pattern {
                 return transform_match2pattern(parsestate, mm, rule, match.children[0]);
             }
         },
         {
-            "choice",
+            "rule://choice",
             [](ParseState parsestate, METAMODEL &mm, RULE& rule, const ta::Match& match) -> ta::Pattern {
                 auto seq1 = match.children[0];
                 auto zom_seq2 = match.children[1];
@@ -103,7 +103,7 @@ namespace {
             }
         },
         {
-            "sequence",
+            "rule://sequence",
             [](ParseState parsestate, METAMODEL &mm, RULE& rule, const ta::Match& match) -> ta::Pattern {
                 std::vector<ta::Pattern> c{};
                 for (auto &inner_entry: match.children) {
@@ -113,15 +113,15 @@ namespace {
             }
         },
         {
-            "repeatable_expr",
+            "rule://repeatable_expr",
             [](ParseState parsestate, METAMODEL &mm, RULE& rule, const ta::Match& match) -> ta::Pattern {
                 // operator *+#?
                 TEXTX_ASSERT(match.children[1].captured.has_value());
                 std::string op = "";
                 Repeat_modifiers repeat_modifiers = None{};
                 if (match.children[1].children.size()>0) {
-                    TEXTX_ASSERT_EQUAL(match.children[1].children[0].name.value(), "repeat_operator");
-                    TEXTX_ASSERT_EQUAL(match.children[1].children[0].children[0].name.value(), "repeat_operator_text");
+                    TEXTX_ASSERT_EQUAL(match.children[1].children[0].name.value(), "rule://repeat_operator");
+                    TEXTX_ASSERT_EQUAL(match.children[1].children[0].children[0].name.value(), "rule://repeat_operator_text");
                     op = match.children[1].children[0].children[0].captured.value(); // operator *+#?
 
                     // repeat modifiers
@@ -165,19 +165,19 @@ namespace {
             }
         },
         {
-            "expression",
+            "rule://expression",
             [](ParseState parsestate, METAMODEL &mm, RULE& rule, const ta::Match& match) -> ta::Pattern {
                 return transform_match2pattern( parsestate, mm, rule, match.children[0]);
             }
         },
         {
-            "simple_match",
+            "rule://simple_match",
             [](ParseState parsestate, METAMODEL &mm, RULE& rule, const ta::Match& match) -> ta::Pattern {
                 return transform_match2pattern( parsestate, mm, rule, match.children[0]);
             }
         },
         {
-            "str_match",
+            "rule://str_match",
             [](ParseState parsestate, METAMODEL &mm, RULE& rule, const ta::Match& match) -> ta::Pattern {
                 std::string str = match.captured.value();
                 TEXTX_ASSERT(str.size()>=2);
@@ -186,7 +186,7 @@ namespace {
             }
         },
         {
-            "re_match",
+            "rule://re_match",
             [](ParseState parsestate, METAMODEL &mm, RULE& rule, const ta::Match& match) -> ta::Pattern {
                 std::string str = match.captured.value();
                 TEXTX_ASSERT(str.size()>=2);
@@ -195,13 +195,13 @@ namespace {
             }
         },
         {
-            "bracketed_choice",
+            "rule://bracketed_choice",
             [](ParseState parsestate, METAMODEL &mm, RULE& rule, const ta::Match& match) -> ta::Pattern {
                 return transform_match2pattern( parsestate, mm, rule, match.children[1]);
             }
         },
         {
-            "assignment",
+            "rule://assignment",
             [](ParseState parsestate, METAMODEL &mm, RULE& rule, const ta::Match& match) -> ta::Pattern {
                 parsestate.in_assignment = true;
                 TEXTX_ASSERT_EQUAL(match.children.size(),3 , "assignment must have 3 children");
@@ -221,10 +221,10 @@ namespace {
                 // TODO extract "type" / terminal
 
                 // register attribute
-                if (choice.children[0].name.value()=="reference" && choice.children[0].children[0].name.value()=="obj_ref") {
+                if (choice.children[0].name.value()=="rule://reference" && choice.children[0].children[0].name.value()=="rule://obj_ref") {
                     rule.add_attribute(attribute_name, choice.children[0].children[0].children[1].captured.value()); // add type here
                 }
-                else if (choice.children[0].name.value()=="reference" && choice.children[0].children[0].name.value()=="rule_ref") {
+                else if (choice.children[0].name.value()=="rule://reference" && choice.children[0].children[0].name.value()=="rule://rule_ref") {
                     rule.add_attribute(attribute_name, choice.children[0].children[0].captured.value());
                 }
                 else {
@@ -263,7 +263,7 @@ namespace {
             }
         },
         {
-            "rule_ref",
+            "rule://rule_ref",
             [](ParseState parsestate, METAMODEL &mm, RULE& rule, const ta::Match& match) -> ta::Pattern {
                 auto ref_rule_name = match.captured.value();
                 if (!parsestate.in_assignment) {
@@ -273,7 +273,7 @@ namespace {
             }
         },
         {
-            "obj_ref",
+            "rule://obj_ref",
             [](ParseState parsestate, METAMODEL &mm, RULE& rule, const ta::Match& match) -> ta::Pattern {
                 auto &optional_format = match.children[2];
                 std::string ref_rule_name = "ID";
@@ -284,7 +284,7 @@ namespace {
             }
         },
         {
-            "reference",
+            "rule://reference",
             [](ParseState parsestate, METAMODEL &mm, RULE& rule, const ta::Match& match) -> ta::Pattern {
                 return transform_match2pattern(parsestate, mm, rule, match.children[0]);
             }
@@ -293,7 +293,7 @@ namespace {
 
     Repeat_modifiers get_repeat_modifiers(ParseState parsestate, METAMODEL &mm, RULE& rule, const ta::Match& m) {
         TEXTX_ASSERT(m.name.has_value(), "has_name expected");
-        TEXTX_ASSERT_EQUAL(m.name.value(), "repeat_modifiers");
+        TEXTX_ASSERT_EQUAL(m.name.value(), "rule://repeat_modifiers");
         auto second = m.children[1];
         if (second.captured.value()=="eolterm") {
             return Eolterm{};

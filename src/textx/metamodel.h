@@ -31,7 +31,8 @@ namespace textx {
         }
 
         textx::arpeggio::Pattern ref(std::string name) {
-            return textx::arpeggio::rule(textx::arpeggio::named(name, [this,name](const textx::arpeggio::Config &config, textx::arpeggio::ParserState &text, textx::arpeggio::TextPosition pos) -> std::optional<textx::arpeggio::Match>
+            std::string rname = std::string("rule://")+name;
+            return textx::arpeggio::rule(textx::arpeggio::named(rname, [this,name](const textx::arpeggio::Config &config, textx::arpeggio::ParserState &text, textx::arpeggio::TextPosition pos) -> std::optional<textx::arpeggio::Match>
             {
                 auto r = grammar.get_rules().find(name);
                 if (r==grammar.get_rules().end()) {
@@ -67,7 +68,7 @@ namespace textx {
 
         std::shared_ptr<textx::Model> model_from_str(std::string_view text) {
             auto parsetree = parsetree_from_str(text);
-            return std::make_shared<textx::Model>(*parsetree, shared_from_this());
+            return std::make_shared<textx::Model>(text, *parsetree, shared_from_this());
         }
 
     };

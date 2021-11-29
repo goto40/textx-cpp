@@ -21,7 +21,8 @@ namespace textx
 
         auto ref(std::string name)
         {
-            return textx::arpeggio::rule(textx::arpeggio::named(name, [this,name](const textx::arpeggio::Config &config, textx::arpeggio::ParserState &text, textx::arpeggio::TextPosition pos) -> std::optional<textx::arpeggio::Match>
+            std::string rname = std::string("rule://")+name;
+            return textx::arpeggio::rule(textx::arpeggio::named(rname, [this,name](const textx::arpeggio::Config &config, textx::arpeggio::ParserState &text, textx::arpeggio::TextPosition pos) -> std::optional<textx::arpeggio::Match>
             {
                 if (rules.find(name)==rules.end()) {
                     throw std::runtime_error(std::string("cannot find ref(\"")+name+"\");");
@@ -32,7 +33,8 @@ namespace textx
 
         auto copy(std::string name)
         {
-            return textx::arpeggio::rule(textx::arpeggio::named(name, [this,name](const textx::arpeggio::Config &config, textx::arpeggio::ParserState &text, textx::arpeggio::TextPosition pos) -> std::optional<textx::arpeggio::Match>
+            std::string rname = std::string("rule://")+name;
+            return textx::arpeggio::rule(textx::arpeggio::named(rname, [this,name](const textx::arpeggio::Config &config, textx::arpeggio::ParserState &text, textx::arpeggio::TextPosition pos) -> std::optional<textx::arpeggio::Match>
             {
                 if (rules.find(name)==rules.end()) {
                     throw std::runtime_error(std::string("cannot find ref(\"")+name+"\");");
@@ -78,9 +80,9 @@ namespace textx
 
         void add_rule(std::string_view name, R p)
         {
+            std::ostringstream n;
+            n << "rule://" << name;
             if constexpr (std::is_same_v<textx::arpeggio::Pattern, R>) {
-                std::ostringstream n;
-                n << "rule://" << name;
                 rules.emplace(std::string{name}, textx::arpeggio::rule(textx::arpeggio::named(n.str(), p)));
             }
             else {
@@ -92,7 +94,10 @@ namespace textx
         {
             if (rules.count(main_rule_name)!=1)
             {
-                throw std::runtime_error("unexpected: no main rule defined in grammar");
+                for (auto [k,v]: rules) {
+                    std::cout << k << "\n";
+                }
+                throw std::runtime_error(std::string("unexpected: no main rule found in grammar; name=")+main_rule_name);
             }
             auto &main = rules[main_rule_name];
             state = textx::arpeggio::ParserState{text};
@@ -121,7 +126,7 @@ namespace textx
 
         void set_main_rule(std::string_view name="main")
         {
-            main_rule_name = name;
+            main_rule_name = std::string(name);
         }
 
         std::string get_last_error_string(std::optional<std::string_view> text = std::nullopt)

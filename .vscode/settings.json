@@ -1,5 +1,8 @@
 {
     "files.associations": {
-        "variant": "cpp"
+        "variant": "cpp",
+        "string": "cpp",
+        "string_view": "cpp",
+        "stdexcept": "cpp"
     }
 }

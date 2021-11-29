@@ -7,13 +7,13 @@
 namespace textx {
     AttributeCardinality get_multiplicity(textx::arpeggio::Match &match) {
         if (match.name.has_value()) {
-            if (match.name.value() == "assignment") {
+            if (match.name.value() == "rule://assignment") {
                 auto assignment_op = match.children[1].captured.value();
                 if (assignment_op=="*=" || assignment_op=="+=") {
                     return textx::AttributeCardinality::list;
                 }
             }
-            if (match.name.value() == "repeatable_expr") {
+            if (match.name.value() == "rule://repeatable_expr") {
                 if (match.children[1].children.size()>0) {
                     std::string op = match.children[1].children[0].children[0].captured.value(); // operator *+#?
                     if (op=="*" || op=="+") {
@@ -27,7 +27,7 @@ namespace textx {
 
     bool is_assignment_to_attribute(textx::arpeggio::Match &match, std::string name) {
         if (match.name.has_value()) {
-            if (match.name.value() == "assignment") {
+            if (match.name.value() == "rule://assignment") {
                 auto attribute_name = match.children[0].captured.value();
                 //std::cout << "CHECK " << attribute_name << "==" << name << "\n"; 
                 return attribute_name == name;
@@ -150,7 +150,7 @@ namespace textx::parsetree {
             }
             else {
                 size_t ret = 0; // no assignment
-                if (textx::is_rule(m,"choice")) {
+                if (textx::is_rule(m,"rule://choice")) {
                     for (auto &child: m.children) {
                         ret = std::max(ret, traverse(child,c));
                     }

@@ -26,6 +26,9 @@ namespace textx::object {
     };
     struct Value {
         std::variant<std::string, std::shared_ptr<Object>, std::shared_ptr<ObjectRef>> data;
+        Value(std::string x) : data{x} {}
+        Value(std::shared_ptr<Object> x) : data{x} {}
+        Value(std::shared_ptr<ObjectRef> x) : data{x} {}
 
         std::shared_ptr<Object> obj() {
             if (std::holds_alternative<std::shared_ptr<Object>>(data)) {

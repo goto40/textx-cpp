@@ -10,7 +10,7 @@ namespace textx {
         auto &root = grammar_parsetree.root.value();
 
         assert(root.name && "unexpected: no textx model loaded!!");
-        assert(root.name.value()=="textx_model" && "unexpected: no textx model loaded!!");
+        assert(root.name.value()=="rule://textx_model" && "unexpected: no textx model loaded!!");
 
         //TODO import and refs
                 
@@ -35,6 +35,8 @@ namespace textx {
                 grammar_parsetree.rule_info.emplace(rule_name, rule_info);
             }
 
+            // TODO: make external/other/base grammars "visible" here... (e.g. NUMBER from get_basic_metamodel())
+            // ???? auto &bmm = get_basic_metamodel(); / later: will come as shared_ptr
             grammar_parsetree.finalize_rule_info();
 
             for (auto&[name,r] : grammar_parsetree.rule_info) {
