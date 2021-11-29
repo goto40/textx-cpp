@@ -5,10 +5,11 @@
 #include "textx/parsetree.h"
 #include "textx/model.h"
 #include <string>
+#include <memory>
 
 namespace textx {
 
-    class Metamodel {
+    class Metamodel : public std::enable_shared_from_this<Metamodel> {
         textx::lang::TextxGrammar textx_grammar={};
         textx::Grammar<textx::Rule> grammar={};
         textx::parsetree::ParseTree grammar_parsetree;
@@ -64,10 +65,9 @@ namespace textx {
             return o;
         }
 
-        textx::model::Model model_from_str(std::string_view text) {
+        std::shared_ptr<textx::Model> model_from_str(std::string_view text) {
             auto parsetree = parsetree_from_str(text);
-            textx::model::Model m{*parsetree};
-            return m;
+            return std::make_shared<textx::Model>(*parsetree, shared_from_this());
         }
 
     };

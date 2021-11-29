@@ -79,7 +79,9 @@ namespace textx
         void add_rule(std::string_view name, R p)
         {
             if constexpr (std::is_same_v<textx::arpeggio::Pattern, R>) {
-                rules.emplace(std::string{name}, textx::arpeggio::rule(textx::arpeggio::named(static_cast<std::string>(name), p)));
+                std::ostringstream n;
+                n << "rule://" << name;
+                rules.emplace(std::string{name}, textx::arpeggio::rule(textx::arpeggio::named(n.str(), p)));
             }
             else {
                 rules.emplace(std::string{name}, p);
