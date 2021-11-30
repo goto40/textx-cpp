@@ -17,47 +17,12 @@ namespace textx {
 
         public:
         Metamodel(std::string_view grammar, bool is_main_grammar=true, bool include_basic_metamodel=true);
+        Rule& operator[](std::string name);
+        const Rule& operator[](std::string name) const;
+        textx::arpeggio::Pattern ref(std::string name);
+        std::shared_ptr<textx::Model> model_from_str(std::string_view text);
 
-        std::optional<textx::arpeggio::Match> parsetree_from_str(std::string_view model_txt) {
-            return grammar.parse_or_throw(model_txt);
-        }
-
-        Rule& operator[](std::string name) {
-            return grammar[name];
-        }
-
-        const Rule& operator[](std::string name) const {
-            return grammar[name];
-        }
-
-        textx::arpeggio::Pattern ref(std::string name) {
-            std::string rname = std::string("rule://")+name;
-            return [this,name](const textx::arpeggio::Config &config, textx::arpeggio::ParserState &text, textx::arpeggio::TextPosition pos) -> std::optional<textx::arpeggio::Match>
-            {
-                auto r = grammar.get_rules().find(name);
-                if (r==grammar.get_rules().end()) {
-                    if (this != &get_basic_metamodel()) {
-                        return get_basic_metamodel().ref(name)(config, text, pos);
-                    }
-                    else {
-                        throw std::runtime_error(std::string("cannot find mm.ref(\"")+name+"\");");
-                    }
-                }
-                else {
-                    return r->second(config, text, pos);
-                }
-            };
-
-            //TODO handle referenced/included metamodels
-            if (grammar.get_rules().find(name)==grammar.get_rules().end()) {
-                std::cout << "?????? " << name << "\n";
-                // if (this != &get_basic_metamodel()) {
-                //     return get_basic_metamodel().ref(name);
-                // }
-            }
-            return grammar.ref(name);
-        }
-
+        std::optional<textx::arpeggio::Match> parsetree_from_str(std::string_view model_txt) { return grammar.parse_or_throw(model_txt); }
         inline friend std::ostream& operator<<(std::ostream &o, const Metamodel& mm) {
             for(auto& [k,v]: mm.grammar.get_rules()) {
                 //o << "RULE[\"" << k << "\"]:\n";
@@ -65,12 +30,6 @@ namespace textx {
             }
             return o;
         }
-
-        std::shared_ptr<textx::Model> model_from_str(std::string_view text) {
-            auto parsetree = parsetree_from_str(text);
-            return std::make_shared<textx::Model>(text, *parsetree, shared_from_this());
-        }
-
     };
 
 }

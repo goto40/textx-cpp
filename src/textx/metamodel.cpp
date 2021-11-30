@@ -74,5 +74,46 @@ namespace textx {
             BASETYPE: NUMBER|FLOAT|BOOL|ID|STRING;
         )", false, false};
         return mm;
-    };
+    }
+
+    textx::arpeggio::Pattern Metamodel::ref(std::string name) {
+        return [this,name](const textx::arpeggio::Config &config, textx::arpeggio::ParserState &text, textx::arpeggio::TextPosition pos) -> std::optional<textx::arpeggio::Match>
+        {
+            auto r = grammar.get_rules().find(name);
+            if (r==grammar.get_rules().end()) {
+                if (this != &get_basic_metamodel()) {
+                    return get_basic_metamodel().ref(name)(config, text, pos);
+                }
+                else {
+                    throw std::runtime_error(std::string("cannot find mm.ref(\"")+name+"\");");
+                }
+            }
+            else {
+                return r->second(config, text, pos);
+            }
+        };
+
+        //TODO handle referenced/included metamodels
+        if (grammar.get_rules().find(name)==grammar.get_rules().end()) {
+            std::cout << "?????? " << name << "\n";
+            // if (this != &get_basic_metamodel()) {
+            //     return get_basic_metamodel().ref(name);
+            // }
+        }
+        return grammar.ref(name);
+    }
+
+    Rule& Metamodel::operator[](std::string name) {
+        return grammar[name];
+    }
+
+    const Rule& Metamodel::operator[](std::string name) const {
+        return grammar[name];
+    }
+
+    std::shared_ptr<textx::Model> Metamodel::model_from_str(std::string_view text) {
+        auto parsetree = parsetree_from_str(text);
+        return std::make_shared<textx::Model>(text, *parsetree, shared_from_this());
+    }
+
 }
