@@ -2,10 +2,9 @@
 
 ## Plan
 
-Create an interpreter for textx grammars.
-
-This is a just-for-fun project and a proof of concept...
-
+ * Create an interpreter for textx grammars.
+ * This is a just-for-fun project and a proof of concept...
+ * Example: see [tests/model.t.cpp](tests/model.t.cpp)
 ## Details
 
 ### grammar.h

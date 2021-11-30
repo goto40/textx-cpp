@@ -53,7 +53,6 @@ TEST_CASE("model_simple3", "[textx/metamodel]")
         )#";
 
         {
-            // model only work from a shared metamodel...
             auto mm = std::make_shared<textx::Metamodel>(grammar1);
             auto m1 = mm->model_from_str("(1,2), (3,4.5)");
             CHECK(std::get<std::shared_ptr<textx::object::Object>>(m1->val()["points"][0].data)->type == "Point");
