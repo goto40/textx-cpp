@@ -5,7 +5,7 @@
 
 namespace textx {
 
-    Metamodel::Metamodel(std::string_view grammar_text, bool is_main_grammar) {
+    Metamodel::Metamodel(std::string_view grammar_text, bool is_main_grammar, bool include_basic_metamodel) {
         textx_grammar_parsetree.root = textx_grammar.parse_or_throw(grammar_text);        
         auto &root = textx_grammar_parsetree.root.value();
 
@@ -35,17 +35,21 @@ namespace textx {
                 textx_grammar_parsetree.rule_info.emplace(rule_name, rule_info);
             }
 
-            // TODO: make external/other/base grammars "visible" here... (e.g. NUMBER from get_basic_metamodel())
-            // ???? auto &bmm = get_basic_metamodel(); / later: will come as shared_ptr
+            if(include_basic_metamodel) {
+                textx_grammar_parsetree.copy_rule_infos_from("", get_basic_metamodel().textx_grammar_parsetree);
+            }
+
             textx_grammar_parsetree.finalize_rule_info();
 
             for (auto&[name,r] : textx_grammar_parsetree.rule_info) {
-                auto &rule = grammar[name];
-                rule.m_type = r.rule_type;
-                rule.tx_inh_by = r.tx_inh_by;
-                for(auto& [name, info]: r.attribute_info) {
-                    rule.attribute_info[name].type = info.type;
-                    rule.attribute_info[name].cardinality = r.get_attribute_cardinality(name);
+                if (!r.external_rule) {
+                    auto &rule = grammar[name];
+                    rule.m_type = r.rule_type;
+                    rule.tx_inh_by = r.tx_inh_by;
+                    for(auto& [name, info]: r.attribute_info) {
+                        rule.attribute_info[name].type = info.type;
+                        rule.attribute_info[name].cardinality = r.get_attribute_cardinality(name);
+                    }
                 }
             }
         }
@@ -68,7 +72,7 @@ namespace textx {
             STRING: /("(\"|[^"])*")|('(\'|[^'])*')/;
             NUMBER: STRICTFLOAT|INT;
             BASETYPE: NUMBER|FLOAT|BOOL|ID|STRING;
-        )", false};
+        )", false, false};
         return mm;
     };
 }

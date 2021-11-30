@@ -329,10 +329,12 @@ namespace textx {
         // << rule_body << "\n";
         Rule rule;
         rule.name = name;
+        std::string rname = std::string("rule://")+std::string(name);
         rule.pattern = transform_match2pattern(ParseState{}, mm, rule_info, rule_body);
         if (add_eof) {
             rule.pattern = ta::sequence({rule.pattern, ta::end_of_file()});
         }
+        rule.pattern = textx::arpeggio::rule(textx::arpeggio::named(rname,rule.pattern));
         rule.m_type = RuleType::illegal;
         return rule;
     }

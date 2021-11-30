@@ -8,7 +8,7 @@ namespace textx {
     } 
 
     textx::object::Value Model::create_model(const std::string_view text, const textx::arpeggio::Match &m, textx::Metamodel &mm) {
-         if (m.name.has_value() && m.name.value().starts_with("rule://")) {
+        if (m.name.has_value() && m.name.value().starts_with("rule://")) {
             std::string rule_name = m.name.value().substr(7);
             auto &rule = mm[rule_name];
             if (rule.type() == RuleType::match) {
@@ -19,7 +19,7 @@ namespace textx {
             }
         }
         else {
-            textx::arpeggio::raise(m.start(), "unexpected, no rule result found here...");
+            textx::arpeggio::raise(m.start(), "unexpected, no rule result found here...\n", m);
         }
     }
 

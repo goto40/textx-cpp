@@ -129,11 +129,15 @@ namespace textx::parsetree {
     void TextxGrammarParsetree::finalize_rule_info() {
         std::unordered_set<std::string> recursion_stopper{};
         for (auto&[name,r] : rule_info) {
-            r.rule_type = r.determine_rule_type(recursion_stopper, *this);
-            r.fix_tx_inh_by(*this);
+            if (!r.external_rule) {
+                r.rule_type = r.determine_rule_type(recursion_stopper, *this);
+                r.fix_tx_inh_by(*this);
+            }
         }
         for (auto&[name,r] : rule_info) {
-            r.fix_attribute_types(*this);
+            if (!r.external_rule) {
+                r.fix_attribute_types(*this);
+            }
         }
     }
 

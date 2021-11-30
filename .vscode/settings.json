@@ -5,6 +5,7 @@
         "string_view": "cpp",
         "stdexcept": "cpp",
         "typeindex": "cpp",
-        "typeinfo": "cpp"
+        "typeinfo": "cpp",
+        "*.tcc": "cpp"
     }
 }

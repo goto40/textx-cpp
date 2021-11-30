@@ -49,7 +49,7 @@ namespace textx::parsetree {
         std::unordered_set<std::string> tx_inh_by; // for abstract rules 
         std::unordered_set<std::string> tx_bases;
         textx::RuleType rule_type;
-        bool external_rule;
+        bool external_rule=false;
 
         RuleInfo(textx::arpeggio::Match &match, std::string name) :match{match}, name(name) {}
         RuleInfo(const RuleInfo&) = default;
@@ -110,7 +110,23 @@ namespace textx::parsetree {
                 if (rule_info.count(name)==0) { // onyl insert if same rule does not exist here
                     auto res = rule_info.emplace(name,ri);
                     TEXTX_ASSERT(res.second, "insertion must be ok")
-                    res.first->second.external_rule = true;
+                    auto &new_ri = res.first->second;
+                    new_ri.external_rule = true;
+                    if (name.size()>0) {
+                        for(auto &[aname, ai]: new_ri.attribute_info) {
+                            for(auto &t: ai.types) {
+                                if (t.find(".")==-1) {
+                                    t = name+"."+t;
+                                }
+                            }
+                            if (ai.type.has_value()) {
+                                auto &t = ai.type.value();
+                                if (t.find(".")==-1) {
+                                    t = name+"."+t;
+                                }
+                            }
+                        }
+                    }
                 }
             }
         }

@@ -16,7 +16,7 @@ namespace textx {
         static Metamodel& get_basic_metamodel();
 
         public:
-        Metamodel(std::string_view grammar, bool is_main_grammar=true);
+        Metamodel(std::string_view grammar, bool is_main_grammar=true, bool include_basic_metamodel=true);
 
         std::optional<textx::arpeggio::Match> parsetree_from_str(std::string_view model_txt) {
             return grammar.parse_or_throw(model_txt);
@@ -32,7 +32,7 @@ namespace textx {
 
         textx::arpeggio::Pattern ref(std::string name) {
             std::string rname = std::string("rule://")+name;
-            return textx::arpeggio::rule(textx::arpeggio::named(rname, [this,name](const textx::arpeggio::Config &config, textx::arpeggio::ParserState &text, textx::arpeggio::TextPosition pos) -> std::optional<textx::arpeggio::Match>
+            return [this,name](const textx::arpeggio::Config &config, textx::arpeggio::ParserState &text, textx::arpeggio::TextPosition pos) -> std::optional<textx::arpeggio::Match>
             {
                 auto r = grammar.get_rules().find(name);
                 if (r==grammar.get_rules().end()) {
@@ -46,7 +46,7 @@ namespace textx {
                 else {
                     return r->second(config, text, pos);
                 }
-            }));
+            };
 
             //TODO handle referenced/included metamodels
             if (grammar.get_rules().find(name)==grammar.get_rules().end()) {
