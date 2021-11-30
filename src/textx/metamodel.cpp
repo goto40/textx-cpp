@@ -104,11 +104,23 @@ namespace textx {
     }
 
     Rule& Metamodel::operator[](std::string name) {
-        return grammar[name];
+        // TOOD handle dot separated grammar names (grammar.rule)
+        if (grammar.get_rules().count(name)>0) {
+            return grammar[name];
+        }
+        else {
+            return get_basic_metamodel()[name];
+        }
     }
 
     const Rule& Metamodel::operator[](std::string name) const {
-        return grammar[name];
+        // TOOD handle dot separated grammar names (grammar.rule)
+        if (grammar.get_rules().count(name)>0) {
+            return grammar[name];
+        }
+        else {
+            return get_basic_metamodel()[name];
+        }
     }
 
     std::shared_ptr<textx::Model> Metamodel::model_from_str(std::string_view text) {

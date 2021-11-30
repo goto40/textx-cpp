@@ -213,7 +213,7 @@ namespace {
                 auto &choice = match.children[2].children[0];
                 std::ostringstream assignment_info;
                 assignment_info << "assignment://" << attribute_name;
-                ta::Pattern assignment_rhs_content = ta::named(assignment_info.str(), transform_match2pattern( parsestate, mm, rule, choice.children[0])); 
+                ta::Pattern assignment_rhs_content = ta::named(assignment_info.str(), ta::sequence({transform_match2pattern( parsestate, mm, rule, choice.children[0])})); 
 
                 // repeat modifiers
                 auto repeat_modifiers_match = match.children[2].children[1]; 

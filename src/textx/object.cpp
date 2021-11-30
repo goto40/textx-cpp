@@ -45,4 +45,11 @@ namespace textx::object {
         } 
         return r->second;
     }
+
+    void Object::create_attribute_if_not_present(std::string name) {
+        if (attributes.count(name)==0) {
+            attributes[name]={};
+        }
+    }
+
 }

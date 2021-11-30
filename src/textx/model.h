@@ -14,5 +14,11 @@ namespace textx {
         void init(const std::string_view text, const textx::arpeggio::Match &parsetree, std::shared_ptr<Metamodel> mm);
         friend textx::Metamodel;
     public:
+        textx::object::Value& val() { 
+            return root;
+        }
+        const textx::object::Value& val() const {
+            return root;
+        }
     };
 }

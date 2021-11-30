@@ -14,9 +14,11 @@ namespace textx {
             std::string rule_name = m.name.value().substr(7);
             auto &rule = mm[rule_name];
             if (rule.type() == RuleType::match) {
+                //std::cout << "match -*- " << m << "\n";
                 return std::string(textx::arpeggio::get_str(text, m));
             }
             if (rule.type() == RuleType::common) {
+                //std::cout << "common -*- " << m << "\n";
                 return create_model_from_common_rule(rule_name, text, m, mm);
             }
             else {
@@ -34,27 +36,30 @@ namespace textx {
         obj->tx_model = shared_from_this(); // store weak ptr
 
         // traverse tree and stop on "rule://" names..."
-        std::function<void(const textx::arpeggio::Match&)> traverse;
-        traverse = [&, this](const textx::arpeggio::Match& m) {
-            if (m.name_starts_with("rule://")) {
+        std::function<void(const textx::arpeggio::Match&, bool)> traverse;
+        traverse = [&, this](const textx::arpeggio::Match& m, bool first=true) {
+            if (m.name_starts_with("rule://") && !first) {
                 return;
             }
             else if (m.name_starts_with("assignment://")) {
-                std::string attr_name = m.name.value().substr(14);
+                std::string attr_name = m.name.value().substr(13);
+                //std::cout << "*************** adding attr " << m.name.value() << "\n";
+                auto& val = m.children[0];
+                obj->create_attribute_if_not_present(attr_name);
                 if (mm[rule_name][attr_name].cardinality==AttributeCardinality::scalar) {
-                    (*obj)[attr_name].data = create_model(text, m, mm);
+                    (*obj)[attr_name].data = create_model(text, val, mm);
                 }
                 else {
-                    (*obj)[attr_name].append(create_model(text, m, mm));
+                    (*obj)[attr_name].append(create_model(text, val, mm));
                 }
             }
             else {
                 for (auto &c: m.children) {
-                    traverse(c);
+                    traverse(c, false);
                 }
             }
         };
-        traverse(m0);
+        traverse(m0,true);
 
         //std::cout << m0 << "\n";
         return obj;         

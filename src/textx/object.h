@@ -147,6 +147,7 @@ namespace textx::object {
 
         const AttributeValue& operator[](std::string name) const;
         AttributeValue& operator[](std::string name);
+        void create_attribute_if_not_present(std::string name);
     };
 
 }
