@@ -101,6 +101,14 @@ namespace textx
             std::optional<std::string> name = std::nullopt;
             std::optional<std::string> captured = std::nullopt;
 
+            bool name_starts_with(const std::string_view p) const {
+                return name.has_value() && name.value().starts_with(p);
+            }
+
+            bool name_is(const std::string_view p) const {
+                return name.has_value() && name.value() == p;
+            }
+
             Match(TextPosition s, TextPosition e, MatchType t, std::vector<Match> c = {}) : m_start{s}, m_end{e}, m_type{t}, children{c}
             {
                 if (m_type == MatchType::undefined)

@@ -76,7 +76,12 @@ namespace textx::object {
         AttributeValue& operator[](std::string name);
     };
     struct AttributeValue {
-        std::variant<Value, std::vector<Value>> data;
+        std::variant<Value, std::vector<Value>> data = std::vector<Value>{};
+
+        void append(Value v) {
+            TEXTX_ASSERT(std::holds_alternative<std::vector<Value>>(data));
+            std::get<std::vector<Value>>(data).push_back(v);
+        }
 
         std::shared_ptr<Object> obj() {
             TEXTX_ASSERT(std::holds_alternative<Value>(data));

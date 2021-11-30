@@ -76,10 +76,20 @@ namespace textx {
 
         AttributeInfo& operator[](std::string name)
         {
-            if (attribute_info.find(name)==attribute_info.end()) {
+            auto p = attribute_info.find(name);
+            if (p==attribute_info.end()) {
                 throw std::runtime_error(std::string("cannot find attribute_info \"")+std::string(name)+"\"");
             }
-            return attribute_info[name];
+            return p->second;
+        }
+
+        const AttributeInfo& operator[](std::string name) const
+        {
+            auto p = attribute_info.find(name);
+            if (p==attribute_info.end()) {
+                throw std::runtime_error(std::string("cannot find attribute_info \"")+std::string(name)+"\"");
+            }
+            return p->second;
         }
 
         friend Rule createRuleFromTextxPattern(textx::Metamodel& mm, std::string_view name, textx::arpeggio::Match rule_params, const textx::arpeggio::Match& rule_body, textx::parsetree::RuleInfo& rule_info, bool add_eof);

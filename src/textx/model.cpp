@@ -10,7 +10,7 @@ namespace textx {
     } 
 
     textx::object::Value Model::create_model(const std::string_view text, const textx::arpeggio::Match &m, textx::Metamodel &mm) {
-        if (m.name.has_value() && m.name.value().starts_with("rule://")) {
+        if (m.name_starts_with("rule://")) {
             std::string rule_name = m.name.value().substr(7);
             auto &rule = mm[rule_name];
             if (rule.type() == RuleType::match) {
@@ -32,13 +32,31 @@ namespace textx {
         auto obj = std::make_shared<textx::object::Object>();
         obj->type = rule_name;
         obj->tx_model = shared_from_this(); // store weak ptr
+
         // traverse tree and stop on "rule://" names..."
         std::function<void(const textx::arpeggio::Match&)> traverse;
-        traverse = [&](const textx::arpeggio::Match& m) {
+        traverse = [&, this](const textx::arpeggio::Match& m) {
+            if (m.name_starts_with("rule://")) {
+                return;
+            }
+            else if (m.name_starts_with("assignment://")) {
+                std::string attr_name = m.name.value().substr(14);
+                if (mm[rule_name][attr_name].cardinality==AttributeCardinality::scalar) {
+                    (*obj)[attr_name].data = create_model(text, m, mm);
+                }
+                else {
+                    (*obj)[attr_name].append(create_model(text, m, mm));
+                }
+            }
+            else {
+                for (auto &c: m.children) {
+                    traverse(c);
+                }
+            }
         };
         traverse(m0);
 
-        std::cout << m0 << "\n";
+        //std::cout << m0 << "\n";
         return obj;         
     }
 
