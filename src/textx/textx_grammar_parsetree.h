@@ -41,7 +41,7 @@ namespace textx::parsetree {
         std::optional<std::string> type = std::nullopt;
     };
 
-    class ParseTree;
+    class TextxGrammarParsetree;
     struct RuleInfo {
         textx::arpeggio::Match &match;
         std::string name;
@@ -49,15 +49,17 @@ namespace textx::parsetree {
         std::unordered_set<std::string> tx_inh_by; // for abstract rules 
         std::unordered_set<std::string> tx_bases;
         textx::RuleType rule_type;
+        bool external_rule;
 
         RuleInfo(textx::arpeggio::Match &match, std::string name) :match{match}, name(name) {}
+        RuleInfo(const RuleInfo&) = default;
 
         void add_tx_inh_by(std::string name) {
             //std::cout << this->name << " is inherited by " << name << "\n";
             tx_inh_by.insert(name);
         }
-        void fix_tx_inh_by(ParseTree& p);
-        void fix_attribute_types(const ParseTree& p);
+        void fix_tx_inh_by(TextxGrammarParsetree& p);
+        void fix_attribute_types(const TextxGrammarParsetree& p);
 
         void add_attribute(std::string name, std::string type) {
             attribute_info[name].types.push_back(type);
@@ -69,10 +71,10 @@ namespace textx::parsetree {
         }
 
         textx::AttributeCardinality get_attribute_cardinality(std::string name);
-        textx::RuleType determine_rule_type(std::unordered_set<std::string> &recursion_stopper, const ParseTree& p) const;
+        textx::RuleType determine_rule_type(std::unordered_set<std::string> &recursion_stopper, const TextxGrammarParsetree& p) const;
     };
 
-    struct ParseTree {
+    struct TextxGrammarParsetree {
         std::optional<textx::arpeggio::Match> root;
         std::unordered_map<std::string, RuleInfo> rule_info;
         void finalize_rule_info();
@@ -99,6 +101,19 @@ namespace textx::parsetree {
             return f->second;
         }
 
+        void copy_rule_infos_from(std::string grammar_name, const TextxGrammarParsetree& other) {
+            for(const auto &[name, ri]: other.rule_info) {
+                std::string new_name = name;
+                if (grammar_name.size()>0) {
+                    new_name = grammar_name+"."+new_name;
+                }
+                if (rule_info.count(name)==0) { // onyl insert if same rule does not exist here
+                    auto res = rule_info.emplace(name,ri);
+                    TEXTX_ASSERT(res.second, "insertion must be ok")
+                    res.first->second.external_rule = true;
+                }
+            }
+        }
     };
 
 }

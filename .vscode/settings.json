@@ -3,6 +3,8 @@
         "variant": "cpp",
         "string": "cpp",
         "string_view": "cpp",
-        "stdexcept": "cpp"
+        "stdexcept": "cpp",
+        "typeindex": "cpp",
+        "typeinfo": "cpp"
     }
 }

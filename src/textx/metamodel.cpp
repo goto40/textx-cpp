@@ -6,8 +6,8 @@
 namespace textx {
 
     Metamodel::Metamodel(std::string_view grammar_text, bool is_main_grammar) {
-        grammar_parsetree.root = textx_grammar.parse_or_throw(grammar_text);        
-        auto &root = grammar_parsetree.root.value();
+        textx_grammar_parsetree.root = textx_grammar.parse_or_throw(grammar_text);        
+        auto &root = textx_grammar_parsetree.root.value();
 
         assert(root.name && "unexpected: no textx model loaded!!");
         assert(root.name.value()=="rule://textx_model" && "unexpected: no textx model loaded!!");
@@ -32,14 +32,14 @@ namespace textx {
                     first = false;
                 }
                 grammar.add_rule(rule_name, new_rule);
-                grammar_parsetree.rule_info.emplace(rule_name, rule_info);
+                textx_grammar_parsetree.rule_info.emplace(rule_name, rule_info);
             }
 
             // TODO: make external/other/base grammars "visible" here... (e.g. NUMBER from get_basic_metamodel())
             // ???? auto &bmm = get_basic_metamodel(); / later: will come as shared_ptr
-            grammar_parsetree.finalize_rule_info();
+            textx_grammar_parsetree.finalize_rule_info();
 
-            for (auto&[name,r] : grammar_parsetree.rule_info) {
+            for (auto&[name,r] : textx_grammar_parsetree.rule_info) {
                 auto &rule = grammar[name];
                 rule.m_type = r.rule_type;
                 rule.tx_inh_by = r.tx_inh_by;

@@ -2,7 +2,7 @@
 #include "textx/lang.h"
 #include "textx/grammar.h"
 #include "textx/rule.h"
-#include "textx/parsetree.h"
+#include "textx/textx_grammar_parsetree.h"
 #include "textx/model.h"
 #include <string>
 #include <memory>
@@ -12,7 +12,7 @@ namespace textx {
     class Metamodel : public std::enable_shared_from_this<Metamodel> {
         textx::lang::TextxGrammar textx_grammar={};
         textx::Grammar<textx::Rule> grammar={};
-        textx::parsetree::ParseTree grammar_parsetree;
+        textx::parsetree::TextxGrammarParsetree textx_grammar_parsetree;
         static Metamodel& get_basic_metamodel();
 
         public:

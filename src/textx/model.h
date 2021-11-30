@@ -1,6 +1,6 @@
 #pragma once
 #include "textx/object.h"
-#include "textx/parsetree.h"
+#include "textx/textx_grammar_parsetree.h"
 
 namespace textx {
 

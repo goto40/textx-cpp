@@ -1,8 +1,8 @@
 #pragma once
 
-#include "arpeggio.h"
-#include "grammar.h"
-#include "parsetree.h"
+#include "textx/arpeggio.h"
+#include "textx/grammar.h"
+#include "textx/textx_grammar_parsetree.h"
 #include <unordered_map>
 #include <string>
 #include <variant>

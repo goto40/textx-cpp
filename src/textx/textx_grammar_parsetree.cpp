@@ -1,4 +1,4 @@
-#include "textx/parsetree.h"
+#include "textx/textx_grammar_parsetree.h"
 #include "textx/metamodel.h"
 #include "textx/arpeggio.h"
 #include "textx/tools.h"
@@ -47,7 +47,7 @@ namespace textx {
 
 namespace textx::parsetree {
 
-    void RuleInfo::fix_tx_inh_by(ParseTree& p) {
+    void RuleInfo::fix_tx_inh_by(TextxGrammarParsetree& p) {
         // remove_match_types_from
         std::erase_if(tx_inh_by, [&](auto&x){ return p[x].rule_type==RuleType::match; });
         // adjust bases
@@ -56,7 +56,7 @@ namespace textx::parsetree {
         }
     }
 
-    void RuleInfo::fix_attribute_types(const ParseTree& p) {
+    void RuleInfo::fix_attribute_types(const TextxGrammarParsetree& p) {
         for (auto& [name, info]: attribute_info) {
             std::function<bool(std::string,std::string)> is_inherited_from;
             is_inherited_from = [&](std::string t1, std::string t2) -> bool {
@@ -102,7 +102,7 @@ namespace textx::parsetree {
         }
     }
 
-    textx::RuleType RuleInfo::determine_rule_type(std::unordered_set<std::string> &recursion_stopper, const ParseTree& p) const {
+    textx::RuleType RuleInfo::determine_rule_type(std::unordered_set<std::string> &recursion_stopper, const TextxGrammarParsetree& p) const {
         if (recursion_stopper.count(name)>0) {
             throw std::runtime_error("detected circular abstract rule reference");
         }
@@ -126,7 +126,7 @@ namespace textx::parsetree {
         }
     }
 
-    void ParseTree::finalize_rule_info() {
+    void TextxGrammarParsetree::finalize_rule_info() {
         std::unordered_set<std::string> recursion_stopper{};
         for (auto&[name,r] : rule_info) {
             r.rule_type = r.determine_rule_type(recursion_stopper, *this);
