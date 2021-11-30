@@ -2,7 +2,7 @@
 
 ## Plan
 
- * Create an interpreter for textx grammars.
+ * Create an interpreter for [textx](https://github.com/textX/textX) grammars.
  * This is a just-for-fun project and a proof of concept...
  * Example: see [tests/model.t.cpp](tests/model.t.cpp)
 ## Details
