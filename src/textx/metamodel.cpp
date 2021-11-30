@@ -113,7 +113,9 @@ namespace textx {
 
     std::shared_ptr<textx::Model> Metamodel::model_from_str(std::string_view text) {
         auto parsetree = parsetree_from_str(text);
-        return std::make_shared<textx::Model>(text, *parsetree, shared_from_this());
+        auto ret=std::shared_ptr<textx::Model>{new textx::Model()}; // call private constructor (new)
+        ret->init(text, *parsetree, shared_from_this());
+        return ret;
     }
 
 }

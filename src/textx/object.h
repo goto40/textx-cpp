@@ -7,7 +7,7 @@
 #include <memory>
 #include <unordered_map>
 
-namespace textx::model {
+namespace textx {
     class Model;
 }
 
@@ -20,7 +20,7 @@ namespace textx::object {
     struct AttributeValue;
 
     struct ObjectRef {
-        std::weak_ptr<textx::model::Model> tx_model;
+        std::weak_ptr<textx::Model> tx_model;
         std::string name;
         std::weak_ptr<Object> obj;
     };
@@ -137,7 +137,7 @@ namespace textx::object {
 
     struct Object {
         std::string type;
-        std::weak_ptr<textx::model::Model> tx_model;
+        std::weak_ptr<textx::Model> tx_model;
         std::unordered_map<std::string, AttributeValue> attributes;
 
         const AttributeValue& operator[](std::string name) const;

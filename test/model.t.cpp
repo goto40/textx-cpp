@@ -25,3 +25,21 @@ TEST_CASE("model_simple1", "[textx/metamodel]")
         }
     }
 }
+
+TEST_CASE("model_simple2", "[textx/metamodel]")
+{
+    {
+        auto grammar1 = R"(
+            Model: x=NUMBER|x=STRING;
+        )";
+
+        {
+            // model only work from a shared metamodel...
+            auto mm = std::make_shared<textx::Metamodel>(grammar1);
+            auto m1 = mm->model_from_str("123");
+            auto m2 = mm->model_from_str("'123'");
+            CHECK(m1);
+            CHECK(m2);
+        }
+    }
+}
