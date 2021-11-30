@@ -4,6 +4,8 @@
 
 Create an interpreter for textx grammars.
 
+This is a just-for-fun project and a proof of concept...
+
 ## Details
 
 ### grammar.h
@@ -25,10 +27,9 @@ Create an interpreter for textx grammars.
 ### Unclear
  * is it correct that either "eolterm", or a repeat modifier, but not both are allowed...? test in textx... (for repeat_operator and assignment)
 ### Open
- * "TODO determine common type here" attribute_info, Rule.h
- * "TODO if target type is a matching rule, create a str-output/terminal-output", Rule.h
  * "eolterm" not used/interpreted (for repeat_operator and assignment)
  * TODO: use has_match_suppression
  * include/reference other metamodels
  * TODO handle referenced/included metamodels, in Metamodel::ref
  * // TODO determine_rule_type, see http://textx.github.io/textX/stable/grammar/#rule-types, rule.cpp
+ * ...
