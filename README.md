@@ -7,15 +7,45 @@
  * Example: see [test/model.t.cpp](test/model.t.cpp)
 ## Details
 
-### grammar.h
-
- * Responsability: container for rules and interface to trigger parsing.
-
 ### arpeggio.h
 
- * Responsability: basic pasrer functionaity, inspirated by [Arpeggio](https://github.com/textX/Arpeggio).
+ * Responsibility: basic parser functionality, inspirited by [Arpeggio](https://github.com/textX/Arpeggio).
  * Code config, arpeggio.h: `#define ARPEGGIO_USE_BOOST_FOR_REGEX` activates the boost version of regex; else the std-lib version is used. Since the boost is *much* faster, this define is introduced (+CMakeLists.txt adaptations).
 
+### assert.h
+
+ * Responsibility: exceptions tools with information about model/file location.
+
+### grammar.h
+
+ * Responsibility: container for rules and interface to trigger parsing.
+
+### lang.h
+
+ * Responsibility: migration of [lang.py](https://github.com/textX/textX/blob/master/textx/lang.py)
+   (the textx grammar language).
+
+### metamodel.h
+
+ * Responsibility: extended user-grammar representation. Allows to load a model (inspired by metamodel.py).
+
+### model.h
+
+ * Responsibility: 
+   - user model representation (inspired by model.py).
+   - user model parsing (inspired by model.py).
+
+### object.h
+
+ * Responsibility: simple model representation tree (resides inside a textx::Model).
+
+### rule.h
+
+ * Responsibility: textx user grammar rule representation (extends a simple textx::apreggio::Pattern with, e.g. attribute and attribute type information).
+
+### textx_grammar_parsetree.h
+
+ * Responsibility: internal helper to parse user grammars.
 ## Links
 
  * Textx, Arpeggio, etc: [https://github.com/textX](https://github.com/textX)
@@ -30,5 +60,6 @@
  * TODO: use has_match_suppression
  * include/reference other metamodels
  * TODO handle referenced/included metamodels, in Metamodel::ref
- * // TODO determine_rule_type, see http://textx.github.io/textX/stable/grammar/#rule-types, rule.cpp
  * ...
+ * include simple references
+ * RREL
