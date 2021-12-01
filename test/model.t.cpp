@@ -110,7 +110,7 @@ TEST_CASE("model_abstract_ref1", "[textx/metamodel]")
             CHECK( m->val()["ref"].is_ref() );
             CHECK( m->val()["ref"].ref().name == "B" ); // the reference string (the address)
             CHECK( m->val()["ref"]["name"].str() == "B" ); // the name of the referenced element
-            //CHECK( m->val()["ref"].obj() == m->val()["items"][1].obj() );
+            CHECK( m->val()["ref"].obj() == m->val()["items"][1].obj() );
         }
     }
 }
