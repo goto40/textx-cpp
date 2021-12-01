@@ -91,3 +91,25 @@ TEST_CASE("model_abstract_rule1", "[textx/metamodel]")
         }
     }
 }
+
+TEST_CASE("model_abstract_ref1", "[textx/metamodel]")
+{
+    {
+        auto grammar1 = R"#(
+            Model: items+=Item 'ref' ref=[Item];
+            Item: 'item' name=ID;
+        )#";
+
+        {
+            auto mm = std::make_shared<textx::Metamodel>(grammar1);
+            auto m = mm->model_from_str("item A item B item C ref B");
+            CHECK( m->val()["items"].size() == 3 );
+            CHECK( m->val()["items"][0]["name"].str() == "A" );
+            CHECK( m->val()["items"][1]["name"].str() == "B" );
+            CHECK( m->val()["items"][2]["name"].str() == "C" );
+            CHECK( m->val()["ref"].has_ref() );
+            CHECK( m->val()["ref"]["name"].str() == "B" );
+            CHECK( m->val()["ref"].obj() == m->val()["items"][1].obj() );
+        }
+    }
+}

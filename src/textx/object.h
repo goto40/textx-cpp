@@ -25,18 +25,27 @@ namespace textx::object {
         std::weak_ptr<Object> obj;
     };
     struct Value {
-        std::variant<std::string, std::shared_ptr<Object>, std::shared_ptr<ObjectRef>> data;
+        std::variant<std::string, std::shared_ptr<Object>, ObjectRef> data;
         Value(std::string x) : data{x} {}
         Value(std::shared_ptr<Object> x) : data{x} {}
-        Value(std::shared_ptr<ObjectRef> x) : data{x} {}
+        Value(ObjectRef x) : data{std::move(x)} {}
+
+        bool has_ref() {
+            return std::holds_alternative<ObjectRef>(data);
+        }
+
+        ObjectRef& ref() {
+            TEXTX_ASSERT(std::holds_alternative<ObjectRef>(data), "no ref!");
+            return std::get<ObjectRef>(data);
+        }
 
         std::shared_ptr<Object> obj() {
             if (std::holds_alternative<std::shared_ptr<Object>>(data)) {
                 return std::get<std::shared_ptr<Object>>(data);
             }
             else {
-                TEXTX_ASSERT(std::holds_alternative<std::shared_ptr<ObjectRef>>(data));
-                return std::get<std::shared_ptr<ObjectRef>>(data)->obj.lock();
+                TEXTX_ASSERT(std::holds_alternative<ObjectRef>(data));
+                return std::get<ObjectRef>(data).obj.lock();
             }
         }
 
@@ -45,8 +54,8 @@ namespace textx::object {
                 return std::get<std::shared_ptr<Object>>(data);
             }
             else {
-                TEXTX_ASSERT(std::holds_alternative<std::shared_ptr<ObjectRef>>(data));
-                return std::get<std::shared_ptr<ObjectRef>>(data)->obj.lock();
+                TEXTX_ASSERT(std::holds_alternative<ObjectRef>(data));
+                return std::get<ObjectRef>(data).obj.lock();
             }
         }
 
@@ -83,6 +92,21 @@ namespace textx::object {
             std::get<std::vector<Value>>(data).push_back(v);
         }
 
+        bool has_ref() {
+            if (!std::holds_alternative<Value>(data)) {
+                return false;
+            }
+            auto &value = std::get<Value>(data);
+            return std::holds_alternative<ObjectRef>(value.data);
+        }
+
+        ObjectRef& ref() {
+            TEXTX_ASSERT(std::holds_alternative<Value>(data));
+            auto &value = std::get<Value>(data);
+            TEXTX_ASSERT(std::holds_alternative<ObjectRef>(value.data), "no ref");
+            return std::get<ObjectRef>(value.data);
+        }
+
         std::shared_ptr<Object> obj() {
             TEXTX_ASSERT(std::holds_alternative<Value>(data));
             auto &value = std::get<Value>(data);
@@ -90,8 +114,8 @@ namespace textx::object {
                 return std::get<std::shared_ptr<Object>>(value.data);
             }
             else {
-                TEXTX_ASSERT(std::holds_alternative<std::shared_ptr<ObjectRef>>(value.data));
-                return std::get<std::shared_ptr<ObjectRef>>(value.data)->obj.lock();
+                TEXTX_ASSERT(std::holds_alternative<ObjectRef>(value.data));
+                return std::get<ObjectRef>(value.data).obj.lock();
             }
         }
 
@@ -102,8 +126,8 @@ namespace textx::object {
                 return std::get<std::shared_ptr<Object>>(value.data);
             }
             else {
-                TEXTX_ASSERT(std::holds_alternative<std::shared_ptr<ObjectRef>>(value.data));
-                return std::get<std::shared_ptr<ObjectRef>>(value.data)->obj.lock();
+                TEXTX_ASSERT(std::holds_alternative<ObjectRef>(value.data));
+                return std::get<ObjectRef>(value.data).obj.lock();
             }
         }
 
