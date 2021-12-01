@@ -1,6 +1,7 @@
 #pragma once
 
 #include "textx/assert.h"
+#include "textx/arpeggio.h"
 #include <string>
 #include <variant>
 #include <vector>
@@ -26,12 +27,22 @@ namespace textx::object {
     };
     struct Value {
         std::variant<std::string, std::shared_ptr<Object>, ObjectRef> data;
-        Value(std::string x) : data{x} {}
-        Value(std::shared_ptr<Object> x) : data{x} {}
-        Value(ObjectRef x) : data{std::move(x)} {}
+        textx::arpeggio::TextPosition pos;
+        Value(std::string x,textx::arpeggio::TextPosition pos) : data{x},pos{pos} {}
+        Value(std::shared_ptr<Object> x,textx::arpeggio::TextPosition pos) : data{x},pos{pos} {}
+        Value(ObjectRef x,textx::arpeggio::TextPosition pos) : data{std::move(x)},pos{pos} {}
 
-        bool has_ref() {
+        bool is_ref() const {
             return std::holds_alternative<ObjectRef>(data);
+        }
+        bool is_pure_obj() const {
+            return std::holds_alternative<std::shared_ptr<Object>>(data);
+        }
+        bool is_obj() const {
+            return is_pure_obj() || is_ref();
+        }
+        bool is_str() const {
+            return std::holds_alternative<std::string>(data);
         }
 
         ObjectRef& ref() {
@@ -92,13 +103,31 @@ namespace textx::object {
             std::get<std::vector<Value>>(data).push_back(v);
         }
 
-        bool has_ref() {
+        bool is_ref() const {
             if (!std::holds_alternative<Value>(data)) {
                 return false;
             }
             auto &value = std::get<Value>(data);
             return std::holds_alternative<ObjectRef>(value.data);
         }
+        bool is_pure_obj() const {
+            if (!std::holds_alternative<Value>(data)) {
+                return false;
+            }
+            auto &value = std::get<Value>(data);
+            return std::holds_alternative<std::shared_ptr<Object>>(value.data);
+        }
+        bool is_obj() const {
+            return is_pure_obj() || is_ref();
+        }
+        bool is_str() const {
+            if (!std::holds_alternative<Value>(data)) {
+                return false;
+            }
+            auto &value = std::get<Value>(data);
+            return std::holds_alternative<std::string>(value.data);
+        }
+
 
         ObjectRef& ref() {
             TEXTX_ASSERT(std::holds_alternative<Value>(data));

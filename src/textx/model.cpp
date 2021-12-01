@@ -7,7 +7,7 @@ namespace textx {
     void Model::init(const std::string_view text, const textx::arpeggio::Match &parsetree, std::shared_ptr<Metamodel> mm) {
        weak_mm = mm;
        root = create_model(text, parsetree, *mm);
-    } 
+    }
 
     textx::object::Value Model::create_model(const std::string_view text, const textx::arpeggio::Match &m, textx::Metamodel &mm) {
         if (m.name_starts_with("rule://")) {
@@ -15,7 +15,7 @@ namespace textx {
             auto &rule = mm[rule_name];
             if (rule.type() == RuleType::match) {
                 //std::cout << "match -*- " << m << "\n";
-                return std::string(textx::arpeggio::get_str(text, m));
+                return {std::string(textx::arpeggio::get_str(text, m)),m.start()};
             }
             if (rule.type() == RuleType::common) {
                 return create_model_from_common_rule(rule_name, text, m, mm);
@@ -50,10 +50,10 @@ namespace textx {
                 if (val.name_starts_with("obj_ref://")) {
                     std::string ref_name = std::string{textx::arpeggio::get_str(text, val.children[0])};
                     if (mm[rule_name][attr_name].cardinality==AttributeCardinality::scalar) {
-                        (*obj)[attr_name].data = textx::object::Value{textx::object::ObjectRef{shared_from_this(), ref_name}};
+                        (*obj)[attr_name].data = textx::object::Value{textx::object::ObjectRef{shared_from_this(), ref_name}, val.start()};
                     }
                     else {
-                        (*obj)[attr_name].append(textx::object::Value{textx::object::ObjectRef{shared_from_this(), ref_name}});
+                        (*obj)[attr_name].append(textx::object::Value{textx::object::ObjectRef{shared_from_this(), ref_name}, val.start()});
                     }
                 }
                 else { // no reference
@@ -74,7 +74,7 @@ namespace textx {
         traverse(m0,true);
 
         //std::cout << m0 << "\n";
-        return obj;         
+        return {obj, m0.start()};
     }
 
     textx::object::Value Model::create_model_from_abstract_rule(const std::string& rule_name, const std::string_view text, const textx::arpeggio::Match &m0, textx::Metamodel &mm) {
@@ -95,6 +95,41 @@ namespace textx {
         auto &r = traverse(m0,true);
         TEXTX_ASSERT(&r != &m0, "unexpected: no used/referenced rule found in abstract rule");
         return create_model(text, r, mm);
+    }
+
+    size_t Model::resolve_references() {
+        auto mm = weak_mm.lock();
+        size_t unresolved=0;
+        std::function<void(textx::object::Value&)> traverse;
+        traverse = [&, this](textx::object::Value& v) -> void {
+            if (v.is_str()) {
+                // nothing
+            }
+            else if (v.is_ref()) {
+                //resolve ref:
+                //TODO
+                if (v.ref().obj.lock() == nullptr) {
+                    unresolved++;
+                }
+            }
+            else if (v.is_pure_obj()) {
+                for (auto &[k,av]: v.obj()->attributes) {
+                    if (std::holds_alternative<textx::object::Value>(av.data)) {
+                        traverse(std::get<textx::object::Value>(av.data));
+                    }
+                    else {
+                        for (auto &iv: std::get<std::vector<textx::object::Value>>(av.data)) {
+                            traverse(iv);
+                        }
+                    }
+                }
+            }
+            else {
+                textx::arpeggio::raise(v.pos, "unexpected situaltion");
+            }
+        };
+        traverse(root);
+        return unresolved;
     }
 
 }
