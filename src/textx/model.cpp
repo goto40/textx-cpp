@@ -50,10 +50,10 @@ namespace textx {
                 if (val.name_starts_with("obj_ref://")) {
                     std::string ref_name = std::string{textx::arpeggio::get_str(text, val.children[0])};
                     if (mm[rule_name][attr_name].cardinality==AttributeCardinality::scalar) {
-                        (*obj)[attr_name].data = textx::object::Value{textx::object::ObjectRef{shared_from_this(), ref_name}, val.start()};
+                        (*obj)[attr_name].data = textx::object::Value{textx::object::ObjectRef{shared_from_this(), ref_name, rule_name, attr_name, obj}, val.start()};
                     }
                     else {
-                        (*obj)[attr_name].append(textx::object::Value{textx::object::ObjectRef{shared_from_this(), ref_name}, val.start()});
+                        (*obj)[attr_name].append(textx::object::Value{textx::object::ObjectRef{shared_from_this(), ref_name, rule_name, attr_name, obj}, val.start()});
                     }
                 }
                 else { // no reference
@@ -106,10 +106,12 @@ namespace textx {
                 // nothing
             }
             else if (v.is_ref()) {
-                //resolve ref:
-                //TODO
                 if (v.ref().obj.lock() == nullptr) {
-                    unresolved++;
+                    //resolve ref:
+                    v.ref().obj = mm->get_resolver(v.ref().rule, v.ref().attr).resolve(v.ref().parent.lock(),v.ref().attr, v.ref().name);
+                    if (v.ref().obj.lock() == nullptr) {
+                        unresolved++;
+                    }
                 }
             }
             else if (v.is_pure_obj()) {

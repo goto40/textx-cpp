@@ -23,6 +23,9 @@ namespace textx::object {
     struct ObjectRef {
         std::weak_ptr<textx::Model> tx_model;
         std::string name;
+        std::string rule;
+        std::string attr;
+        std::weak_ptr<Object> parent = {};
         std::weak_ptr<Object> obj = {};
     };
     struct Value {
@@ -198,6 +201,7 @@ namespace textx::object {
         std::weak_ptr<textx::Model> tx_model;
         std::unordered_map<std::string, AttributeValue> attributes;
 
+        bool has_attr(std::string n) { return attributes.count(n)>0; }
         const AttributeValue& operator[](std::string name) const;
         AttributeValue& operator[](std::string name);
         void create_attribute_if_not_present(std::string name);
