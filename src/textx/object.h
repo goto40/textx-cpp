@@ -22,7 +22,7 @@ namespace textx::object {
     struct ObjectRef {
         std::weak_ptr<textx::Model> tx_model;
         std::string name;
-        std::weak_ptr<Object> obj;
+        std::weak_ptr<Object> obj = {};
     };
     struct Value {
         std::variant<std::string, std::shared_ptr<Object>, ObjectRef> data;

@@ -42,14 +42,27 @@ namespace textx {
             }
             else if (m.name_starts_with("assignment://")) {
                 std::string attr_name = m.name.value().substr(13);
-                //std::cout << "*************** adding attr " << m.name.value() << "\n";
+                //std::cout << "*************** adding attr " << m.name.value() << "\n"<< m << "\n";
                 auto& val = m.children[0];
                 obj->create_attribute_if_not_present(attr_name);
-                if (mm[rule_name][attr_name].cardinality==AttributeCardinality::scalar) {
-                    (*obj)[attr_name].data = create_model(text, val, mm);
+
+                // reference assignment
+                if (val.name_starts_with("obj_ref://")) {
+                    std::string ref_name = std::string{textx::arpeggio::get_str(text, val.children[0])};
+                    if (mm[rule_name][attr_name].cardinality==AttributeCardinality::scalar) {
+                        (*obj)[attr_name].data = textx::object::Value{textx::object::ObjectRef{shared_from_this(), ref_name}};
+                    }
+                    else {
+                        (*obj)[attr_name].append(textx::object::Value{textx::object::ObjectRef{shared_from_this(), ref_name}});
+                    }
                 }
-                else {
-                    (*obj)[attr_name].append(create_model(text, val, mm));
+                else { // no reference
+                    if (mm[rule_name][attr_name].cardinality==AttributeCardinality::scalar) {
+                        (*obj)[attr_name].data = create_model(text, val, mm);
+                    }
+                    else {
+                        (*obj)[attr_name].append(create_model(text, val, mm));
+                    }
                 }
             }
             else {

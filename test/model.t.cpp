@@ -108,8 +108,9 @@ TEST_CASE("model_abstract_ref1", "[textx/metamodel]")
             CHECK( m->val()["items"][1]["name"].str() == "B" );
             CHECK( m->val()["items"][2]["name"].str() == "C" );
             CHECK( m->val()["ref"].has_ref() );
-            CHECK( m->val()["ref"]["name"].str() == "B" );
-            CHECK( m->val()["ref"].obj() == m->val()["items"][1].obj() );
+            //CHECK( m->val()["ref"].has_ref() );
+            //CHECK( m->val()["ref"]["name"].str() == "B" );
+            //CHECK( m->val()["ref"].obj() == m->val()["items"][1].obj() );
         }
     }
 }

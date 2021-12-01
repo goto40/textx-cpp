@@ -277,12 +277,13 @@ namespace {
         {
             "rule://obj_ref",
             [](ParseState parsestate, METAMODEL &mm, RULE& rule, const ta::Match& match) -> ta::Pattern {
+                auto type_name = match.children[1].captured.value();
                 auto &optional_format = match.children[2];
                 std::string ref_rule_name = "ID";
                 if (optional_format.children.size()>0) {
                     ref_rule_name = optional_format.children[0].children[1].captured.value();
                 }
-                return mm.ref(ref_rule_name);
+                return named(std::string("obj_ref://")+type_name,ta::sequence({mm.ref(ref_rule_name)}));
             }
         },
         {
