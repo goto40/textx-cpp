@@ -61,8 +61,33 @@ TEST_CASE("model_simple3", "[textx/metamodel]")
             CHECK(m1->val()["points"][0]["y"].i() == 2);
             CHECK(m1->val()["points"][1]["x"].i() == 3);
             CHECK(m1->val()["points"][1]["y"].str() == "4.5");
-            //TODO: check if int was correctly comverted: 
+            //TODO: check if int was correctly converted: 
             // CHECK_THROWS(m1->val()["points"][1]["y"].i() == 4);
+        }
+    }
+}
+
+TEST_CASE("model_abstract_rule1", "[textx/metamodel]")
+{
+    {
+        auto grammar1 = R"#(
+            Model: shapes+=Shape[','];
+            Shape: Point|Circle|Line;
+            Point: 'Point' '(' x=NUMBER ',' y=NUMBER ')';
+            Circle: 'Circle' '(' center=Point ',' r=NUMBER ')';
+            Line: 'Line' '(' p1=Point ',' p2=Point ')';
+        )#";
+
+        {
+            auto mm = std::make_shared<textx::Metamodel>(grammar1);
+            auto m = mm->model_from_str("Point(1,2), Circle(Point(333,4.5),9), Line(Point(0,0),Point(1,1))");
+            CHECK( (*mm)["Model"]["shapes"].cardinality == textx::AttributeCardinality::list );
+            CHECK( (*mm)["Model"]["shapes"].type.value() == "Shape" );
+            CHECK( m->val()["shapes"].size() == 3 );
+            CHECK( m->val()["shapes"][0].obj()->type == "Point" );
+            CHECK( m->val()["shapes"][1].obj()->type == "Circle" );
+            CHECK( m->val()["shapes"][1]["center"]["x"].i() == 333 );
+            CHECK( m->val()["shapes"][2].obj()->type == "Line" );
         }
     }
 }

@@ -10,6 +10,7 @@ namespace textx {
         textx::object::Value root={std::shared_ptr<textx::object::Object>{}}; // nullptr
         textx::object::Value create_model(const std::string_view text, const textx::arpeggio::Match &m, textx::Metamodel &mm);
         textx::object::Value create_model_from_common_rule(const std::string& rule_name, const std::string_view text, const textx::arpeggio::Match &m0, textx::Metamodel &mm);
+        textx::object::Value create_model_from_abstract_rule(const std::string& rule_name, const std::string_view text, const textx::arpeggio::Match &m0, textx::Metamodel &mm);
         Model() = default;
         void init(const std::string_view text, const textx::arpeggio::Match &parsetree, std::shared_ptr<Metamodel> mm);
         friend textx::Metamodel;

@@ -18,11 +18,10 @@ namespace textx {
                 return std::string(textx::arpeggio::get_str(text, m));
             }
             if (rule.type() == RuleType::common) {
-                //std::cout << "common -*- " << m << "\n";
                 return create_model_from_common_rule(rule_name, text, m, mm);
             }
             else {
-                textx::arpeggio::raise(m.start(), "TODO");
+                return create_model_from_abstract_rule(rule_name, text, m, mm);
             }
         }
         else {
@@ -63,6 +62,26 @@ namespace textx {
 
         //std::cout << m0 << "\n";
         return obj;         
+    }
+
+    textx::object::Value Model::create_model_from_abstract_rule(const std::string& rule_name, const std::string_view text, const textx::arpeggio::Match &m0, textx::Metamodel &mm) {
+        // traverse tree and stop on "rule://" names..."
+        std::function<const textx::arpeggio::Match&(const textx::arpeggio::Match&, bool)> traverse;
+        traverse = [&, this](const textx::arpeggio::Match& m, bool first=true) -> const textx::arpeggio::Match&{
+            if (m.name_starts_with("rule://") && !first) {
+                return m;
+            }
+            else {
+                for (auto &c: m.children) {
+                    auto &r = traverse(c, false);
+                    if (&r != &m0) return r;
+                }
+            }
+            return m0;
+        };
+        auto &r = traverse(m0,true);
+        TEXTX_ASSERT(&r != &m0, "unexpected: no used/referenced rule found in abstract rule");
+        return create_model(text, r, mm);
     }
 
 }
