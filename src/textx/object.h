@@ -7,6 +7,7 @@
 #include <vector>
 #include <memory>
 #include <unordered_map>
+#include <functional>
 
 namespace textx {
     class Model;
@@ -49,6 +50,11 @@ namespace textx::object {
         }
 
         ObjectRef& ref() {
+            TEXTX_ASSERT(std::holds_alternative<ObjectRef>(data), "no ref!");
+            return std::get<ObjectRef>(data);
+        }
+
+        const ObjectRef& ref() const {
             TEXTX_ASSERT(std::holds_alternative<ObjectRef>(data), "no ref!");
             return std::get<ObjectRef>(data);
         }
@@ -97,7 +103,13 @@ namespace textx::object {
 
         const AttributeValue& operator[](std::string name) const;
         AttributeValue& operator[](std::string name);
-    };
+
+        void print(std::ostream& o, size_t indent=0) const;
+        friend std::ostream& operator<<(std::ostream& o, const Value&v) {
+            v.print(o);
+            return o;
+        }
+   };
     struct AttributeValue {
         std::variant<Value, std::vector<Value>> data = std::vector<Value>{};
 
@@ -133,6 +145,13 @@ namespace textx::object {
 
 
         ObjectRef& ref() {
+            TEXTX_ASSERT(std::holds_alternative<Value>(data));
+            auto &value = std::get<Value>(data);
+            TEXTX_ASSERT(std::holds_alternative<ObjectRef>(value.data), "no ref");
+            return std::get<ObjectRef>(value.data);
+        }
+
+        const ObjectRef& ref() const {
             TEXTX_ASSERT(std::holds_alternative<Value>(data));
             auto &value = std::get<Value>(data);
             TEXTX_ASSERT(std::holds_alternative<ObjectRef>(value.data), "no ref");
@@ -205,6 +224,32 @@ namespace textx::object {
         const AttributeValue& operator[](std::string name) const;
         AttributeValue& operator[](std::string name);
         void create_attribute_if_not_present(std::string name);
+
+        void print(std::ostream& o, size_t indent=0) const;
     };
 
+    inline void traverse(textx::object::Value& v, std::function<void(textx::object::Value&)> f) {
+        f(v);
+        if (v.is_str()) {
+            // nothing
+        }
+        else if (v.is_ref()) {
+            // nothing
+        }
+        else if (v.is_pure_obj()) {
+            for (auto &[k,av]: v.obj()->attributes) {
+                if (std::holds_alternative<textx::object::Value>(av.data)) {
+                    traverse(std::get<textx::object::Value>(av.data),f);
+                }
+                else {
+                    for (auto &iv: std::get<std::vector<textx::object::Value>>(av.data)) {
+                        traverse(iv,f);
+                    }
+                }
+            }
+        }
+        else {
+            textx::arpeggio::raise(v.pos, "unexpected situation");
+        }
+    }
 }

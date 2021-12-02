@@ -52,4 +52,35 @@ namespace textx::object {
         }
     }
 
+    void Value::print(std::ostream& o, size_t indent) const {
+        if (is_pure_obj()) {
+            obj()->print(o, indent);
+        }
+        else if (is_str()) {
+            o << std::string(indent,' ') << str() << "\n";
+        }
+        else if (is_ref()) {
+            o << std::string(indent,' ') << "-[ref]->" << ref().name << "\n";
+        }
+        else {
+            throw std::runtime_error("unexpected");
+        }
+    }
+
+    void Object::print(std::ostream& o, size_t indent) const {
+        o << std::string(indent,' ') << this->type << "{\n";
+        for(auto &[name,a]: attributes) {
+            o << std::string(indent+2,' ') << name << "=\n";
+            if (std::holds_alternative<Value>((*this)[name].data)) {
+                std::get<Value>((*this)[name].data).print(o,indent+4);
+            }
+            else { // array
+                for(size_t i=0;i<(*this)[name].size();i++) {
+                    (*this)[name][i].print(o,indent+4);
+                }
+            }
+        }
+        o << std::string(indent,' ') << "}\n";
+    }
+
 }

@@ -119,37 +119,23 @@ namespace textx {
     size_t Model::resolve_references() {
         auto mm = weak_mm.lock();
         size_t unresolved=0;
-        std::function<void(textx::object::Value&)> traverse;
-        traverse = [&, this](textx::object::Value& v) -> void {
-            if (v.is_str()) {
-                // nothing
-            }
-            else if (v.is_ref()) {
+        textx::object::traverse(root,[&](textx::object::Value& v) -> void {
+            if (v.is_ref()) {
                 if (v.ref().obj.lock() == nullptr) {
                     //resolve ref:
-                    v.ref().obj = mm->get_resolver(v.ref().rule, v.ref().attr).resolve(v.ref().parent.lock(),v.ref().attr, v.ref().name);
+                    //std::cout << "searching " << v.ref().name << ".\n";
+                    v.ref().obj = mm->get_resolver(v.ref().rule, v.ref().attr)
+                        .resolve(v.ref().parent.lock(),v.ref().attr, v.ref().name);
                     if (v.ref().obj.lock() == nullptr) {
+                        //std::cout << "not found.\n";
                         unresolved++;
                     }
+                    // else {
+                    //     std::cout << "found.\n";
+                    // }
                 }
             }
-            else if (v.is_pure_obj()) {
-                for (auto &[k,av]: v.obj()->attributes) {
-                    if (std::holds_alternative<textx::object::Value>(av.data)) {
-                        traverse(std::get<textx::object::Value>(av.data));
-                    }
-                    else {
-                        for (auto &iv: std::get<std::vector<textx::object::Value>>(av.data)) {
-                            traverse(iv);
-                        }
-                    }
-                }
-            }
-            else {
-                textx::arpeggio::raise(v.pos, "unexpected situaltion");
-            }
-        };
-        traverse(root);
+        });
         return unresolved;
     }
 

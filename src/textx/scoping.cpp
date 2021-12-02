@@ -18,7 +18,7 @@ namespace textx::scoping {
                 //     std::cout << "name ='" <<(*v.obj())["name"].str()<< "' ==? '" << obj_name<<"'\n";
                 // }
                 if (v.obj()->has_attr("name") && (*v.obj())["name"].str()==obj_name) {
-                    //std::cout << "FOUND!\n";
+                    std::cout << "FOUND!" << obj_name << "\n";
                     return v.obj();
                 } 
                 for (auto &[k,av]: v.obj()->attributes) {

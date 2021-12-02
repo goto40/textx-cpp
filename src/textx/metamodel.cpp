@@ -139,7 +139,18 @@ namespace textx {
         auto parsetree = parsetree_from_str(text);
         auto ret=std::shared_ptr<textx::Model>{new textx::Model()}; // call private constructor (new)
         ret->init(text, *parsetree, shared_from_this());
-        TEXTX_ASSERT(0==ret->resolve_references(), "TODO: multi pass / multi model resolution like in python here!");
+        if(ret->resolve_references()>0) {
+            std::stringstream error_text;
+            textx::arpeggio::TextPosition pos;
+            textx::object::traverse(ret->val(),[&](textx::object::Value& v) {
+                if (v.is_ref() && !v.ref().obj.lock()) {
+                    error_text << "ref '" << v.ref().name << "' not found at " << v.pos << ";\n";
+                    pos = v.pos;
+                }
+            });
+            //std::cout << ret->val() << "\n";
+            textx::arpeggio::raise(pos, error_text.str());
+        }
         return ret;
     }
 
