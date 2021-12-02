@@ -32,7 +32,7 @@ namespace textx {
     textx::object::Value Model::create_model_from_common_rule(const std::string& rule_name, const std::string_view text, const textx::arpeggio::Match &m0, textx::Metamodel &mm) {
         auto obj = std::make_shared<textx::object::Object>();
         obj->type = rule_name;
-        obj->tx_model = shared_from_this(); // store weak ptr
+        obj->weak_model = shared_from_this(); // store weak ptr
 
         // create all fields with empty content
         const auto &rule = mm[rule_name];

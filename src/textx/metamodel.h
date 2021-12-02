@@ -27,6 +27,7 @@ namespace textx {
         textx::arpeggio::Pattern ref(std::string name);
         std::shared_ptr<textx::Model> model_from_str(std::string_view text);
         std::shared_ptr<textx::Model> model_from_file(std::filesystem::path p);
+        std::vector<std::shared_ptr<textx::Model>> builtin_models;
 
         textx::scoping::RefResolver& get_resolver(std::string rule_name, std::string attr_name) {
             //TODO select registered resolver

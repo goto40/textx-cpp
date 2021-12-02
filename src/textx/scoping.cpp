@@ -1,8 +1,10 @@
 #include "textx/scoping.h"
+#include "textx/metamodel.h"
 
 namespace textx::scoping {
     std::shared_ptr<textx::object::Object> DefaultRefResolver::resolve(std::shared_ptr<textx::object::Object> origin, std::string attr_name, std::string obj_name) {
-        auto m = origin->tx_model.lock();
+        auto m = origin->tx_model();
+        auto mm = m->tx_metamodel();
 
         std::function<std::shared_ptr<textx::object::Object>(textx::object::Value&)> traverse;
         traverse = [&, this](textx::object::Value& v) -> std::shared_ptr<textx::object::Object> {
@@ -18,7 +20,7 @@ namespace textx::scoping {
                 //     std::cout << "name ='" <<(*v.obj())["name"].str()<< "' ==? '" << obj_name<<"'\n";
                 // }
                 if (v.obj()->has_attr("name") && (*v.obj())["name"].str()==obj_name) {
-                    std::cout << "FOUND!" << obj_name << "\n";
+                    //std::cout << "FOUND!" << obj_name << "\n";
                     return v.obj();
                 } 
                 for (auto &[k,av]: v.obj()->attributes) {
@@ -37,8 +39,19 @@ namespace textx::scoping {
             else {
                 textx::arpeggio::raise(v.pos, "unexpected situaltion");
             }
+
             return nullptr;
         };
-        return traverse(m->val());
+        // own model:
+        {
+            auto p = traverse(m->val());
+            if (p) return p;
+        }
+        // build in models:
+        for (auto im: mm->builtin_models) {
+            auto p = traverse(im->val());
+            if (p) return p;
+        }
+        return nullptr;
     }
 }
