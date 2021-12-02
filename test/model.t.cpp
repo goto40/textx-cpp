@@ -3,7 +3,7 @@
 #include <sstream>
 #include "textx/metamodel.h"
 
-TEST_CASE("model_simple1", "[textx/metamodel]")
+TEST_CASE("model_simple1", "[textx/model]")
 {
     {
         auto grammar1 = R"(

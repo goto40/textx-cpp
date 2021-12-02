@@ -143,21 +143,25 @@ namespace {
                     return expression;
                 }
                 else if (op=="*") {
-                   return std::visit(overloaded{
+                    return std::visit(overloaded{
                         [&](ta::Pattern&p) -> ta::Pattern { return ta::optional(ta::sequence({expression, ta::zero_or_more(ta::sequence({p, expression}))})); },
                         [&](Eolterm&) -> ta::Pattern { ta::raise(match.start(), "TODO eolterm"); },
                         [&](None&) -> ta::Pattern { return ta::zero_or_more(expression); }
                     }, repeat_modifiers);
                 }
                 else if (op=="+") {
-                   return std::visit(overloaded{
+                    return std::visit(overloaded{
                         [&](ta::Pattern&p) -> ta::Pattern { return ta::sequence({expression, ta::zero_or_more(ta::sequence({p, expression}))}); },
                         [&](Eolterm&) -> ta::Pattern { ta::raise(match.start(), "TODO eolterm"); },
                         [&](None&) -> ta::Pattern { return ta::one_or_more(expression); }
                     }, repeat_modifiers);
                 }
+                else if (op=="?") {
+                    TEXTX_ASSERT(std::holds_alternative<None>(repeat_modifiers),"no repeat modifiers allowed for an optional assignment");
+                    return ta::optional(expression);
+                }
                 else if (op=="#") {
-                    return expression;
+                    return expression; // '#' handled in normal_expression_or_unordered_choice
                 }
                 else {
                     ta::raise(match.start(), std::string("unexpected: op not covered: ")+op);

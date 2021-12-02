@@ -34,6 +34,26 @@ namespace textx {
         obj->type = rule_name;
         obj->tx_model = shared_from_this(); // store weak ptr
 
+        // create all fields with empty content
+        const auto &rule = mm[rule_name];
+        for (auto &[attr_name,info]: rule.get_attribute_info()) {
+            if (info.is_text()) {
+                obj->create_attribute_if_not_present(attr_name);
+                (*obj)[attr_name] = textx::object::AttributeValue{textx::object::Value{std::string{""},m0.start()}};
+            }
+            else if (info.cardinality == AttributeCardinality::list) {
+                obj->create_attribute_if_not_present(attr_name);
+                (*obj)[attr_name] = textx::object::AttributeValue{std::vector<textx::object::Value>{}};
+            }
+            else if (info.cardinality == AttributeCardinality::scalar) {
+                obj->create_attribute_if_not_present(attr_name);
+                (*obj)[attr_name] = textx::object::AttributeValue{textx::object::Value{std::shared_ptr<textx::object::Object>{}, m0.start()}};
+            }
+            else {
+                textx::arpeggio::raise(m0.start(), rule_name, attr_name, "unexpected attribute config found...");
+            }
+        }
+
         // traverse tree and stop on "rule://" names..."
         std::function<void(const textx::arpeggio::Match&, bool)> traverse;
         traverse = [&, this](const textx::arpeggio::Match& m, bool first=true) {
@@ -44,7 +64,6 @@ namespace textx {
                 std::string attr_name = m.name.value().substr(13);
                 //std::cout << "*************** adding attr " << m.name.value() << "\n"<< m << "\n";
                 auto& val = m.children[0];
-                obj->create_attribute_if_not_present(attr_name);
 
                 // reference assignment
                 if (val.name_starts_with("obj_ref://")) {

@@ -7,6 +7,9 @@
 #include "textx/scoping.h"
 #include <string>
 #include <memory>
+#include <filesystem>
+#include <fstream>
+#include <sstream>
 
 namespace textx {
     class Metamodel : public std::enable_shared_from_this<Metamodel> {
@@ -20,8 +23,10 @@ namespace textx {
         Metamodel(std::string_view grammar, bool is_main_grammar=true, bool include_basic_metamodel=true);
         Rule& operator[](std::string name);
         const Rule& operator[](std::string name) const;
+        bool has_rule(std::string name) const;
         textx::arpeggio::Pattern ref(std::string name);
         std::shared_ptr<textx::Model> model_from_str(std::string_view text);
+        std::shared_ptr<textx::Model> model_from_file(std::filesystem::path p);
 
         textx::scoping::RefResolver& get_resolver(std::string rule_name, std::string attr_name) {
             //TODO select registered resolver
@@ -41,4 +46,12 @@ namespace textx {
     inline auto metamodel_from_str(std::string_view grammar) {
         return std::make_shared<textx::Metamodel>(grammar);
     }
+
+    inline auto metamodel_from_file(std::filesystem::path p) {
+        std::ifstream file(p);
+        std::stringstream grammartext;
+        grammartext << file.rdbuf();
+        return std::make_shared<textx::Metamodel>(grammartext.str());
+    }
+
 }

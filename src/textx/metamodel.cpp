@@ -52,6 +52,14 @@ namespace textx {
                     }
                 }
             }
+
+            // comments
+            if (has_rule("Comment")) {
+                grammar.get_config().skip_text = textx::arpeggio::skip_text_functions::combine({
+                    textx::arpeggio::skip_text_functions::skipws(),
+                    textx::arpeggio::skip_text_functions::skip_pattern(grammar["Comment"])
+                });
+            }
         }
         catch(textx::arpeggio::Exception &e) {
             std::ostringstream o;
@@ -60,6 +68,10 @@ namespace textx {
             o << "\n" << e.what();
             throw std::runtime_error(o.str());
         }
+    }
+
+    bool Metamodel::has_rule(std::string name) const {
+        return grammar.get_rules().count(name)>0;
     }
 
     Metamodel& Metamodel::get_basic_metamodel() {
@@ -129,6 +141,13 @@ namespace textx {
         ret->init(text, *parsetree, shared_from_this());
         TEXTX_ASSERT(0==ret->resolve_references(), "TODO: multi pass / multi model resolution like in python here!");
         return ret;
+    }
+
+    std::shared_ptr<textx::Model> Metamodel::model_from_file(std::filesystem::path p) {
+        std::ifstream file(p);
+        std::stringstream modeltext;
+        modeltext << file.rdbuf();
+        return model_from_str(modeltext.str());
     }
 
 }

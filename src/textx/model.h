@@ -24,5 +24,21 @@ namespace textx {
         const textx::object::Value& val() const {
             return root;
         }
+
+        // convenience functions:
+        bool is_ref() const { return val().is_ref(); }
+        bool is_pure_obj() const { return val().is_pure_obj(); }
+        bool is_obj() const { return val().is_obj(); }
+        bool is_str() const { return val().is_str(); }
+        textx::object::ObjectRef& ref() { return val().ref(); }
+        std::shared_ptr<textx::object::Object> obj() { return val().obj(); }
+        std::shared_ptr<const textx::object::Object> obj() const { return val().obj(); }
+        std::string& str() { return val().str(); }
+        const std::string& str() const { return val().str(); }
+        long double f() { return val().f(); }
+        long long i() { return val().i(); }
+        unsigned long long u() { return val().u(); }
+        const textx::object::AttributeValue& operator[](std::string name) const { return val()[name]; }
+        textx::object::AttributeValue& operator[](std::string name) { return val()[name]; }
     };
 }
