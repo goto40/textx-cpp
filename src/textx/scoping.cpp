@@ -1,7 +1,7 @@
 #include "textx/scoping.h"
 
 namespace textx::scoping {
-    std::shared_ptr<textx::object::Object> DefaultResolver resolve(std::shared_ptr<textx::object::Object> origin, std::string attr_name, std::string obj_name) override {
+    std::shared_ptr<textx::object::Object> DefaultRefResolver::resolve(std::shared_ptr<textx::object::Object> origin, std::string attr_name, std::string obj_name) {
         auto m = origin->tx_model.lock();
 
         std::function<std::shared_ptr<textx::object::Object>(textx::object::Value&)> traverse;
