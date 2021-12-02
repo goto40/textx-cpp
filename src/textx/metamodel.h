@@ -38,4 +38,7 @@ namespace textx {
         }
     };
 
+    inline auto metamodel_from_str(std::string_view grammar) {
+        return std::make_shared<textx::Metamodel>(grammar);
+    }
 }

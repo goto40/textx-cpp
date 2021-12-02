@@ -35,7 +35,7 @@ TEST_CASE("model_simple2", "[textx/metamodel]")
 
         {
             // model only work from a shared metamodel...
-            auto mm = std::make_shared<textx::Metamodel>(grammar1);
+            auto mm = textx::metamodel_from_str(grammar1);
             auto m1 = mm->model_from_str("123");
             auto m2 = mm->model_from_str("'123'");
             CHECK(m1->val()["x"].i() == 123);
@@ -53,7 +53,7 @@ TEST_CASE("model_simple3", "[textx/metamodel]")
         )#";
 
         {
-            auto mm = std::make_shared<textx::Metamodel>(grammar1);
+            auto mm = textx::metamodel_from_str(grammar1);
             auto m1 = mm->model_from_str("(1,2), (3,4.5)");
             CHECK(std::get<std::shared_ptr<textx::object::Object>>(m1->val()["points"][0].data)->type == "Point");
             CHECK(m1->val()["points"].size() == 2);
@@ -79,7 +79,7 @@ TEST_CASE("model_abstract_rule1", "[textx/metamodel]")
         )#";
 
         {
-            auto mm = std::make_shared<textx::Metamodel>(grammar1);
+            auto mm = textx::metamodel_from_str(grammar1);
             auto m = mm->model_from_str("Point(1,2), Circle(Point(333,4.5),9), Line(Point(0,0),Point(1,1))");
             CHECK( (*mm)["Model"]["shapes"].cardinality == textx::AttributeCardinality::list );
             CHECK( (*mm)["Model"]["shapes"].type.value() == "Shape" );
@@ -92,7 +92,7 @@ TEST_CASE("model_abstract_rule1", "[textx/metamodel]")
     }
 }
 
-TEST_CASE("model_abstract_ref1", "[textx/metamodel]")
+TEST_CASE("model_ref1", "[textx/metamodel]")
 {
     {
         auto grammar1 = R"#(
@@ -101,7 +101,7 @@ TEST_CASE("model_abstract_ref1", "[textx/metamodel]")
         )#";
 
         {
-            auto mm = std::make_shared<textx::Metamodel>(grammar1);
+            auto mm = textx::metamodel_from_str(grammar1);
             auto m = mm->model_from_str("item A item B item C ref B");
             CHECK( m->val()["items"].size() == 3 );
             CHECK( m->val()["items"][0]["name"].str() == "A" );
