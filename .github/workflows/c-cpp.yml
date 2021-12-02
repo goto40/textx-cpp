@@ -15,7 +15,7 @@ jobs:
         with:
             submodules: recursive
       - name: install
-        run: sudo apt install -y cmake g++
+        run: sudo apt install -y cmake g++ libboost-regex-dev
       - name: build
         run: |
           mkdir build
