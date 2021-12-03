@@ -21,12 +21,12 @@ namespace textx {
         std::vector<std::shared_ptr<textx::Model>> builtin_models={};
 
         public:
-        Metamodel(std::string_view grammar, bool is_main_grammar=true, bool include_basic_metamodel=true);
+        Metamodel(std::string_view grammar, bool is_main_grammar=true, bool include_basic_metamodel=true, std::string filename="<str>");
         Rule& operator[](std::string name);
         const Rule& operator[](std::string name) const;
         bool has_rule(std::string name) const;
         textx::arpeggio::Pattern ref(std::string name);
-        std::shared_ptr<textx::Model> model_from_str(std::string_view text);
+        std::shared_ptr<textx::Model> model_from_str(std::string_view text, std::string filename="<str>");
         std::shared_ptr<textx::Model> model_from_file(std::filesystem::path p);
 
         const auto& tx_builtin_models() const { return builtin_models; }
@@ -55,7 +55,7 @@ namespace textx {
         std::ifstream file(p);
         std::stringstream grammartext;
         grammartext << file.rdbuf();
-        return std::make_shared<textx::Metamodel>(grammartext.str());
+        return std::make_shared<textx::Metamodel>(grammartext.str(),true,true,p);
     }
 
 }

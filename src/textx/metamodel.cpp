@@ -5,20 +5,20 @@
 
 namespace textx {
 
-    Metamodel::Metamodel(std::string_view grammar_text, bool is_main_grammar, bool include_basic_metamodel) {
-        textx_grammar_parsetree.root = textx_grammar.parse_or_throw(grammar_text);        
-        auto &root = textx_grammar_parsetree.root.value();
-
-        assert(root.name && "unexpected: no textx model loaded!!");
-        assert(root.name.value()=="rule://textx_model" && "unexpected: no textx model loaded!!");
-
-        //TODO import and refs
-                
-        auto &rules = root.children[1];
-        //std::cout << "children: " << rules.children.size() << "\n";
-
-        bool first = true;
+    Metamodel::Metamodel(std::string_view grammar_text, bool is_main_grammar, bool include_basic_metamodel, std::string filename) {
         try {
+            textx_grammar_parsetree.root = textx_grammar.parse_or_throw(grammar_text);
+            auto &root = textx_grammar_parsetree.root.value();
+
+            assert(root.name && "unexpected: no textx model loaded!!");
+            assert(root.name.value()=="rule://textx_model" && "unexpected: no textx model loaded!!");
+
+            //TODO import and refs
+                    
+            auto &rules = root.children[1];
+            //std::cout << "children: " << rules.children.size() << "\n";
+
+            bool first = true;
             for (auto&r : rules.children) {
                 auto &rule_name = r.children[0].captured.value();
                 //std::cout << "r: " << rule_name << "\n";
@@ -63,10 +63,14 @@ namespace textx {
         }
         catch(textx::arpeggio::Exception &e) {
             std::ostringstream o;
-            o << "textx grammar setup problem:\n";
+            o << filename << ": textx grammar setup problem:\n";
             textx::arpeggio::print_error_position(o, grammar_text, e.pos);
             o << "\n" << e.what();
-            throw std::runtime_error(o.str());
+            e.error = o.str();
+            throw e;
+        }
+        catch(std::exception &e) {
+            throw std::runtime_error(filename+": "+e.what());
         }
     }
 
@@ -81,7 +85,7 @@ namespace textx {
             INT: /[-+]?[0-9]+\b/;
             FLOAT: /[+-]?(\d+(\.\d*)?|\.\d+)([eE][+-]?\d+)?(?<=[\w\.])(?![\w\.])/;
             STRICTFLOAT: /[+-]?(((\d+\.(\d*)?|\.\d+)([eE][+-]?\d+)?)|((\d+)([eE][+-]?\d+)))(?<=[\w\.])(?![\w\.])/;
-            STRING: /("(\"|[^"])*")|('(\'|[^'])*')/;
+            STRING: /("(\\"|[^"])*")|('(\\'|[^'])*')/;
             NUMBER: STRICTFLOAT|INT;
             BASETYPE: NUMBER|FLOAT|BOOL|ID|STRING;
         )", false, false};
@@ -135,30 +139,40 @@ namespace textx {
         }
     }
 
-    std::shared_ptr<textx::Model> Metamodel::model_from_str(std::string_view text) {
-        auto parsetree = parsetree_from_str(text);
-        auto ret=std::shared_ptr<textx::Model>{new textx::Model()}; // call private constructor (new)
-        ret->init(text, *parsetree, shared_from_this());
-        if(ret->resolve_references()>0) {
-            std::stringstream error_text;
-            textx::arpeggio::TextPosition pos;
-            textx::object::traverse(ret->val(),[&](textx::object::Value& v) {
-                if (v.is_ref() && !v.ref().obj.lock()) {
-                    error_text << "ref '" << v.ref().name << "' not found at " << v.pos << ";\n";
-                    pos = v.pos;
-                }
-            });
-            //std::cout << ret->val() << "\n";
-            textx::arpeggio::raise(pos, error_text.str());
+    std::shared_ptr<textx::Model> Metamodel::model_from_str(std::string_view text, std::string filename) {
+        try {
+            auto parsetree = parsetree_from_str(text);
+            auto ret=std::shared_ptr<textx::Model>{new textx::Model()}; // call private constructor (new)
+            ret->init(text, *parsetree, shared_from_this());
+            if(ret->resolve_references()>0) {
+                std::stringstream error_text;
+                textx::arpeggio::TextPosition pos;
+                textx::object::traverse(ret->val(),[&](textx::object::Value& v) {
+                    if (v.is_ref() && !v.ref().obj.lock()) {
+                        error_text << "ref '" << v.ref().name << "' not found at " << v.pos << ";\n";
+                        pos = v.pos;
+                    }
+                });
+                //std::cout << ret->val() << "\n";
+                textx::arpeggio::raise(pos, error_text.str());
+            }
+            return ret;
         }
-        return ret;
+        catch(textx::arpeggio::Exception &e) {
+            e.filename = filename;
+            e.error = filename + ":" + e.error;
+            throw e;
+        }
+        catch(std::exception &e) {
+            throw std::runtime_error(filename+": "+e.what());
+        }
     }
 
     std::shared_ptr<textx::Model> Metamodel::model_from_file(std::filesystem::path p) {
         std::ifstream file(p);
         std::stringstream modeltext;
         modeltext << file.rdbuf();
-        return model_from_str(modeltext.str());
+        return model_from_str(modeltext.str(), p);
     }
 
 }

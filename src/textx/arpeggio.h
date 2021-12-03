@@ -77,6 +77,7 @@ namespace textx
         struct Exception : std::exception {
             TextPosition pos;
             std::string error;
+            std::string filename="";
             Exception(TextPosition pos, std::string error) : pos{pos}, error{error} {}
             const char* what() const noexcept override {
                 return error.c_str();
@@ -331,6 +332,7 @@ namespace textx
         {
             return [=](const Config &config, ParserState &text, TextPosition pos) -> std::optional<Match>
             {
+                //std::cout << "NAMED RULE " << name << "\n";
                 auto match = pattern(config, text, pos);
                 if (match.has_value())
                 {
@@ -352,6 +354,7 @@ namespace textx
                 if (match.has_value())
                 {
                     match.value().captured = get_str(text, match.value());
+                    //std::cout << "CAPTURED VAL " << match.value().captured.value() << "\n";
                 }
                 return match; };
         }

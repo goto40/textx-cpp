@@ -110,7 +110,7 @@ namespace textx
         {
             auto res = parse(text);
             if (!res) {
-                throw std::runtime_error( get_last_error_string(text) );
+                textx::arpeggio::raise( state.farthest_position.text_position, get_last_error_string(text) );
             }
             return res;
         }

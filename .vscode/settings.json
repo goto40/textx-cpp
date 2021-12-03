@@ -6,6 +6,7 @@
         "stdexcept": "cpp",
         "typeindex": "cpp",
         "typeinfo": "cpp",
-        "*.tcc": "cpp"
+        "*.tcc": "cpp",
+        "chrono": "cpp"
     }
 }

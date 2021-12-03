@@ -112,7 +112,10 @@ namespace textx {
             return m0;
         };
         auto &r = traverse(m0,true);
-        TEXTX_ASSERT(&r != &m0, "unexpected: no used/referenced rule found in abstract rule");
+        if(&r == &m0) {
+            //std::cout << "abstract rule --> match -*- " << m << "\n";
+            return {std::string(textx::arpeggio::get_str(text, m0)),m0.start()};            
+        }
         return create_model(text, r, mm);
     }
 
