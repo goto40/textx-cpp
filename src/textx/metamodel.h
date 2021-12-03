@@ -18,6 +18,7 @@ namespace textx {
         textx::parsetree::TextxGrammarParsetree textx_grammar_parsetree;
         static Metamodel& get_basic_metamodel();
         std::unique_ptr<textx::scoping::RefResolver> default_resolver = std::make_unique<textx::scoping::DefaultRefResolver>();
+        std::vector<std::shared_ptr<textx::Model>> builtin_models={};
 
         public:
         Metamodel(std::string_view grammar, bool is_main_grammar=true, bool include_basic_metamodel=true);
@@ -27,7 +28,9 @@ namespace textx {
         textx::arpeggio::Pattern ref(std::string name);
         std::shared_ptr<textx::Model> model_from_str(std::string_view text);
         std::shared_ptr<textx::Model> model_from_file(std::filesystem::path p);
-        std::vector<std::shared_ptr<textx::Model>> builtin_models;
+
+        const auto& tx_builtin_models() const { return builtin_models; }
+        void add_builtin_model(std::shared_ptr<textx::Model> m) { builtin_models.push_back(std::move(m)); }
 
         textx::scoping::RefResolver& get_resolver(std::string rule_name, std::string attr_name) {
             //TODO select registered resolver

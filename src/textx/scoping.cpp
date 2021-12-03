@@ -48,7 +48,7 @@ namespace textx::scoping {
             if (p) return p;
         }
         // build in models:
-        for (auto im: mm->builtin_models) {
+        for (auto im: mm->tx_builtin_models()) {
             auto p = traverse(im->val());
             if (p) return p;
         }

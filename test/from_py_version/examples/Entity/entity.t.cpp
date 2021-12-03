@@ -8,7 +8,7 @@ TEST_CASE("from_python/examples/Entity 1", "[textx/from_python/examples]")
 {
     auto p_grammar = std::filesystem::path(__FILE__).parent_path().append("entity.tx");
     auto mm = textx::metamodel_from_file(p_grammar);
-    mm->builtin_models.push_back(mm->model_from_str(R"(
+    mm->add_builtin_model(mm->model_from_str(R"(
         type integer
         type string
         entity None {
