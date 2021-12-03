@@ -22,8 +22,8 @@ TEST_CASE("from_python/examples/json1", "[textx/from_python/examples]")
         auto p_model = std::filesystem::path(__FILE__).parent_path().append(std::get<0>(cfg));
         auto m = mm->model_from_file(p_model);
         std::ostringstream s;
-        //s << m->val();
-        std::cout << s.str() << "\n";
+        s << m->val();
+        //std::cout << s.str() << "\n";
         CHECK_THAT( s.str(), Contains( std::get<1>(cfg) ));
     }
 }
