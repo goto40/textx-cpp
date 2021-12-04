@@ -248,6 +248,6 @@ ResponseMap:
 
 // Special rule for comments
 Comment:
-  /\/\/.*$/|/\/\*(.|\n)*?\*\//  // Non-greedy match of block component content
+  /\/\/.*\n/|/\/\*(.|\n)*?\*\//  // Non-greedy match of block component content
 ;
 
