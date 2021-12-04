@@ -1,5 +1,6 @@
 #pragma once
 
+// C++ regex seem to have problems with some regular expressions, e.g. in "FLOAT: ..."
 #define ARPEGGIO_USE_BOOST_FOR_REGEX
 
 #include <cstdlib>
@@ -421,12 +422,16 @@ namespace textx
             using boost::match_results;
             using boost::regex;
             using boost::regex_search;
+            //using boost::regex_constants::match_not_dot_newline;
+            auto myregex = regex{s};
 #else
+            //TODO not working with certain regex situations...
             using std::match_results;
             using std::regex;
             using std::regex_search;
+            auto myregex = regex{s};
 #endif
-            return rule([=, r = regex{s}](const Config &config, ParserState &text, TextPosition pos) -> std::optional<Match>
+            return rule([=, r = myregex](const Config &config, ParserState &text, TextPosition pos) -> std::optional<Match>
                         {
                 pos = config.skip_text(text, pos);
                 match_results<std::string_view::const_iterator> smatch;
