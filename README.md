@@ -54,12 +54,12 @@
 ## Open Points
 
 ### Unclear
- * is it correct that either "eolterm", or a repeat modifier, but not both are allowed...? test in textx... (for repeat_operator and assignment)
+ * unordered group on choices?
 ### Open
- * "eolterm" not used/interpreted (for repeat_operator and assignment)
+ * TODO minor: it must be possible for "eolterm" to be combined with a separator pattern
  * TODO: use has_match_suppression
  * include/reference other metamodels
  * TODO handle referenced/included metamodels, in Metamodel::ref
- * ...
- * include simple references
+ * TODO importURI
+ * include FQN references
  * RREL
