@@ -15,7 +15,7 @@ namespace textx {
             auto &rule = mm[rule_name];
             if (rule.type() == RuleType::match) {
                 //std::cout << "match -*- " << m << "\n";
-                return {std::string(textx::arpeggio::get_str(text, m)),m.start()};
+                return {textx::object::MatchText{textx::arpeggio::get_str(text, m),rule_name},m.start()};
             }
             if (rule.type() == RuleType::common) {
                 return create_model_from_common_rule(rule_name, text, m, mm);
@@ -25,7 +25,7 @@ namespace textx {
             }
         }
         if (textx::arpeggio::is_terminal(m)) { // also a match
-            return {std::string(textx::arpeggio::get_str(text, m)),m.start()};
+            return {textx::object::MatchText{textx::arpeggio::get_str(text, m), "?"},m.start()};
         }
         else {
             textx::arpeggio::raise(m.start(), "unexpected, no rule result found here to create object data...\n", m);
@@ -49,7 +49,11 @@ namespace textx {
                 obj->create_attribute_if_not_present(attr_name);
                 //std::cout << "create scalar " << attr_name << "\n";
                 if (info.is_text()) {
-                    (*obj)[attr_name] = textx::object::AttributeValue{textx::object::Value{std::string{""},m0.start()}};
+                    std::string t="";
+                    if (info.type.has_value()) {
+                        t = info.type.value();
+                    }
+                    (*obj)[attr_name] = textx::object::AttributeValue{textx::object::Value{textx::object::MatchText{"",t},m0.start()}};
                 }
                 else {
                     (*obj)[attr_name] = textx::object::AttributeValue{textx::object::Value{std::shared_ptr<textx::object::Object>{}, m0.start()}};
@@ -120,7 +124,7 @@ namespace textx {
         auto &r = traverse(m0,true);
         if(&r == &m0) {
             //std::cout << "abstract rule --> match -*- " << m << "\n";
-            return {std::string(textx::arpeggio::get_str(text, m0)),m0.start()};            
+            return {textx::object::MatchText{textx::arpeggio::get_str(text, m0), rule_name},m0.start()};            
         }
         return create_model(text, r, mm);
     }

@@ -4,6 +4,7 @@
 #include "textx/arpeggio.h"
 #include <string>
 #include <variant>
+#include <utility>
 #include <vector>
 #include <memory>
 #include <unordered_map>
@@ -29,10 +30,12 @@ namespace textx::object {
         std::weak_ptr<Object> parent = {};
         std::weak_ptr<Object> obj = {};
     };
+
+    using MatchText = std::pair<std::string, std::string>; /// first: text, second: rule-type
     struct Value {
-        std::variant<std::string, std::shared_ptr<Object>, ObjectRef> data;
+        std::variant<MatchText, std::shared_ptr<Object>, ObjectRef> data;
         textx::arpeggio::TextPosition pos;
-        Value(std::string x,textx::arpeggio::TextPosition pos) : data{x},pos{pos} {}
+        Value(MatchText x,textx::arpeggio::TextPosition pos) : data{x},pos{pos} {}
         Value(std::shared_ptr<Object> x,textx::arpeggio::TextPosition pos) : data{x},pos{pos} {}
         Value(ObjectRef x,textx::arpeggio::TextPosition pos) : data{std::move(x)},pos{pos} {}
 
@@ -46,7 +49,7 @@ namespace textx::object {
             return is_pure_obj() || is_ref();
         }
         bool is_str() const {
-            return std::holds_alternative<std::string>(data);
+            return std::holds_alternative<MatchText>(data);
         }
 
         ObjectRef& ref() {
@@ -80,13 +83,13 @@ namespace textx::object {
         }
 
         std::string& str() {
-            TEXTX_ASSERT(std::holds_alternative<std::string>(data));
-            return std::get<std::string>(data);
+            TEXTX_ASSERT(std::holds_alternative<MatchText>(data));
+            return std::get<MatchText>(data).first;
         }
 
         const std::string& str() const {
-            TEXTX_ASSERT(std::holds_alternative<std::string>(data));
-            return std::get<std::string>(data);
+            TEXTX_ASSERT(std::holds_alternative<MatchText>(data));
+            return std::get<MatchText>(data).first;
         }
 
         long double f() {
@@ -140,7 +143,7 @@ namespace textx::object {
                 return false;
             }
             auto &value = std::get<Value>(data);
-            return std::holds_alternative<std::string>(value.data);
+            return std::holds_alternative<MatchText>(value.data);
         }
 
 
@@ -185,15 +188,13 @@ namespace textx::object {
         std::string& str() {
             TEXTX_ASSERT(std::holds_alternative<Value>(data));
             auto &value = std::get<Value>(data);
-            TEXTX_ASSERT(std::holds_alternative<std::string>(value.data));
-            return std::get<std::string>(value.data);
+            return value.str();
         }
 
         const std::string& str() const {
             TEXTX_ASSERT(std::holds_alternative<Value>(data));
             auto &value = std::get<Value>(data);
-            TEXTX_ASSERT(std::holds_alternative<std::string>(value.data));
-            return std::get<std::string>(value.data);
+            return value.str();
         }
 
         long double f() {
