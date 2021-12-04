@@ -21,7 +21,7 @@ TEST_CASE("model_simple1", "[textx/model]")
             // model only work from a shared metamodel...
             auto mm = std::make_shared<textx::Metamodel>(grammar1);
             CHECK(mm->model_from_str("123"));
-            CHECK(mm->model_from_str("'123'"));
+            CHECK(mm->model_from_str("123"));
         }
     }
 }

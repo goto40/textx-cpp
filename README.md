@@ -63,3 +63,4 @@
  * TODO importURI
  * include FQN references
  * RREL
+ * Add object transformation during parsing (original matched rules type is lost laster, see model.t.cpp: model_simple1 vs model_simple2)

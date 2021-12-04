@@ -34,11 +34,10 @@ namespace textx {
         textx::object::ObjectRef& ref() { return val().ref(); }
         std::shared_ptr<textx::object::Object> obj() { return val().obj(); }
         std::shared_ptr<const textx::object::Object> obj() const { return val().obj(); }
-        std::string& str() { return val().str(); }
-        const std::string& str() const { return val().str(); }
-        long double f() { return val().f(); }
-        long long i() { return val().i(); }
-        unsigned long long u() { return val().u(); }
+        std::string str() const { return val().str(); }
+        long double f() const { return val().f(); }
+        long long i() const { return val().i(); }
+        unsigned long long u() const { return val().u(); }
         const textx::object::AttributeValue& operator[](std::string name) const { return val()[name]; }
         textx::object::AttributeValue& operator[](std::string name) { return val()[name]; }
     };

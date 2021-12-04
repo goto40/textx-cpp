@@ -82,25 +82,25 @@ namespace textx::object {
             }
         }
 
-        std::string& str() {
+        std::string str() const {
             TEXTX_ASSERT(std::holds_alternative<MatchText>(data));
-            return std::get<MatchText>(data).first;
+            if (std::get<MatchText>(data).first=="STRING") {
+                return std::get<MatchText>(data).first.substr(1,std::get<MatchText>(data).first.size()-2);
+            }
+            else {
+                return std::get<MatchText>(data).first;
+            }
         }
 
-        const std::string& str() const {
-            TEXTX_ASSERT(std::holds_alternative<MatchText>(data));
-            return std::get<MatchText>(data).first;
-        }
-
-        long double f() {
+        long double f() const {
             return std::stold(str());
         }
 
-        long long i() {
+        long long i() const {
             return std::stoll(str(), nullptr, 0);
         }
 
-        unsigned long long u() {
+        unsigned long long u() const {
             return std::stoull(str(), nullptr, 0);
         }
 
@@ -185,27 +185,21 @@ namespace textx::object {
             }
         }
 
-        std::string& str() {
+        std::string str() const {
             TEXTX_ASSERT(std::holds_alternative<Value>(data));
             auto &value = std::get<Value>(data);
             return value.str();
         }
 
-        const std::string& str() const {
-            TEXTX_ASSERT(std::holds_alternative<Value>(data));
-            auto &value = std::get<Value>(data);
-            return value.str();
-        }
-
-        long double f() {
+        long double f() const {
             return std::stold(str());
         }
 
-        long long i() {
+        long long i() const {
             return std::stoll(str(), nullptr, 0);
         }
 
-        unsigned long long u() {
+        unsigned long long u() const {
             return std::stoull(str(), nullptr, 0);
         }
 

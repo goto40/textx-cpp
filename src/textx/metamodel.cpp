@@ -143,7 +143,7 @@ namespace textx {
         try {
             auto parsetree = parsetree_from_str(text);
             auto ret=std::shared_ptr<textx::Model>{new textx::Model()}; // call private constructor (new)
-            //debug: std::cout << parsetree.value() << "\n";
+            //std::cout << parsetree.value() << "\n";
             ret->init(text, *parsetree, shared_from_this());
             if(ret->resolve_references()>0) {
                 std::stringstream error_text;
