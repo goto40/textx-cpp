@@ -271,7 +271,19 @@ namespace textx
             SkipTextFun skip_text = skip_text_functions::skipws();
         };
 
-        using Pattern = std::function<std::optional<Match>(const Config &config, ParserState &text, TextPosition pos)>;
+        using PatternFunc = std::function<std::optional<Match>(const Config &config, ParserState &text, TextPosition pos)>;
+        class Pattern {
+            PatternFunc patternfunc;
+            MatchType type_value;
+        public:
+            Pattern() : patternfunc{}, type_value{MatchType::undefined} {}
+            template<class Func>
+            Pattern(Func f, MatchType t=MatchType::custom) : patternfunc{f}, type_value{t} {}
+            std::optional<textx::arpeggio::Match> operator()(const textx::arpeggio::Config &config, textx::arpeggio::ParserState &text, textx::arpeggio::TextPosition pos) const {
+                return patternfunc(config, text, pos);
+            }
+            MatchType type() { return type_value; }
+        };
 
         inline std::string_view get_str(std::string_view text, Match match)
         {
@@ -290,9 +302,9 @@ namespace textx
          *
          * If you omit the rule-call in your high-level grammar you loose some efficiency.
          */
-        inline auto rule(Pattern pattern)
+        inline Pattern rule(Pattern pattern)
         {
-            return [=, cache = std::unordered_map<size_t, std::optional<Match>>{}, chached_state = static_cast<size_t>(0)](const Config &config, ParserState &text, TextPosition pos) mutable -> std::optional<Match>
+            return {[=, cache = std::unordered_map<size_t, std::optional<Match>>{}, chached_state = static_cast<size_t>(0)](const Config &config, ParserState &text, TextPosition pos) mutable -> std::optional<Match>
             {
                 // basic checks:
                 if (pos > text.length())
@@ -331,7 +343,7 @@ namespace textx
                     cache[pos.pos] = match;
                     return match;
                 }
-            };
+            }, pattern.type()}; // forward type
         }
 
         // decorator
@@ -386,23 +398,24 @@ namespace textx
             }, pattern);
         }
 
-        inline auto optional(Pattern pattern)
+        inline Pattern optional(Pattern pattern)
         {
-            return rule([=](const Config &config, ParserState &text, TextPosition pos) -> std::optional<Match>
+            return rule({[=](const Config &config, ParserState &text, TextPosition pos) -> std::optional<Match>
                         {
-                auto match = pattern(config, text, pos);
-                if (match.has_value())
-                {
-                    return Match{match.value().start(), match.value().end(), MatchType::optional, {match.value()}};
-                }
-                else {
-                    return Match{pos, pos, MatchType::optional, {}};
-                } });
+                    auto match = pattern(config, text, pos);
+                    if (match.has_value())
+                    {
+                        return Match{match.value().start(), match.value().end(), MatchType::optional, {match.value()}};
+                    }
+                    else {
+                        return Match{pos, pos, MatchType::optional, {}};
+                    }
+                }, MatchType::optional});
         }
 
-        inline auto str_match(std::string s)
+        inline Pattern str_match(std::string s)
         {
-            return rule([=](const Config &config, ParserState &text, TextPosition pos) -> std::optional<Match>
+            return rule({[=](const Config &config, ParserState &text, TextPosition pos) -> std::optional<Match>
                         {
                 pos = config.skip_text(text, pos);
                 if (text.str().substr(pos).starts_with(s))
@@ -413,7 +426,7 @@ namespace textx
                 {
                     text.update_farthest_position(pos,MatchType::str_match,s);
                     return std::nullopt;
-                } });
+                } }, MatchType::optional});
         }
 
         inline auto regex_match(std::string s)
@@ -431,7 +444,7 @@ namespace textx
             using std::regex_search;
             auto myregex = regex{s};
 #endif
-            return rule([=, r = myregex](const Config &config, ParserState &text, TextPosition pos) -> std::optional<Match>
+            return rule({[=, r = myregex](const Config &config, ParserState &text, TextPosition pos) -> std::optional<Match>
                         {
                 pos = config.skip_text(text, pos);
                 match_results<std::string_view::const_iterator> smatch;
@@ -445,12 +458,12 @@ namespace textx
                 // else - no match as index 0 found, no return so far...
 
                 //text.update_farthest_position(pos,MatchType::regex_match,s);
-                return std::nullopt; });
+                return std::nullopt; },MatchType::regex_match});
         }
 
-        inline auto sequence(std::vector<Pattern> patterns)
+        inline Pattern sequence(std::vector<Pattern> patterns)
         {
-            return rule([=](const Config &config, ParserState &text, TextPosition pos) -> std::optional<Match>
+            return rule({[=](const Config &config, ParserState &text, TextPosition pos) -> std::optional<Match>
                         {
                 Match match{pos, pos, MatchType::sequence};
                 for (auto pattern : patterns)
@@ -467,12 +480,12 @@ namespace textx
                         return std::nullopt;
                     }
                 }
-                return match; });
+                return match; },MatchType::sequence});
         }
 
-        inline auto ordered_choice(std::vector<Pattern> patterns)
+        inline Pattern ordered_choice(std::vector<Pattern> patterns)
         {
-            return rule([=](const Config &config, ParserState &text, TextPosition pos) -> std::optional<Match>
+            return rule({[=](const Config &config, ParserState &text, TextPosition pos) -> std::optional<Match>
                         {
                 for (auto pattern : patterns)
                 {
@@ -482,10 +495,10 @@ namespace textx
                         return Match{match.value().start(),match.value().end(),MatchType::ordered_choice, {match.value()}};
                     }
                 }
-                return std::nullopt; });
+                return std::nullopt; },MatchType::ordered_choice});
         }
 
-        inline auto unordered_group(std::vector<Pattern> patterns, std::optional<Pattern> separator=std::nullopt, std::vector<bool> is_optional={})
+        inline Pattern unordered_group(std::vector<Pattern> patterns, std::optional<Pattern> separator=std::nullopt, std::vector<bool> is_optional={})
         {
             if (is_optional.size()==0) {
                 is_optional.resize(patterns.size());
@@ -493,7 +506,7 @@ namespace textx
             }
             size_t optional_elements_n = std::count_if(is_optional.begin(), is_optional.end(), [](bool x){return x;});
 
-            return rule([=](const Config &config, ParserState &text, TextPosition pos) -> std::optional<Match>
+            return rule({[=](const Config &config, ParserState &text, TextPosition pos) -> std::optional<Match>
                         {
                 Match result{pos,pos,MatchType::unordered_group, {}};
                 std::vector<bool> used(patterns.size());
@@ -537,12 +550,12 @@ namespace textx
                 result.update_end(pos);
                 if (n==0) return std::nullopt; // special case, nothing was found
                 else if (n_req == patterns.size()-optional_elements_n) return result;
-                else return std::nullopt; });
+                else return std::nullopt; }, MatchType::unordered_group});
         }
 
-        inline auto negative_lookahead(Pattern pattern)
+        inline Pattern negative_lookahead(Pattern pattern)
         {
-            return rule([=](const Config &config, ParserState &text, TextPosition pos) -> std::optional<Match>
+            return rule({[=](const Config &config, ParserState &text, TextPosition pos) -> std::optional<Match>
                         {
                 auto match = pattern(config, text, pos);
                 if (!match)
@@ -552,12 +565,12 @@ namespace textx
                 else
                 {
                     return std::nullopt;
-                } });
+                } },MatchType::negative_lookahead});
         }
 
-        inline auto positive_lookahead(Pattern pattern)
+        inline Pattern positive_lookahead(Pattern pattern)
         {
-            return rule([=](const Config &config, ParserState &text, TextPosition pos) -> std::optional<Match>
+            return rule({[=](const Config &config, ParserState &text, TextPosition pos) -> std::optional<Match>
                         {
                 auto match = pattern(config, text, pos);
                 if (match)
@@ -567,12 +580,12 @@ namespace textx
                 else
                 {
                     return std::nullopt;
-                } });
+                } },MatchType::positive_lookahead});
         }
 
-        inline auto one_or_more(Pattern pattern)
+        inline Pattern one_or_more(Pattern pattern)
         {
-            return rule([=](const Config &config, ParserState &text, TextPosition pos) -> std::optional<Match>
+            return rule({[=](const Config &config, ParserState &text, TextPosition pos) -> std::optional<Match>
                         {
                 auto sub_match = pattern(config, text, pos);
                 if (!sub_match)
@@ -590,12 +603,12 @@ namespace textx
                         match.update_end(pos);
                     }
                     return match;
-                } });
+                } },MatchType::one_or_more});
         }
  
-        inline auto zero_or_more(Pattern pattern)
+        inline Pattern zero_or_more(Pattern pattern)
         {
-            return rule([=](const Config &config, ParserState &text, TextPosition pos) -> std::optional<Match>
+            return rule({[=](const Config &config, ParserState &text, TextPosition pos) -> std::optional<Match>
                         {
                 auto match = Match{pos, pos,MatchType::zero_or_more, {}};
                 while (auto next_match = pattern(config, text, pos))
@@ -604,12 +617,12 @@ namespace textx
                     pos = next_match.value().end();
                     match.update_end(pos);
                 }
-                return match; });
+                return match; },MatchType::zero_or_more});
         }
 
         inline auto end_of_file()
         {
-            return rule([=](const Config &config, ParserState &text, TextPosition pos) -> std::optional<Match>
+            return rule({[=](const Config &config, ParserState &text, TextPosition pos) -> std::optional<Match>
                         {
                 pos = config.skip_text(text, pos);
                 if (pos==text.length()) {
@@ -618,7 +631,7 @@ namespace textx
                 else {
                     text.update_farthest_position(pos,MatchType::end_of_file,"");
                     return std::nullopt;
-                } });
+                } },MatchType::end_of_file});
         }
 
         namespace skip_text_functions
