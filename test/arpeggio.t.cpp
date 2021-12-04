@@ -403,7 +403,7 @@ TEST_CASE("unordered_group_optional1", "[arpeggio]")
         unordered_group({        
             optional(capture(str_match("A"))),
             optional(capture(str_match("B"))),
-        },std::nullopt,{true,true}), // 2x optional (true,true)
+        }),
         end_of_file()
     })};
     grammar.get_config().skip_text = textx::arpeggio::skip_text_functions::skip_cpp_style();
@@ -428,7 +428,7 @@ TEST_CASE("unordered_group_optional2", "[arpeggio]")
             optional(capture(str_match("A"))),
             optional(capture(str_match("B"))),
             capture(str_match("C")),
-        },std::nullopt,{true,true,false}), // 2x optional (true,true)
+        }),
         end_of_file()
     })};
     grammar.get_config().skip_text = textx::arpeggio::skip_text_functions::skip_cpp_style();
@@ -445,4 +445,38 @@ TEST_CASE("unordered_group_optional2", "[arpeggio]")
     CHECK(match.value().children[0].children.size()==2);
     CHECK(match.value().children[0].children[0].children[0].captured.value() == "B"); // optional B found
     CHECK(match.value().children[0].children[1].captured.value() == "C"); // req. C found
+}
+
+TEST_CASE("pattern_type", "[arpeggio]")
+{
+    using namespace textx::arpeggio;
+
+    CHECK(regex_match(".*").type() == MatchType::regex_match);
+    CHECK(one_or_more({str_match("x")}).type() == MatchType::one_or_more);
+    CHECK(zero_or_more({str_match("x")}).type() == MatchType::zero_or_more);
+    CHECK(unordered_group({str_match("x"),str_match("y")}).type() == MatchType::unordered_group);
+
+    CHECK(rule(regex_match(".*")).type() == MatchType::regex_match);
+    CHECK(named("x", one_or_more({str_match("x")})).type() == MatchType::one_or_more);
+    CHECK(capture(named("x", one_or_more({str_match("x")}))).type() == MatchType::one_or_more);
+}
+
+TEST_CASE("details_get_is_optional", "[arpeggio]")
+{
+    using namespace textx::arpeggio;
+
+    std::vector<Pattern> v={
+        capture(optional(str_match("A"))),
+        optional(capture(str_match("B"))),
+        capture(str_match("C")),
+    };
+
+    CHECK(v[0].type() == MatchType::optional);
+    CHECK(v[1].type() == MatchType::optional);
+    CHECK(v[2].type() == MatchType::str_match);
+
+    auto is_opt = textx::arpeggio::details::get_is_optional(v);
+    CHECK(is_opt[0]);
+    CHECK(is_opt[1]);
+    CHECK(!is_opt[2]);
 }

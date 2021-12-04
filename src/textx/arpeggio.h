@@ -347,9 +347,9 @@ namespace textx
         }
 
         // decorator
-        inline auto named(std::string name, Pattern pattern)
+        inline Pattern named(std::string name, Pattern pattern)
         {
-            return [=](const Config &config, ParserState &text, TextPosition pos) -> std::optional<Match>
+            return {[=](const Config &config, ParserState &text, TextPosition pos) -> std::optional<Match>
             {
                 //std::cout << "NAMED RULE " << name << "\n";
                 auto match = pattern(config, text, pos);
@@ -362,13 +362,13 @@ namespace textx
                 {
                     text.update_farthest_position(pos,MatchType::str_match,std::string("rule-name="+name)+(text.eolterm?"+eolterm":""));
                 }
-                return match; };
+                return match; }, pattern.type()};
         }
 
         // decorator
-        inline auto capture(Pattern pattern)
+        inline Pattern capture(Pattern pattern)
         {
-            return [=](const Config &config, ParserState &text, TextPosition pos) -> std::optional<Match>
+            return {[=](const Config &config, ParserState &text, TextPosition pos) -> std::optional<Match>
             {
                 auto match = pattern(config, text, pos);
                 if (match.has_value())
@@ -376,19 +376,19 @@ namespace textx
                     match.value().captured = get_str(text, match.value());
                     DBG_TEXTX_ARPEGGIO_FOUND(std::cout << "TEXTX DBG found captured:" << match.value().captured.value() << " @" << match.value().start() << "\n";)
                 }
-                return match; };
+                return match; }, pattern.type()};
         }
 
-        inline auto modify_parser_state(std::function<void(ParserState &)> modifier, Pattern pattern)
+        inline Pattern modify_parser_state(std::function<void(ParserState &)> modifier, Pattern pattern)
         {
-            return [=](const Config &config, ParserState &text, TextPosition pos) -> std::optional<Match>
+            return {[=](const Config &config, ParserState &text, TextPosition pos) -> std::optional<Match>
                         {
                 auto copy = text;
                 modifier(text);
                 auto match = pattern(config, text, pos);
                 text = copy;
                 return match;
-                        };
+                        }, pattern.type()};
         }
 
         inline auto eolterm(Pattern pattern)
@@ -426,7 +426,7 @@ namespace textx
                 {
                     text.update_farthest_position(pos,MatchType::str_match,s);
                     return std::nullopt;
-                } }, MatchType::optional});
+                } }, MatchType::str_match});
         }
 
         inline auto regex_match(std::string s)
@@ -498,12 +498,22 @@ namespace textx
                 return std::nullopt; },MatchType::ordered_choice});
         }
 
-        inline Pattern unordered_group(std::vector<Pattern> patterns, std::optional<Pattern> separator=std::nullopt, std::vector<bool> is_optional={})
-        {
-            if (is_optional.size()==0) {
-                is_optional.resize(patterns.size());
-                std::fill(is_optional.begin(), is_optional.end(), false);
+        namespace details {
+            inline std::vector<bool> get_is_optional(std::vector<Pattern> patterns) {
+                std::vector<bool> is_optional={};
+                std::transform(
+                    patterns.begin(),
+                    patterns.end(),
+                    std::back_inserter(is_optional),
+                    [](auto p)->bool{return p.type()==MatchType::optional;}
+                );
+                return is_optional;
             }
+        }
+
+        inline Pattern unordered_group(std::vector<Pattern> patterns, std::optional<Pattern> separator=std::nullopt)
+        {
+            auto is_optional = details::get_is_optional(patterns);
             size_t optional_elements_n = std::count_if(is_optional.begin(), is_optional.end(), [](bool x){return x;});
 
             return rule({[=](const Config &config, ParserState &text, TextPosition pos) -> std::optional<Match>
