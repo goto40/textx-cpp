@@ -395,3 +395,23 @@ TEST_CASE("unordered_group", "[arpeggio]")
     CHECK(match.value().children[0].children[2].captured.value() == "C");
 
 }
+
+TEST_CASE("unordered_group_optional1", "[arpeggio]")
+{
+    using namespace textx::arpeggio;
+    auto grammar = textx::Grammar<textx::arpeggio::Pattern>{sequence({
+        unordered_group({        
+            optional(capture(str_match("A"))),
+            optional(capture(str_match("B"))),
+        }),
+        end_of_file()
+    })};
+    grammar.get_config().skip_text = textx::arpeggio::skip_text_functions::skip_cpp_style();
+
+    CHECK(grammar.parse_or_throw("AB"));
+    CHECK(grammar.parse_or_throw("BA"));
+    CHECK(grammar.parse_or_throw("A"));
+    CHECK(grammar.parse_or_throw("B"));
+    CHECK(!grammar.parse("BAA")); // more than the allowed elements --> error
+    CHECK(!grammar.parse("")); // all optionals unmatched --> error
+}

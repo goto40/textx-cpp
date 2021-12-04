@@ -149,7 +149,7 @@ namespace textx
             // add_rule("comment_line", ta::regex_match(R"(//.*?$)"));
 
             // add_rule("comment_block", ta::regex_match(R"(/\*(.|\n)*?\*/)"));
-            // TODO?? see above skip_cpp_style
+            // see above skip_cpp_style
 
             add_rule("rrel_id", ta::capture(ta::regex_match(R"([^\d\W]\w*\b)"))); // from lang.py
 

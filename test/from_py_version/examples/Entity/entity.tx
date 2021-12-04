@@ -31,6 +31,6 @@ SimpleType:
 
 // Special rule for comments. Comments start with //
 Comment:
-    /\/\/[^\n]*\n/   // changed (either use ".*?" or "[^\n]*")
+    /\/\/[^\n]*$/    // changed (either use ".*?" or "[^\n]*")
                      // original:   /\/\/.*$/
 ;
