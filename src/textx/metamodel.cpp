@@ -63,7 +63,7 @@ namespace textx {
         }
         catch(textx::arpeggio::Exception &e) {
             std::ostringstream o;
-            o << filename << ": textx grammar setup problem:\n";
+            o << filename << ":" << e.pos << ": textx grammar setup problem:\n";
             textx::arpeggio::print_error_position(o, grammar_text, e.pos);
             o << "\n" << e.what();
             e.error = o.str();
@@ -143,6 +143,7 @@ namespace textx {
         try {
             auto parsetree = parsetree_from_str(text);
             auto ret=std::shared_ptr<textx::Model>{new textx::Model()}; // call private constructor (new)
+            //debug: std::cout << parsetree.value() << "\n";
             ret->init(text, *parsetree, shared_from_this());
             if(ret->resolve_references()>0) {
                 std::stringstream error_text;
@@ -160,7 +161,7 @@ namespace textx {
         }
         catch(textx::arpeggio::Exception &e) {
             e.filename = filename;
-            e.error = filename + ":" + e.error;
+            e.error = filename + ":" + std::to_string(e.pos.line) +":" + std::to_string(e.pos.col) + ": " + e.error;
             throw e;
         }
         catch(std::exception &e) {

@@ -24,8 +24,11 @@ namespace textx {
                 return create_model_from_abstract_rule(rule_name, text, m, mm);
             }
         }
+        if (textx::arpeggio::is_terminal(m)) { // also a match
+            return {std::string(textx::arpeggio::get_str(text, m)),m.start()};
+        }
         else {
-            textx::arpeggio::raise(m.start(), "unexpected, no rule result found here...\n", m);
+            textx::arpeggio::raise(m.start(), "unexpected, no rule result found here to create object data...\n", m);
         }
     }
 

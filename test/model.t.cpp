@@ -114,3 +114,27 @@ TEST_CASE("model_ref1", "[textx/metamodel]")
         }
     }
 }
+
+TEST_CASE("model_ordered_choice_regression1", "[textx/model]")
+{
+    {
+        auto grammar = R"(
+            Model: ('A' 'B')#;
+        )";
+        {
+            auto mm = textx::metamodel_from_str(grammar);
+            CHECK(mm->model_from_str("A B"));
+            CHECK(mm->model_from_str("B A"));
+        }
+    }
+    {
+        auto grammar = R"(
+            Model: (a='A' b='B')#;
+        )";
+        {
+            auto mm = textx::metamodel_from_str(grammar);
+            CHECK(mm->model_from_str("A B"));
+            CHECK(mm->model_from_str("B A"));
+        }
+    }
+}

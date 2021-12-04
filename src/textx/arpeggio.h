@@ -87,7 +87,6 @@ namespace textx
         template<class ...T>
         [[noreturn]] void raise(TextPosition pos, T... params) {
             std::ostringstream o;
-            o << pos << ": ";
             (o << ... << params) << "\n";
             throw Exception{pos, o.str()};
         }
@@ -194,6 +193,7 @@ namespace textx
             size_t cache_reset_indicator = {cache_reset_indicator_source++};
 
         public:
+            bool eolterm = false;
             size_t cache_hits = {0};
             size_t cache_misses = {0};
             AnnotatedTextPosition farthest_position = {};
@@ -234,7 +234,11 @@ namespace textx
             {
                 return [=](ParserState &text, TextPosition pos) -> TextPosition
                 {
-                    while (pos < text.length() && std::isspace(text[pos]))
+                    auto isspace = [&](char c) -> bool {
+                        if (!text.eolterm) return std::isspace(c);
+                        else return std::isspace(text[pos]) && c!='\n' && c!='\r';
+                    };
+                    while (pos < text.length() && isspace(text[pos]))
                     {
                         pos.inc(text);
                     }
@@ -357,6 +361,25 @@ namespace textx
                     //std::cout << "CAPTURED VAL " << match.value().captured.value() << "\n";
                 }
                 return match; };
+        }
+
+        inline auto modify_parser_state(std::function<void(ParserState &)> modifier, Pattern pattern)
+        {
+            return [=](const Config &config, ParserState &text, TextPosition pos) -> std::optional<Match>
+                        {
+                auto copy = text;
+                modifier(text);
+                auto match = pattern(config, text, pos);
+                text = copy;
+                return match;
+                        };
+        }
+
+        inline auto eolterm(Pattern pattern)
+        {
+            return modify_parser_state([](ParserState &s){
+                s.eolterm = true;
+            }, pattern);
         }
 
         inline auto optional(Pattern pattern)

@@ -38,6 +38,7 @@ namespace {
     /** preprocess an expression with a special case for unordered_groups */
     ta::Pattern normal_expression_or_unordered_choice(ParseState parsestate, METAMODEL &mm, RULE& rule, const ta::Match& match, bool use_choice, const Repeat_modifiers &repeat_modifiers) {
         auto &expr = match;
+        TEXTX_ASSERT(expr.name_starts_with("rule://expression"));
         if(expr.children[0].name.has_value() && expr.children[0].name.value() == "rule://assignment") {
             return transform_match2pattern(parsestate, mm, rule, expr.children[0]);
         }
@@ -127,7 +128,6 @@ namespace {
                     // repeat modifiers
                     auto repeat_modifiers_match = match.children[1].children[0].children[1];
                     repeat_modifiers = extract_repeat_modifiers(parsestate, mm, rule, repeat_modifiers_match);
-                    // TODO eval, use... a[','] / a[eolterm]
                 }
                 
                 // match suppression
@@ -145,14 +145,14 @@ namespace {
                 else if (op=="*") {
                     return std::visit(overloaded{
                         [&](ta::Pattern&p) -> ta::Pattern { return ta::optional(ta::sequence({expression, ta::zero_or_more(ta::sequence({p, expression}))})); },
-                        [&](Eolterm&) -> ta::Pattern { ta::raise(match.start(), "TODO eolterm"); },
+                        [&](Eolterm&) -> ta::Pattern { return ta::eolterm(ta::zero_or_more(expression)); },
                         [&](None&) -> ta::Pattern { return ta::zero_or_more(expression); }
                     }, repeat_modifiers);
                 }
                 else if (op=="+") {
                     return std::visit(overloaded{
                         [&](ta::Pattern&p) -> ta::Pattern { return ta::sequence({expression, ta::zero_or_more(ta::sequence({p, expression}))}); },
-                        [&](Eolterm&) -> ta::Pattern { ta::raise(match.start(), "TODO eolterm"); },
+                        [&](Eolterm&) -> ta::Pattern { return ta::eolterm(ta::one_or_more(expression)); },
                         [&](None&) -> ta::Pattern { return ta::one_or_more(expression); }
                     }, repeat_modifiers);
                 }
@@ -246,7 +246,7 @@ namespace {
                     // TODO handle assignment
                     return std::visit(overloaded{
                         [&](ta::Pattern&p) -> ta::Pattern { return ta::optional(ta::sequence({assignment_rhs_content, ta::zero_or_more(ta::sequence({p, assignment_rhs_content}))})); },
-                        [&](Eolterm&) -> ta::Pattern { ta::raise(repeat_modifiers_match.start(), "TODO eolterm"); },
+                        [&](Eolterm&) -> ta::Pattern { return ta::eolterm(ta::zero_or_more(assignment_rhs_content)); },
                         [&](None&) -> ta::Pattern { return ta::zero_or_more(assignment_rhs_content); }
                     }, repeat_modifiers);
                 }
@@ -254,7 +254,7 @@ namespace {
                     // TODO handle assignment
                     return std::visit(overloaded{
                         [&](ta::Pattern&p) -> ta::Pattern { return ta::sequence({assignment_rhs_content, ta::zero_or_more(ta::sequence({p, assignment_rhs_content}))}); },
-                        [&](Eolterm&) -> ta::Pattern { ta::raise(repeat_modifiers_match.start(), "TODO eolterm"); },
+                        [&](Eolterm&) -> ta::Pattern { return ta::eolterm(ta::one_or_more(assignment_rhs_content)); },
                         [&](None&) -> ta::Pattern { return ta::one_or_more(assignment_rhs_content); }
                     }, repeat_modifiers);
                 }
