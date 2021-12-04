@@ -1,8 +1,5 @@
 #pragma once
 
-// C++ regex seem to have problems with some regular expressions, e.g. in "FLOAT: ..."
-#define ARPEGGIO_USE_BOOST_FOR_REGEX
-
 #include <cstdlib>
 #include <vector>
 #include <string>
@@ -11,13 +8,9 @@
 #include <sstream>
 #include <unordered_map>
 #include <stdexcept>
-#ifdef ARPEGGIO_USE_BOOST_FOR_REGEX
-#include <boost/regex.hpp>
-#else
-#include <regex>
-#endif
 #include <tuple>
 #include <compare>
+#include <functional>
 
 #define DBG_TEXTX_ARPEGGIO(x)
 #define DBG_TEXTX_ARPEGGIO_FOUND(x) DBG_TEXTX_ARPEGGIO(x)
@@ -25,6 +18,7 @@ namespace textx
 {
     namespace arpeggio
     {
+        struct Pattern;
         enum class MatchType
         {
             undefined,
@@ -104,14 +98,6 @@ namespace textx
             std::optional<std::string> name = std::nullopt;
             std::optional<std::string> captured = std::nullopt;
 
-            bool name_starts_with(const std::string_view p) const {
-                return name.has_value() && name.value().starts_with(p);
-            }
-
-            bool name_is(const std::string_view p) const {
-                return name.has_value() && name.value() == p;
-            }
-
             Match(TextPosition s, TextPosition e, MatchType t, std::vector<Match> c = {}) : m_start{s}, m_end{e}, m_type{t}, children{c}
             {
                 if (m_type == MatchType::undefined)
@@ -120,6 +106,13 @@ namespace textx
                 }
             }
 
+            bool name_starts_with(const std::string_view p) const {
+                return name.has_value() && name.value().starts_with(p);
+            }
+
+            bool name_is(const std::string_view p) const {
+                return name.has_value() && name.value() == p;
+            }
             auto start() const { return m_start; }
             auto end() const { return m_end; }
             auto type() const { return m_type; }
@@ -132,28 +125,10 @@ namespace textx
 
             static std::unordered_map<MatchType, std::string> type2str;
             static std::unordered_map<MatchType, bool> is_terminal;
-            friend void print(std::ostream &o, const Match &match, size_t indent=0)
-            {
-                auto istr = std::string(indent, ' ');
-                o << istr << "<" << type2str.at(match.type());
-                if (match.name.has_value())
-                {
-                    o << ":" << match.name.value();
-                }
-                if (match.captured.has_value())
-                {
-                    o << " captured=" << match.captured.value();
-                }
-                o << ">(\n";
-                for (auto &child : match.children)
-                {
-                    print(o, child, indent+2);
-                }
-                o << istr << ")\n";
-            }
+            void print(std::ostream &o, size_t indent=0) const;
             friend inline std::ostream &operator<<(std::ostream &o, const Match &match)
             {
-                print(o, match);
+                match.print(o);
                 return o;
             }
         };
@@ -163,14 +138,7 @@ namespace textx
             return o;
         }
 
-        inline void print_error_position(std::ostream& s, std::string_view text, TextPosition pos) {
-            const size_t p = pos.pos;
-            const size_t n = std::min<size_t>(p, 30);
-            const size_t m = std::min<size_t>(text.length()-p, 30);
-            s << "..." << text.substr(pos.pos-n,n);
-            s << "*\n" << text.substr(pos.pos,m);
-            s << "...\n";
-        }
+        void print_error_position(std::ostream& s, std::string_view text, TextPosition pos); 
 
         struct AnnotatedTextPosition
         {
@@ -206,19 +174,7 @@ namespace textx
             operator std::string_view() { return source; }
             size_t length() { return source.length(); }
             char operator[](size_t p) { return source[p]; }
-            void update_farthest_position(TextPosition pos, MatchType type, std::string_view info)
-            {
-                if (pos > farthest_position)
-                {
-                    farthest_position = AnnotatedTextPosition{
-                        .text_position = pos,
-                        .info = {{type, std::string{info}}}};
-                }
-                else if (pos == farthest_position)
-                {
-                    farthest_position.info.push_back({type, std::string{info}});
-                }
-            }
+            void update_farthest_position(TextPosition pos, MatchType type, std::string_view info);
             std::string_view str() { return source; }
         };
 
@@ -226,14 +182,14 @@ namespace textx
 
         namespace skip_text_functions
         {
-            inline auto nothing()
+            inline SkipTextFun nothing()
             {
                 return [](ParserState &, TextPosition pos) -> TextPosition
                 {
                     return pos;
                 };
             }
-            inline auto skipws()
+            inline SkipTextFun skipws()
             {
                 return [=](ParserState &text, TextPosition pos) -> TextPosition
                 {
@@ -248,7 +204,7 @@ namespace textx
                     return pos;
                 };
             }
-            inline auto combine(std::vector<SkipTextFun> ps)
+            inline SkipTextFun combine(std::vector<SkipTextFun> ps)
             {
                 return [=](ParserState &text, TextPosition pos) -> TextPosition
                 {
@@ -264,6 +220,10 @@ namespace textx
                     return pos;
                 };
             }
+            SkipTextFun skip_pattern(textx::arpeggio::Pattern p);
+            SkipTextFun skip_cpp_line_comments();
+            SkipTextFun skip_cpp_multiline_comments();
+            SkipTextFun skip_cpp_style();
         }
 
         struct Config
@@ -398,285 +358,21 @@ namespace textx
             }, pattern);
         }
 
-        inline Pattern optional(Pattern pattern)
-        {
-            return rule({[=](const Config &config, ParserState &text, TextPosition pos) -> std::optional<Match>
-                        {
-                    auto match = pattern(config, text, pos);
-                    if (match.has_value())
-                    {
-                        return Match{match.value().start(), match.value().end(), MatchType::optional, {match.value()}};
-                    }
-                    else {
-                        return Match{pos, pos, MatchType::optional, {}};
-                    }
-                }, MatchType::optional});
-        }
-
-        inline Pattern str_match(std::string s)
-        {
-            return rule({[=](const Config &config, ParserState &text, TextPosition pos) -> std::optional<Match>
-                        {
-                pos = config.skip_text(text, pos);
-                if (text.str().substr(pos).starts_with(s))
-                {
-                    return Match{pos, pos.add(text, s.length()), MatchType::str_match};
-                }
-                else
-                {
-                    text.update_farthest_position(pos,MatchType::str_match,s);
-                    return std::nullopt;
-                } }, MatchType::str_match});
-        }
-
-        inline auto regex_match(std::string s)
-        {
-#ifdef ARPEGGIO_USE_BOOST_FOR_REGEX
-            using boost::match_results;
-            using boost::regex;
-            using boost::regex_search;
-            //using boost::regex_constants::match_not_dot_newline;
-            auto myregex = regex{s};
-#else
-            //TODO not working with certain regex situations...
-            using std::match_results;
-            using std::regex;
-            using std::regex_search;
-            auto myregex = regex{s};
-#endif
-            return rule({[=, r = myregex](const Config &config, ParserState &text, TextPosition pos) -> std::optional<Match>
-                        {
-                pos = config.skip_text(text, pos);
-                match_results<std::string_view::const_iterator> smatch;
-                if (regex_search(text.str().begin() + pos, text.str().end(), smatch, r))
-                {
-                    if (smatch.position() == 0) {
-                        auto res = Match{pos, pos.add(text,smatch.length()), MatchType::regex_match};
-                        return res;
-                    }
-                }
-                // else - no match as index 0 found, no return so far...
-
-                //text.update_farthest_position(pos,MatchType::regex_match,s);
-                return std::nullopt; },MatchType::regex_match});
-        }
-
-        inline Pattern sequence(std::vector<Pattern> patterns)
-        {
-            return rule({[=](const Config &config, ParserState &text, TextPosition pos) -> std::optional<Match>
-                        {
-                Match match{pos, pos, MatchType::sequence};
-                for (auto pattern : patterns)
-                {
-                    auto sub_match = pattern(config, text, pos);
-                    if (sub_match)
-                    {
-                        pos = sub_match.value().end();
-                        match.update_end(pos);
-                        match.children.push_back(sub_match.value());
-                    }
-                    else
-                    {
-                        return std::nullopt;
-                    }
-                }
-                return match; },MatchType::sequence});
-        }
-
-        inline Pattern ordered_choice(std::vector<Pattern> patterns)
-        {
-            return rule({[=](const Config &config, ParserState &text, TextPosition pos) -> std::optional<Match>
-                        {
-                for (auto pattern : patterns)
-                {
-                    auto match = pattern(config, text, pos);
-                    if (match)
-                    {
-                        return Match{match.value().start(),match.value().end(),MatchType::ordered_choice, {match.value()}};
-                    }
-                }
-                return std::nullopt; },MatchType::ordered_choice});
-        }
-
         namespace details {
-            inline std::vector<bool> get_is_optional(std::vector<Pattern> patterns) {
-                std::vector<bool> is_optional={};
-                std::transform(
-                    patterns.begin(),
-                    patterns.end(),
-                    std::back_inserter(is_optional),
-                    [](auto p)->bool{return p.type()==MatchType::optional;}
-                );
-                return is_optional;
-            }
+            std::vector<bool> get_is_optional(std::vector<Pattern> patterns);
         }
 
-        inline Pattern unordered_group(std::vector<Pattern> patterns, std::optional<Pattern> separator=std::nullopt)
-        {
-            auto is_optional = details::get_is_optional(patterns);
-            size_t optional_elements_n = std::count_if(is_optional.begin(), is_optional.end(), [](bool x){return x;});
-
-            return rule({[=](const Config &config, ParserState &text, TextPosition pos) -> std::optional<Match>
-                        {
-                Match result{pos,pos,MatchType::unordered_group, {}};
-                std::vector<bool> used(patterns.size());
-                std::fill(used.begin(), used.end(), false);
-                size_t n_req = 0;
-                size_t n_opt = 0;
-                size_t n = 0;
-
-                for (size_t t=0;t<patterns.size();t++) {
-                    for (size_t i=0;i<patterns.size();i++) {
-                        if (!used[i]) {
-                            bool ok = true;
-                            TextPosition npos = pos;
-                            if (n>0 && separator.has_value()) {
-                                auto sep_match = separator.value()(config, text, pos);
-                                if (sep_match) {
-                                    npos = sep_match.value().end(); 
-                                }
-                                else {
-                                    ok = false;
-                                }
-                            }
-                            if (ok) {
-                                auto match = patterns[i](config, text, npos);
-                                if (match && is_optional[i] && match->start()==match->end()) {
-                                    match = std::nullopt; // empty optional match
-                                }
-                                if (match)
-                                {
-                                    result.children.emplace_back(match.value());
-                                    pos = match.value().end();
-                                    used[i] = true;
-                                    n++;
-                                    if (is_optional[i]) n_opt++;
-                                    else n_req++;
-                                }
-                            }
-                        }
-                    }
-                }
-                result.update_end(pos);
-                if (n==0) return std::nullopt; // special case, nothing was found
-                else if (n_req == patterns.size()-optional_elements_n) return result;
-                else return std::nullopt; }, MatchType::unordered_group});
-        }
-
-        inline Pattern negative_lookahead(Pattern pattern)
-        {
-            return rule({[=](const Config &config, ParserState &text, TextPosition pos) -> std::optional<Match>
-                        {
-                auto match = pattern(config, text, pos);
-                if (!match)
-                {
-                    return Match{pos, pos,MatchType::negative_lookahead};
-                }
-                else
-                {
-                    return std::nullopt;
-                } },MatchType::negative_lookahead});
-        }
-
-        inline Pattern positive_lookahead(Pattern pattern)
-        {
-            return rule({[=](const Config &config, ParserState &text, TextPosition pos) -> std::optional<Match>
-                        {
-                auto match = pattern(config, text, pos);
-                if (match)
-                {
-                    return Match{pos, pos, MatchType::positive_lookahead, {match.value()}};
-                }
-                else
-                {
-                    return std::nullopt;
-                } },MatchType::positive_lookahead});
-        }
-
-        inline Pattern one_or_more(Pattern pattern)
-        {
-            return rule({[=](const Config &config, ParserState &text, TextPosition pos) -> std::optional<Match>
-                        {
-                auto sub_match = pattern(config, text, pos);
-                if (!sub_match)
-                {
-                    return std::nullopt;
-                }
-                else
-                {
-                    auto match = Match{sub_match.value().start(), sub_match.value().end(), MatchType::one_or_more, {sub_match.value()}};
-                    pos = match.end();
-                    while (auto next_match = pattern(config, text, pos))
-                    {
-                        match.children.push_back(next_match.value());
-                        pos = next_match.value().end();
-                        match.update_end(pos);
-                    }
-                    return match;
-                } },MatchType::one_or_more});
-        }
- 
-        inline Pattern zero_or_more(Pattern pattern)
-        {
-            return rule({[=](const Config &config, ParserState &text, TextPosition pos) -> std::optional<Match>
-                        {
-                auto match = Match{pos, pos,MatchType::zero_or_more, {}};
-                while (auto next_match = pattern(config, text, pos))
-                {
-                    match.children.push_back(next_match.value());
-                    pos = next_match.value().end();
-                    match.update_end(pos);
-                }
-                return match; },MatchType::zero_or_more});
-        }
-
-        inline auto end_of_file()
-        {
-            return rule({[=](const Config &config, ParserState &text, TextPosition pos) -> std::optional<Match>
-                        {
-                pos = config.skip_text(text, pos);
-                if (pos==text.length()) {
-                    return Match{pos,pos,MatchType::end_of_file};
-                }
-                else {
-                    text.update_farthest_position(pos,MatchType::end_of_file,"");
-                    return std::nullopt;
-                } },MatchType::end_of_file});
-        }
-
-        namespace skip_text_functions
-        {
-            inline auto skip_pattern(Pattern p)
-            {
-                return [=](ParserState &text, TextPosition pos) -> TextPosition
-                {
-                    static Config empty_config{.skip_text = nothing()};
-                    std::optional<Match> match;
-                    while ((pos < text.length()) && (match = p(empty_config, text, pos)))
-                    {
-                        pos = match.value().end();
-                    }
-                    return pos;
-                };
-            }
-            inline auto skip_cpp_line_comments()
-            {
-                return textx::arpeggio::skip_text_functions::skip_pattern(
-                    textx::arpeggio::regex_match(R"(//.*?(?:$|\n))"));
-            }
-            inline auto skip_cpp_multiline_comments()
-            {
-                return textx::arpeggio::skip_text_functions::skip_pattern(
-                    textx::arpeggio::regex_match(R"(/\*(?:.|\n)*?\*/)"));
-            }
-            inline auto skip_cpp_style()
-            {
-                return textx::arpeggio::skip_text_functions::combine({skipws(),
-                                                                      skip_cpp_line_comments(),
-                                                                      skip_cpp_multiline_comments()});
-            }
-
-        }
+        Pattern optional(Pattern pattern);
+        Pattern str_match(std::string s);
+        Pattern regex_match(std::string s);
+        Pattern sequence(std::vector<Pattern> patterns);
+        Pattern ordered_choice(std::vector<Pattern> patterns);
+        Pattern unordered_group(std::vector<Pattern> patterns, std::optional<Pattern> separator=std::nullopt);
+        Pattern negative_lookahead(Pattern pattern);
+        Pattern positive_lookahead(Pattern pattern);
+        Pattern one_or_more(Pattern pattern);
+        Pattern zero_or_more(Pattern pattern);
+        Pattern end_of_file();
 
     }
 }
