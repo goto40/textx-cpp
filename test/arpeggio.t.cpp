@@ -390,9 +390,9 @@ TEST_CASE("unordered_group", "[arpeggio]")
 
     auto match = grammar.parse("CAB");
     REQUIRE(match);
-    CHECK(match.value().children[0].children[0].captured.value() == "A"); // order as in grammar
-    CHECK(match.value().children[0].children[1].captured.value() == "B");
-    CHECK(match.value().children[0].children[2].captured.value() == "C");
+    CHECK(match.value().children[0].children[0].captured.value() == "C");
+    CHECK(match.value().children[0].children[1].captured.value() == "A");
+    CHECK(match.value().children[0].children[2].captured.value() == "B");
 
 }
 
@@ -403,7 +403,7 @@ TEST_CASE("unordered_group_optional1", "[arpeggio]")
         unordered_group({        
             optional(capture(str_match("A"))),
             optional(capture(str_match("B"))),
-        }),
+        },std::nullopt,{true,true}), // 2x optional (true,true)
         end_of_file()
     })};
     grammar.get_config().skip_text = textx::arpeggio::skip_text_functions::skip_cpp_style();
@@ -414,4 +414,35 @@ TEST_CASE("unordered_group_optional1", "[arpeggio]")
     CHECK(grammar.parse_or_throw("B"));
     CHECK(!grammar.parse("BAA")); // more than the allowed elements --> error
     CHECK(!grammar.parse("")); // all optionals unmatched --> error
+
+    auto match = grammar.parse_or_throw("B");
+    CHECK(match.value().children[0].children.size()==1);
+    CHECK(match.value().children[0].children[0].children[0].captured.value() == "B");
+}
+
+TEST_CASE("unordered_group_optional2", "[arpeggio]")
+{
+    using namespace textx::arpeggio;
+    auto grammar = textx::Grammar<textx::arpeggio::Pattern>{sequence({
+        unordered_group({        
+            optional(capture(str_match("A"))),
+            optional(capture(str_match("B"))),
+            capture(str_match("C")),
+        },std::nullopt,{true,true,false}), // 2x optional (true,true)
+        end_of_file()
+    })};
+    grammar.get_config().skip_text = textx::arpeggio::skip_text_functions::skip_cpp_style();
+
+    CHECK(grammar.parse_or_throw("CAB"));
+    CHECK(grammar.parse_or_throw("BCA"));
+    CHECK(grammar.parse_or_throw("AC"));
+    CHECK(grammar.parse_or_throw("CB"));
+    CHECK(grammar.parse_or_throw("C"));
+    CHECK(!grammar.parse("BACA")); // more than the allowed elements --> error
+    CHECK(!grammar.parse("")); // all optionals unmatched --> error
+
+    auto match = grammar.parse_or_throw("BC");
+    CHECK(match.value().children[0].children.size()==2);
+    CHECK(match.value().children[0].children[0].children[0].captured.value() == "B"); // optional B found
+    CHECK(match.value().children[0].children[1].captured.value() == "C"); // req. C found
 }

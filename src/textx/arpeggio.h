@@ -485,16 +485,21 @@ namespace textx
                 return std::nullopt; });
         }
 
-        inline auto unordered_group(std::vector<Pattern> patterns, std::optional<Pattern> separator=std::nullopt)
+        inline auto unordered_group(std::vector<Pattern> patterns, std::optional<Pattern> separator=std::nullopt, std::vector<bool> is_optional={})
         {
+            if (is_optional.size()==0) {
+                is_optional.resize(patterns.size());
+                std::fill(is_optional.begin(), is_optional.end(), false);
+            }
+            size_t optional_elements_n = std::count_if(is_optional.begin(), is_optional.end(), [](bool x){return x;});
+
             return rule([=](const Config &config, ParserState &text, TextPosition pos) -> std::optional<Match>
                         {
                 Match result{pos,pos,MatchType::unordered_group, {}};
-                for (size_t t=0;t<patterns.size();t++) { // fill with dummy results
-                    result.children.emplace_back(pos,pos,MatchType::unordered_group);
-                }
                 std::vector<bool> used(patterns.size());
                 std::fill(used.begin(), used.end(), false);
+                size_t n_req = 0;
+                size_t n_opt = 0;
                 size_t n = 0;
 
                 for (size_t t=0;t<patterns.size();t++) {
@@ -513,20 +518,26 @@ namespace textx
                             }
                             if (ok) {
                                 auto match = patterns[i](config, text, npos);
+                                if (match && is_optional[i] && match->start()==match->end()) {
+                                    match = std::nullopt; // empty optional match
+                                }
                                 if (match)
                                 {
-                                    result.children[i] = match.value();
+                                    result.children.emplace_back(match.value());
                                     pos = match.value().end();
                                     used[i] = true;
                                     n++;
+                                    if (is_optional[i]) n_opt++;
+                                    else n_req++;
                                 }
                             }
                         }
                     }
                 }
                 result.update_end(pos);
-                if (n==patterns.size()) return result;
-                return std::nullopt; });
+                if (n==0) return std::nullopt; // special case, nothing was found
+                else if (n_req == patterns.size()-optional_elements_n) return result;
+                else return std::nullopt; });
         }
 
         inline auto negative_lookahead(Pattern pattern)

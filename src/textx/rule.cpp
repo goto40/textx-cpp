@@ -67,7 +67,7 @@ namespace {
                     part_of_expression = ta::unordered_group(patterns, std::get<ta::Pattern>(repeat_modifiers));
                 }
                 else {
-                    part_of_expression = ta::unordered_group(patterns);
+                    part_of_expression = ta::unordered_group(patterns, std::nullopt);
                 }
             }
             else {
