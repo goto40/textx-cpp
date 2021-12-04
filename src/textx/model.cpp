@@ -40,17 +40,20 @@ namespace textx {
         // create all fields with empty content
         const auto &rule = mm[rule_name];
         for (auto &[attr_name,info]: rule.get_attribute_info()) {
-            if (info.is_text()) {
+            if (info.cardinality == AttributeCardinality::list) {
                 obj->create_attribute_if_not_present(attr_name);
-                (*obj)[attr_name] = textx::object::AttributeValue{textx::object::Value{std::string{""},m0.start()}};
-            }
-            else if (info.cardinality == AttributeCardinality::list) {
-                obj->create_attribute_if_not_present(attr_name);
+                //std::cout << "create list " << attr_name << "\n";
                 (*obj)[attr_name] = textx::object::AttributeValue{std::vector<textx::object::Value>{}};
             }
             else if (info.cardinality == AttributeCardinality::scalar) {
                 obj->create_attribute_if_not_present(attr_name);
-                (*obj)[attr_name] = textx::object::AttributeValue{textx::object::Value{std::shared_ptr<textx::object::Object>{}, m0.start()}};
+                //std::cout << "create scalar " << attr_name << "\n";
+                if (info.is_text()) {
+                    (*obj)[attr_name] = textx::object::AttributeValue{textx::object::Value{std::string{""},m0.start()}};
+                }
+                else {
+                    (*obj)[attr_name] = textx::object::AttributeValue{textx::object::Value{std::shared_ptr<textx::object::Object>{}, m0.start()}};
+                }
             }
             else {
                 textx::arpeggio::raise(m0.start(), rule_name, attr_name, "unexpected attribute config found...");

@@ -12,10 +12,12 @@ namespace textx {
             throw std::runtime_error(o.str());
         }
     }
-    inline void textx_assert(const char *filename, size_t lineno, std::string assert_text, bool a, std::string info="") {
+    template<class ...T>
+    inline void textx_assert(const char *filename, size_t lineno, std::string assert_text, bool a, T... info) {
         if (!a) {
             std:: ostringstream o;
-            o << assert_text << " failed, " << info << " (" << filename << ":" << lineno << ")";
+            o << assert_text << " failed, ";
+            (o << ... << info) << " (" << filename << ":" << lineno << ")";
             throw std::runtime_error(o.str());
         }
     }

@@ -114,7 +114,7 @@ namespace textx::object {
         std::variant<Value, std::vector<Value>> data = std::vector<Value>{};
 
         void append(Value v) {
-            TEXTX_ASSERT(std::holds_alternative<std::vector<Value>>(data));
+            TEXTX_ASSERT(std::holds_alternative<std::vector<Value>>(data), "error appending data:", v);
             std::get<std::vector<Value>>(data).push_back(v);
         }
 

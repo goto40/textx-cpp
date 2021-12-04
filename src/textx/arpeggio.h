@@ -18,6 +18,8 @@
 #include <tuple>
 #include <compare>
 
+#define DBG_TEXTX_ARPEGGIO(x)
+#define DBG_TEXTX_ARPEGGIO_FOUND(x) DBG_TEXTX_ARPEGGIO(x)
 namespace textx
 {
     namespace arpeggio
@@ -341,6 +343,7 @@ namespace textx
                 if (match.has_value())
                 {
                     match.value().name = name;
+                    DBG_TEXTX_ARPEGGIO_FOUND(std::cout << "TEXTX DBG found name:" << name << " @" << match.value().start() << "\n";)
                 }
                 else
                 {
@@ -358,7 +361,7 @@ namespace textx
                 if (match.has_value())
                 {
                     match.value().captured = get_str(text, match.value());
-                    //std::cout << "CAPTURED VAL " << match.value().captured.value() << "\n";
+                    DBG_TEXTX_ARPEGGIO_FOUND(std::cout << "TEXTX DBG found captured:" << match.value().captured.value() << " @" << match.value().start() << "\n";)
                 }
                 return match; };
         }
