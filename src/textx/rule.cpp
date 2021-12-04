@@ -47,10 +47,17 @@ namespace {
             ta::Pattern part_of_expression;
             if (use_choice) {
                 auto choice = expr.children[0].children[1].children[0];
-                TEXTX_ASSERT_EQUAL(choice.name.value(),"rule://bracketed_choice");
+                TEXTX_ASSERT_EQUAL(choice.name.value(),"rule://bracketed_choice"); // must be "(" ... ")" for "#"
                 TEXTX_ASSERT_EQUAL(choice.children[1].type(), ta::MatchType::sequence);
                 TEXTX_ASSERT_EQUAL(choice.children[1].children.size(),2);
+
                 TEXTX_ASSERT_EQUAL(choice.children[1].children[1].children.size(),0); // only one entry + 0*zero_or_more
+                // if(choice.children[1].children[1].children.size()>0) {
+                //     // we have a choice here (e.g., "a|b|c") , nothing to permutate
+                //     // TODO: discuss / document
+                //     part_of_expression = transform_match2pattern(parsestate, mm, rule, expr.children[0].children[1].children[0]);
+                // }
+                // else {
                 auto &seq = choice.children[1].children[0]; // "(" .#1. ")"
                 std::vector<ta::Pattern> patterns;
                 for(auto &c : seq.children) {

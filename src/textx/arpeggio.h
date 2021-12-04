@@ -344,7 +344,7 @@ namespace textx
                 }
                 else
                 {
-                    text.update_farthest_position(pos,MatchType::str_match,std::string("rule-name="+name));
+                    text.update_farthest_position(pos,MatchType::str_match,std::string("rule-name="+name)+(text.eolterm?"+eolterm":""));
                 }
                 return match; };
         }
