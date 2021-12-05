@@ -1,9 +1,11 @@
 #include "textx/scoping.h"
 #include "textx/metamodel.h"
+#include <sstream>
+#include <iostream>
 
 namespace textx::scoping {
 
-    std::shared_ptr<textx::object::Object> PlainNameRefResolver::resolve(std::shared_ptr<textx::object::Object> origin, std::string attr_name, std::string obj_name) const {
+    std::shared_ptr<textx::object::Object> PlainNameRefResolver::resolve(std::shared_ptr<textx::object::Object> origin, std::string obj_name) const {
         auto m = origin->tx_model();
         auto mm = m->tx_metamodel();
 
@@ -56,10 +58,50 @@ namespace textx::scoping {
         return nullptr;
     }
 
-    std::shared_ptr<textx::object::Object> FQNRefResolver::resolve(std::shared_ptr<textx::object::Object> origin, std::string attr_name, std::string obj_name) const {
+    std::shared_ptr<textx::object::Object> FQNRefResolver::resolve(std::shared_ptr<textx::object::Object> origin, std::string obj_name) const {
         auto m = origin->tx_model();
         auto mm = m->tx_metamodel();
 
+        auto v_obj_name = separate_name(obj_name);
+        //auto res = search(origin, v);
+        return nullptr;
+    }
+
+    std::vector<std::string> separate_name(std::string obj_name) {
+        std::istringstream f_obj_name{obj_name};
+        std::vector<std::string> v_obj_name = {};
+        {
+            std::string x;
+            while(std::getline(f_obj_name, x, '.')) {
+                v_obj_name.push_back(x);
+            }
+        }
+        return v_obj_name;
+    }
+    std::shared_ptr<textx::object::Object> dot_separated_name_search(std::shared_ptr<textx::object::Object> origin, std::vector<std::string> v_obj_name, size_t idx) {
+        if (idx==v_obj_name.size()) {
+            return origin;
+        }
+        TEXTX_ASSERT(idx<v_obj_name.size());
+ 
+        auto check_obj_and_name=[&](auto &attr) {
+            return attr.is_pure_obj() && attr.obj()->has_attr("name") && attr["name"].is_str() && attr["name"].str()==v_obj_name[idx];
+        };
+
+        for(auto& [aname,attr]: origin->attributes) {
+            if (check_obj_and_name(attr)) {
+                auto res = dot_separated_name_search(attr.obj(),v_obj_name,idx+1);
+                if (res) return res;
+            }
+            if (attr.is_list()) {
+                for(size_t i=0;i<0;i++) {
+                    if (check_obj_and_name(attr[i])) {
+                        auto res = dot_separated_name_search(attr[i].obj(),v_obj_name,idx+1);
+                        if (res) return res;
+                    }
+                }
+            }
+        }
         return nullptr;
     }
 

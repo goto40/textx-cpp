@@ -145,7 +145,9 @@ namespace textx::object {
             auto &value = std::get<Value>(data);
             return std::holds_alternative<MatchText>(value.data);
         }
-
+        bool is_list() const {
+            return std::holds_alternative<std::vector<Value>>(data);
+        }
 
         ObjectRef& ref() {
             TEXTX_ASSERT(std::holds_alternative<Value>(data));
