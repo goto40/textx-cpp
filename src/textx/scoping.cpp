@@ -1,5 +1,6 @@
 #include "textx/scoping.h"
 #include "textx/metamodel.h"
+#include "textx/arpeggio.h"
 #include <sstream>
 #include <iostream>
 
@@ -88,6 +89,12 @@ namespace textx::scoping {
     }
     std::shared_ptr<textx::object::Object> dot_separated_name_search(std::shared_ptr<textx::object::Object> origin, const std::vector<std::string> &v_obj_name, std::optional<std::string> target_type, size_t idx) {
         if (idx==v_obj_name.size()) {
+            if(target_type.has_value()) {
+                auto &mm = *origin->tx_model()->tx_metamodel();
+                if (!mm.is_base_of(target_type.value(),origin->type)) {
+                    textx::arpeggio::raise(origin->pos,"'", v_obj_name[idx-1], "' has not expected type '", target_type.value(), "'");
+                }
+            }
             return origin;
         }
         TEXTX_ASSERT(idx<v_obj_name.size());

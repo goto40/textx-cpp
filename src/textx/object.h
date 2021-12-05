@@ -26,6 +26,7 @@ namespace textx::object {
         std::weak_ptr<textx::Model> tx_model;
         std::string name;
         std::string rule;
+        std::string target_type;
         std::string attr;
         std::weak_ptr<Object> parent = {};
         std::weak_ptr<Object> obj = {};
@@ -42,7 +43,7 @@ namespace textx::object {
         bool is_ref() const {
             return std::holds_alternative<ObjectRef>(data);
         }
-        
+
         bool is_resolved() const {
             TEXTX_ASSERT(is_ref());
             return obj()!=nullptr;
@@ -230,9 +231,11 @@ namespace textx::object {
         std::weak_ptr<textx::Model> weak_model;
         std::unordered_map<std::string, AttributeValue> attributes;
         std::weak_ptr<Object> weak_parent;
+        textx::arpeggio::TextPosition pos;
 
-        Object(std::shared_ptr<Object> parent) : weak_parent{parent} {}
+        Object(std::shared_ptr<Object> parent, textx::arpeggio::TextPosition pos) : weak_parent{parent}, pos(pos) {}
 
+        textx::arpeggio::TextPosition get_pos() { return pos; }
         std::shared_ptr<Object> parent() { return weak_parent.lock(); }
         std::shared_ptr<textx::Model> tx_model() { return weak_model.lock(); }
         bool has_attr(std::string n) { return attributes.count(n)>0; }

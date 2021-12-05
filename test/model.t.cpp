@@ -80,6 +80,15 @@ TEST_CASE("model_abstract_rule1", "[textx/metamodel]")
 
         {
             auto mm = textx::metamodel_from_str(grammar1);
+
+            CHECK(mm->operator[]("Shape").tx_inh_by().size()==3);
+
+            CHECK(mm->is_base_of("Shape","Point"));
+            CHECK(mm->is_base_of("Point","Point"));
+            CHECK(!mm->is_base_of("Point","Shape"));
+            CHECK_THROWS(mm->is_base_of("Unknown","Point"));
+            CHECK_THROWS(mm->is_base_of("Point","Unknown"));
+
             auto m = mm->model_from_str("Point(1,2), Circle(Point(333,4.5),9), Line(Point(0,0),Point(1,1))");
             CHECK( (*mm)["Model"]["shapes"].cardinality == textx::AttributeCardinality::list );
             CHECK( (*mm)["Model"]["shapes"].type.value() == "Shape" );

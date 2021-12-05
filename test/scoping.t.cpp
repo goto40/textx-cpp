@@ -72,9 +72,10 @@ TEST_CASE("model_ref_fqn", "[textx/metamodel]")
                     ( packages=Package | items=Item | usings=Using )*
                 'end';
             Item: 'item' name=ID;
-            Using: 'using' name=ID '=' ref=[Item|FQN];
+            Using: 'using' name=ID '=' ref=[ItemOrPackage|FQN];
             FQN: ID ('.' ID)*;
             Comment: /\/\/.*?$/;
+            ItemOrPackage: Item|Package;
         )#";
 
         {
@@ -114,5 +115,51 @@ TEST_CASE("model_ref_fqn", "[textx/metamodel]")
                 CHECK( (*m->fqn("p1.p2.p2_x"))["ref"].obj() == m->fqn("b1.b2.X") );
             }
         }
+    }
+}
+
+TEST_CASE("model_ref_fqn_bad_target_type", "[textx/metamodel]")
+{
+    {
+        auto grammar1 = R"#(
+            Model: packages+=Package;
+            Package: 'package' name=ID
+                'begin'
+                    ( packages=Package | items=Item | usings=Using )*
+                'end';
+            Item: 'item' name=ID;
+            Using: 'using' name=ID '=' ref=[Item|FQN];
+            FQN: ID ('.' ID)*;
+            Comment: /\/\/.*?$/;
+        )#";
+
+        {
+            auto modeltext = R"(
+                package p1 begin
+                    item A
+                    item C
+                    package p2 begin
+                        item A
+                        item B
+                        using p2_p2A=A
+                        using p2_p1C=C
+                        using p2_x=b1.b2.X
+                        using b2r=b1.b2 // bad type: exception
+                        //does not work with FQN, wait for REEL: using pass_through_ref=b2r.X
+                    end
+                    using p1_p1A=A
+                    using p1_p1C=C
+                    using p1_p2A=p2.A
+                end
+                package b1 begin
+                    package b2 begin
+                        item X
+                    end
+                end
+            )";
+            auto mm = textx::metamodel_from_str(grammar1);
+            mm->set_resolver("*.*", std::make_unique<textx::scoping::FQNRefResolver>());
+            CHECK_THROWS_WITH( (void)mm->model_from_str(modeltext), Catch::Matchers::Contains("'b2' has not expected type 'Item'"));
+    }
     }
 }

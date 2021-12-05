@@ -45,7 +45,8 @@ namespace textx {
                 if (!r.external_rule) {
                     auto &rule = grammar[name];
                     rule.m_type = r.rule_type;
-                    rule.tx_inh_by = r.tx_inh_by;
+                    rule.m_tx_inh_by = r.tx_inh_by;
+                    rule.m_tx_bases = r.tx_bases;
                     for(auto& [name, info]: r.attribute_info) {
                         rule.attribute_info[name].type = info.type;
                         rule.attribute_info[name].cardinality = r.get_attribute_cardinality(name);
@@ -176,4 +177,17 @@ namespace textx {
         return model_from_str(modeltext.str(), p);
     }
 
+    bool Metamodel::is_base_of(std::string t1, std::string t2) const {
+        //std::cout << "is_base_of " << t1 << " " << t2 << "?\n";
+        TEXTX_ASSERT(has_rule(t1));
+        TEXTX_ASSERT(has_rule(t2));
+        if (t1==t2) return true;
+        else if (operator[](t2).tx_bases().size()>0) {
+            for (auto b: operator[](t2).tx_bases()) {
+                auto res = is_base_of(t1,b);
+                if (res) return res;
+            }
+        }
+        return false;
+    }
 }

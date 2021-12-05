@@ -23,6 +23,7 @@ namespace textx {
 
         public:
         Metamodel(std::string_view grammar, bool is_main_grammar=true, bool include_basic_metamodel=true, std::string filename="<str>");
+        bool is_base_of(std::string t1, std::string t2) const;
         Rule& operator[](std::string name);
         const Rule& operator[](std::string name) const;
         bool has_rule(std::string name) const;

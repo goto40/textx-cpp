@@ -34,7 +34,7 @@ namespace textx {
     }
 
     textx::object::Value Model::create_model_from_common_rule(const std::string& rule_name, const std::string_view text, const textx::arpeggio::Match &m0, textx::Metamodel &mm, std::shared_ptr<textx::object::Object> parent) {
-        auto obj = std::make_shared<textx::object::Object>(parent);
+        auto obj = std::make_shared<textx::object::Object>(parent, m0.start());
         obj->type = rule_name;
         obj->weak_model = shared_from_this(); // store weak ptr
 
@@ -78,12 +78,14 @@ namespace textx {
 
                 // reference assignment
                 if (val.name_starts_with("obj_ref://")) {
+                    TEXTX_ASSERT(mm[rule_name][attr_name].type.has_value(), rule_name, ".", attr_name, " must have a type");
+                    auto target_type = mm[rule_name][attr_name].type.value();
                     std::string ref_name = std::string{textx::arpeggio::get_str(text, val.children[0])};
                     if (mm[rule_name][attr_name].cardinality==AttributeCardinality::scalar) {
-                        (*obj)[attr_name].data = textx::object::Value{textx::object::ObjectRef{shared_from_this(), ref_name, rule_name, attr_name, obj}, val.start()};
+                        (*obj)[attr_name].data = textx::object::Value{textx::object::ObjectRef{shared_from_this(), ref_name, rule_name, target_type, attr_name, obj}, val.start()};
                     }
                     else {
-                        (*obj)[attr_name].append(textx::object::Value{textx::object::ObjectRef{shared_from_this(), ref_name, rule_name, attr_name, obj}, val.start()});
+                        (*obj)[attr_name].append(textx::object::Value{textx::object::ObjectRef{shared_from_this(), ref_name, rule_name, target_type, attr_name, obj}, val.start()});
                     }
                 }
                 else { // no reference
@@ -139,7 +141,7 @@ namespace textx {
                     //resolve ref:
                     //std::cout << "searching " << v.ref().name << ".\n";
                     v.ref().obj = mm->get_resolver(v.ref().rule, v.ref().attr)
-                        .resolve(v.ref().parent.lock(),v.ref().name, v.ref().rule);
+                        .resolve(v.ref().parent.lock(),v.ref().name, v.ref().target_type);
                     if (v.ref().obj.lock() == nullptr) {
                         //std::cout << "not found.\n";
                         unresolved++;

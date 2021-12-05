@@ -50,14 +50,17 @@ namespace textx {
         textx::arpeggio::Pattern pattern;
         std::string name = "unnamed";
         std::unordered_map<std::string, AttributeInfo> attribute_info; 
-        std::unordered_set<std::string> tx_inh_by; // for abstract rules 
-        std::unordered_set<std::string> tx_bases;
+        std::unordered_set<std::string> m_tx_inh_by; // for abstract rules 
+        std::unordered_set<std::string> m_tx_bases;
         RuleType m_type = RuleType::illegal;        
     public:
         friend Metamodel;
 
         RuleType type() const { return m_type; }
-    
+
+        const auto& tx_bases() const { return m_tx_bases; }
+        const auto& tx_inh_by() const { return m_tx_inh_by; }
+
         std::optional<textx::arpeggio::Match> operator()(const textx::arpeggio::Config &config, textx::arpeggio::ParserState &text, textx::arpeggio::TextPosition pos) const {
             return pattern(config, text, pos);
         }
