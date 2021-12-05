@@ -54,7 +54,6 @@
 ## Open Points
 
 ### Unclear
- * unordered group on choices?
 ### Open
  * TODO minor: it must be possible for "eolterm" to be combined with a separator pattern
  * TODO: use has_match_suppression
@@ -62,3 +61,4 @@
  * TODO handle referenced/included metamodels, in Metamodel::ref
  * TODO importURI
  * RREL
+ * unordered group with choices
