@@ -188,8 +188,16 @@ TEST_CASE("model_ref_fqn", "[textx/metamodel]")
                     end
                 end
             )";
-            auto mm = textx::metamodel_from_str(grammar1);
-            auto m = mm->model_from_str(modeltext);
+            {
+                auto mm = textx::metamodel_from_str(grammar1);
+                CHECK_THROWS_WITH((void)mm->model_from_str(modeltext),Catch::Matchers::Contains("p2.A"));
+                CHECK_THROWS_WITH((void)mm->model_from_str(modeltext),Catch::Matchers::Contains("b1.b2.X"));
+            }
+            {
+                auto mm = textx::metamodel_from_str(grammar1);
+                mm->set_resolver("*.*", std::make_unique<textx::scoping::FQNRefResolver>());
+                auto m = mm->model_from_str(modeltext);
+            }
         }
     }
 }

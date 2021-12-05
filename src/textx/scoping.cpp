@@ -61,9 +61,13 @@ namespace textx::scoping {
     std::shared_ptr<textx::object::Object> FQNRefResolver::resolve(std::shared_ptr<textx::object::Object> origin, std::string obj_name) const {
         auto m = origin->tx_model();
         auto mm = m->tx_metamodel();
-
         auto v_obj_name = separate_name(obj_name);
-        //auto res = search(origin, v);
+
+        while(origin!=nullptr) {
+            auto res = dot_separated_name_search(origin, v_obj_name);
+            if (res) return res;
+            origin = origin->parent();
+        }
         return nullptr;
     }
 
