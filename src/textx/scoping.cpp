@@ -2,7 +2,8 @@
 #include "textx/metamodel.h"
 
 namespace textx::scoping {
-    std::shared_ptr<textx::object::Object> DefaultRefResolver::resolve(std::shared_ptr<textx::object::Object> origin, std::string attr_name, std::string obj_name) {
+
+    std::shared_ptr<textx::object::Object> PlainNameRefResolver::resolve(std::shared_ptr<textx::object::Object> origin, std::string attr_name, std::string obj_name) const {
         auto m = origin->tx_model();
         auto mm = m->tx_metamodel();
 
@@ -54,4 +55,12 @@ namespace textx::scoping {
         }
         return nullptr;
     }
+
+    std::shared_ptr<textx::object::Object> FQNRefResolver::resolve(std::shared_ptr<textx::object::Object> origin, std::string attr_name, std::string obj_name) const {
+        auto m = origin->tx_model();
+        auto mm = m->tx_metamodel();
+
+        return nullptr;
+    }
+
 }

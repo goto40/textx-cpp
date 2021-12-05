@@ -17,7 +17,8 @@ namespace textx {
         textx::Grammar<textx::Rule> grammar={};
         textx::parsetree::TextxGrammarParsetree textx_grammar_parsetree;
         static Metamodel& get_basic_metamodel();
-        std::unique_ptr<textx::scoping::RefResolver> default_resolver = std::make_unique<textx::scoping::DefaultRefResolver>();
+        std::unique_ptr<textx::scoping::RefResolver> default_resolver = std::make_unique<textx::scoping::PlainNameRefResolver>();
+        std::unordered_map<std::string, std::unique_ptr<textx::scoping::RefResolver>> resolver = {};
         std::vector<std::shared_ptr<textx::Model>> builtin_models={};
 
         public:
@@ -32,9 +33,22 @@ namespace textx {
         const auto& tx_builtin_models() const { return builtin_models; }
         void add_builtin_model(std::shared_ptr<textx::Model> m) { builtin_models.push_back(std::move(m)); }
 
-        textx::scoping::RefResolver& get_resolver(std::string rule_name, std::string attr_name) {
-            //TODO select registered resolver
+        const textx::scoping::RefResolver& get_resolver(std::string rule_name, std::string attr_name) const {
+            std::string lookup[] = {
+                rule_name+"."+attr_name,
+                std::string("*.")+attr_name,
+                rule_name+".*",
+                "*.*"
+            };
+            for (auto l: lookup) {
+                auto res = resolver.find(l);
+                if (res!=resolver.end()) return *res->second;
+            }
             return *default_resolver;
+        }
+
+        void set_resolver(std::string dot_separated_rule_attr_with_asterix, std::unique_ptr<textx::scoping::RefResolver> r) {
+            resolver.insert({dot_separated_rule_attr_with_asterix, std::move(r)});
         }
 
         std::optional<textx::arpeggio::Match> parsetree_from_str(std::string_view model_txt) { return grammar.parse_or_throw(model_txt); }

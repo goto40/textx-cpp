@@ -151,3 +151,45 @@ TEST_CASE("model_ordered_choice_regression1", "[textx/model]")
         }
     }
 }
+
+TEST_CASE("model_ref_fqn", "[textx/metamodel]")
+{
+    {
+        auto grammar1 = R"#(
+            Model: packages+=Package;
+            Package: 'package' name=ID
+                'begin'
+                    ( packages=Package | items=Item | usings=Using )*
+                'end';
+            Item: 'item' name=ID;
+            Using: 'using' name=ID '=' ref=[Item|FQN];
+            FQN: ID ('.' ID)*;
+        )#";
+
+        {
+            auto modeltext = R"(
+                package p1 begin
+                    item A
+                    item C
+                    package p2 begin
+                        item A
+                        item B
+                        using p2_p2A=A
+                        using p2_p1C=C
+                        using p2_x=b1.b2.X
+                    end
+                    using p1_p1A=A
+                    using p1_p1C=C
+                    using p1_p2A=p2.A
+                end
+                package b1 begin
+                    package b2 begin
+                        item X
+                    end
+                end
+            )";
+            auto mm = textx::metamodel_from_str(grammar1);
+            auto m = mm->model_from_str(modeltext);
+        }
+    }
+}

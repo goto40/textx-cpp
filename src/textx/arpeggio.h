@@ -271,8 +271,10 @@ namespace textx
                 {
                     throw std::runtime_error("unexpected: pos>text.length()");
                 }
-                pos = config.skip_text(text, pos);
-
+                if (pattern.type()!=MatchType::optional && pattern.type()!=MatchType::zero_or_more) {
+                    pos = config.skip_text(text, pos);
+                }
+                
                 // memoization:
                 if (chached_state != text.get_cache_reset_indicator())
                 {

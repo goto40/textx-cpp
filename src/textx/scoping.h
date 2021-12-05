@@ -5,11 +5,15 @@
 namespace textx::scoping {
     struct RefResolver {
         /** looks for obj_name in attr_name, starting form origin */
-        virtual std::shared_ptr<textx::object::Object> resolve(std::shared_ptr<textx::object::Object> origin, std::string attr_name, std::string obj_name)=0;
+        virtual std::shared_ptr<textx::object::Object> resolve(std::shared_ptr<textx::object::Object> origin, std::string attr_name, std::string obj_name) const =0;
         virtual ~RefResolver() = default;
     };
 
-    struct DefaultRefResolver : RefResolver {
-        std::shared_ptr<textx::object::Object> resolve(std::shared_ptr<textx::object::Object> origin, std::string attr_name, std::string obj_name);
+    struct PlainNameRefResolver : RefResolver {
+        std::shared_ptr<textx::object::Object> resolve(std::shared_ptr<textx::object::Object> origin, std::string attr_name, std::string obj_name) const override;
+    };
+
+    struct FQNRefResolver : RefResolver {
+        std::shared_ptr<textx::object::Object> resolve(std::shared_ptr<textx::object::Object> origin, std::string attr_name, std::string obj_name) const override;
     };
 }

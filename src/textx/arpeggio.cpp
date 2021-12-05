@@ -144,7 +144,6 @@ namespace textx
         {
             return rule({[=](const Config &config, ParserState &text, TextPosition pos) -> std::optional<Match>
                         {
-                pos = config.skip_text(text, pos);
                 if (text.str().substr(pos).starts_with(s))
                 {
                     return Match{pos, pos.add(text, s.length()), MatchType::str_match};
@@ -173,7 +172,6 @@ namespace textx
 #endif
             return rule({[=, r = myregex](const Config &config, ParserState &text, TextPosition pos) -> std::optional<Match>
                         {
-                pos = config.skip_text(text, pos);
                 match_results<std::string_view::const_iterator> smatch;
                 if (regex_search(text.str().begin() + pos, text.str().end(), smatch, r))
                 {
@@ -361,7 +359,6 @@ namespace textx
         {
             return rule({[=](const Config &config, ParserState &text, TextPosition pos) -> std::optional<Match>
                         {
-                pos = config.skip_text(text, pos);
                 if (pos==text.length()) {
                     return Match{pos,pos,MatchType::end_of_file};
                 }
