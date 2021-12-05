@@ -5,7 +5,7 @@
 
 namespace textx::scoping {
 
-    std::shared_ptr<textx::object::Object> PlainNameRefResolver::resolve(std::shared_ptr<textx::object::Object> origin, std::string obj_name) const {
+    std::shared_ptr<textx::object::Object> PlainNameRefResolver::resolve(std::shared_ptr<textx::object::Object> origin, std::string obj_name, std::optional<std::string> target_type) const {
         auto m = origin->tx_model();
         auto mm = m->tx_metamodel();
 
@@ -58,13 +58,13 @@ namespace textx::scoping {
         return nullptr;
     }
 
-    std::shared_ptr<textx::object::Object> FQNRefResolver::resolve(std::shared_ptr<textx::object::Object> origin, std::string obj_name) const {
+    std::shared_ptr<textx::object::Object> FQNRefResolver::resolve(std::shared_ptr<textx::object::Object> origin, std::string obj_name, std::optional<std::string> target_type) const {
         auto m = origin->tx_model();
         auto mm = m->tx_metamodel();
         auto v_obj_name = separate_name(obj_name);
 
         while(origin!=nullptr) {
-            auto res = dot_separated_name_search(origin, v_obj_name);
+            auto res = dot_separated_name_search(origin, v_obj_name, target_type);
             if (res) return res;
             origin = origin->parent();
         }
@@ -86,7 +86,7 @@ namespace textx::scoping {
         }
         return v_obj_name;
     }
-    std::shared_ptr<textx::object::Object> dot_separated_name_search(std::shared_ptr<textx::object::Object> origin, const std::vector<std::string> &v_obj_name, size_t idx) {
+    std::shared_ptr<textx::object::Object> dot_separated_name_search(std::shared_ptr<textx::object::Object> origin, const std::vector<std::string> &v_obj_name, std::optional<std::string> target_type, size_t idx) {
         if (idx==v_obj_name.size()) {
             return origin;
         }
@@ -98,13 +98,13 @@ namespace textx::scoping {
 
         for(auto& [aname,attr]: origin->attributes) {
             if (check_obj_and_name(attr)) {
-                auto res = dot_separated_name_search(attr.obj(),v_obj_name,idx+1);
+                auto res = dot_separated_name_search(attr.obj(), v_obj_name, target_type, idx+1);
                 if (res) return res;
             }
             else if (attr.is_list()) {
                 for(size_t i=0;i<attr.size();i++) {
                     if (check_obj_and_name(attr[i])) {
-                        auto res = dot_separated_name_search(attr[i].obj(),v_obj_name,idx+1);
+                        auto res = dot_separated_name_search(attr[i].obj(), v_obj_name, target_type, idx+1);
                         if (res) return res;
                     }
                 }

@@ -139,7 +139,7 @@ namespace textx {
                     //resolve ref:
                     //std::cout << "searching " << v.ref().name << ".\n";
                     v.ref().obj = mm->get_resolver(v.ref().rule, v.ref().attr)
-                        .resolve(v.ref().parent.lock(),v.ref().name);
+                        .resolve(v.ref().parent.lock(),v.ref().name, v.ref().rule);
                     if (v.ref().obj.lock() == nullptr) {
                         //std::cout << "not found.\n";
                         unresolved++;
