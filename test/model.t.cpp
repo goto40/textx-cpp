@@ -197,6 +197,8 @@ TEST_CASE("model_ref_fqn", "[textx/metamodel]")
                 auto mm = textx::metamodel_from_str(grammar1);
                 mm->set_resolver("*.*", std::make_unique<textx::scoping::FQNRefResolver>());
                 auto m = mm->model_from_str(modeltext);
+
+                CHECK( (*m->fqn("p1.p2.p2_x"))["ref"].obj() == m->fqn("b1.b2.X") );
             }
         }
     }

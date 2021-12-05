@@ -40,5 +40,6 @@ namespace textx {
         unsigned long long u() const { return val().u(); }
         const textx::object::AttributeValue& operator[](std::string name) const { return val()[name]; }
         textx::object::AttributeValue& operator[](std::string name) { return val()[name]; }
+        std::shared_ptr<textx::object::Object> fqn(std::string name);
     };
 }

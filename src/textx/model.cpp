@@ -153,4 +153,8 @@ namespace textx {
         return unresolved;
     }
 
+    std::shared_ptr<textx::object::Object> Model::fqn(std::string name) {
+        return textx::scoping::dot_separated_name_search(val().obj(), name);
+    }
+
 }
