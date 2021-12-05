@@ -69,16 +69,20 @@ namespace textx::scoping {
 
     std::vector<std::string> separate_name(std::string obj_name) {
         std::istringstream f_obj_name{obj_name};
+        TEXTX_ASSERT(obj_name.size()>0, "empty names are not allowed");
+        TEXTX_ASSERT(obj_name[0]!='.', obj_name, "names mut not start with a dot");
+        TEXTX_ASSERT(obj_name[obj_name.size()-1]!='.', obj_name, "names mut not start with a dot");
         std::vector<std::string> v_obj_name = {};
         {
             std::string x;
             while(std::getline(f_obj_name, x, '.')) {
+                TEXTX_ASSERT(x.size()>0, obj_name, "all parts must be non empty strings");
                 v_obj_name.push_back(x);
             }
         }
         return v_obj_name;
     }
-    std::shared_ptr<textx::object::Object> dot_separated_name_search(std::shared_ptr<textx::object::Object> origin, std::vector<std::string> v_obj_name, size_t idx) {
+    std::shared_ptr<textx::object::Object> dot_separated_name_search(std::shared_ptr<textx::object::Object> origin, const std::vector<std::string> &v_obj_name, size_t idx) {
         if (idx==v_obj_name.size()) {
             return origin;
         }
@@ -93,8 +97,8 @@ namespace textx::scoping {
                 auto res = dot_separated_name_search(attr.obj(),v_obj_name,idx+1);
                 if (res) return res;
             }
-            if (attr.is_list()) {
-                for(size_t i=0;i<0;i++) {
+            else if (attr.is_list()) {
+                for(size_t i=0;i<attr.size();i++) {
                     if (check_obj_and_name(attr[i])) {
                         auto res = dot_separated_name_search(attr[i].obj(),v_obj_name,idx+1);
                         if (res) return res;
@@ -104,5 +108,4 @@ namespace textx::scoping {
         }
         return nullptr;
     }
-
 }

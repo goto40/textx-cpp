@@ -216,9 +216,12 @@ namespace textx::object {
         std::string type;
         std::weak_ptr<textx::Model> weak_model;
         std::unordered_map<std::string, AttributeValue> attributes;
+        std::weak_ptr<Object> weak_parent;
 
+        Object(std::shared_ptr<Object> parent) : weak_parent{parent} {}
+
+        std::shared_ptr<Object> parent() { return weak_parent.lock(); }
         std::shared_ptr<textx::Model> tx_model() { return weak_model.lock(); }
-
         bool has_attr(std::string n) { return attributes.count(n)>0; }
         const AttributeValue& operator[](std::string name) const;
         AttributeValue& operator[](std::string name);

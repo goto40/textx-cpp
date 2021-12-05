@@ -6,10 +6,11 @@ namespace textx {
 
     void Model::init(const std::string_view text, const textx::arpeggio::Match &parsetree, std::shared_ptr<Metamodel> mm) {
        weak_mm = mm;
-       root = create_model(text, parsetree, *mm);
+       std::shared_ptr<textx::object::Object> parent = nullptr;
+       root = create_model(text, parsetree, *mm, parent);
     }
 
-    textx::object::Value Model::create_model(const std::string_view text, const textx::arpeggio::Match &m, textx::Metamodel &mm) {
+    textx::object::Value Model::create_model(const std::string_view text, const textx::arpeggio::Match &m, textx::Metamodel &mm, std::shared_ptr<textx::object::Object> parent) {
         if (m.name_starts_with("rule://")) {
             std::string rule_name = m.name.value().substr(7);
             auto &rule = mm[rule_name];
@@ -18,10 +19,10 @@ namespace textx {
                 return {textx::object::MatchText{textx::arpeggio::get_str(text, m),rule_name},m.start()};
             }
             if (rule.type() == RuleType::common) {
-                return create_model_from_common_rule(rule_name, text, m, mm);
+                return create_model_from_common_rule(rule_name, text, m, mm, parent);
             }
             else {
-                return create_model_from_abstract_rule(rule_name, text, m, mm);
+                return create_model_from_abstract_rule(rule_name, text, m, mm, parent);
             }
         }
         if (textx::arpeggio::is_terminal(m)) { // also a match
@@ -32,8 +33,8 @@ namespace textx {
         }
     }
 
-    textx::object::Value Model::create_model_from_common_rule(const std::string& rule_name, const std::string_view text, const textx::arpeggio::Match &m0, textx::Metamodel &mm) {
-        auto obj = std::make_shared<textx::object::Object>();
+    textx::object::Value Model::create_model_from_common_rule(const std::string& rule_name, const std::string_view text, const textx::arpeggio::Match &m0, textx::Metamodel &mm, std::shared_ptr<textx::object::Object> parent) {
+        auto obj = std::make_shared<textx::object::Object>(parent);
         obj->type = rule_name;
         obj->weak_model = shared_from_this(); // store weak ptr
 
@@ -87,10 +88,10 @@ namespace textx {
                 }
                 else { // no reference
                     if (mm[rule_name][attr_name].cardinality==AttributeCardinality::scalar) {
-                        (*obj)[attr_name].data = create_model(text, val, mm);
+                        (*obj)[attr_name].data = create_model(text, val, mm, obj);
                     }
                     else {
-                        (*obj)[attr_name].append(create_model(text, val, mm));
+                        (*obj)[attr_name].append(create_model(text, val, mm, obj));
                     }
                 }
             }
@@ -106,7 +107,7 @@ namespace textx {
         return {obj, m0.start()};
     }
 
-    textx::object::Value Model::create_model_from_abstract_rule(const std::string& rule_name, const std::string_view text, const textx::arpeggio::Match &m0, textx::Metamodel &mm) {
+    textx::object::Value Model::create_model_from_abstract_rule(const std::string& rule_name, const std::string_view text, const textx::arpeggio::Match &m0, textx::Metamodel &mm, std::shared_ptr<textx::object::Object> parent) {
         // traverse tree and stop on "rule://" names..."
         std::function<const textx::arpeggio::Match&(const textx::arpeggio::Match&, bool)> traverse;
         traverse = [&, this](const textx::arpeggio::Match& m, bool first=true) -> const textx::arpeggio::Match&{
@@ -126,7 +127,7 @@ namespace textx {
             //std::cout << "abstract rule --> match -*- " << m << "\n";
             return {textx::object::MatchText{textx::arpeggio::get_str(text, m0), rule_name},m0.start()};            
         }
-        return create_model(text, r, mm);
+        return create_model(text, r, mm, parent);
     }
 
     size_t Model::resolve_references() {

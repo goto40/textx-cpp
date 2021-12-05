@@ -18,7 +18,7 @@ namespace textx::scoping {
     };
 
     std::vector<std::string> separate_name(std::string obj_name);
-    std::shared_ptr<textx::object::Object> dot_separated_name_search(std::shared_ptr<textx::object::Object> origin, std::vector<std::string> v_obj_name, size_t idx=0);
+    std::shared_ptr<textx::object::Object> dot_separated_name_search(std::shared_ptr<textx::object::Object> origin, const std::vector<std::string> &v_obj_name, size_t idx=0);
     inline std::shared_ptr<textx::object::Object> dot_separated_name_search(std::shared_ptr<textx::object::Object> origin, std::string obj_name) {
         auto v = separate_name(obj_name);
         return dot_separated_name_search(origin, v);
