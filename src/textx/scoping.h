@@ -1,8 +1,13 @@
 #pragma once
 #include "textx/model.h"
 #include "textx/object.h"
+#include <variant>
+#include <memory>
+#include <vector>
 
 namespace textx::scoping {
+    struct Postponed {};
+
     struct RefResolver {
         /** looks for obj_name in attr_name, starting form origin */
         virtual std::shared_ptr<textx::object::Object> resolve(std::shared_ptr<textx::object::Object> origin, std::string obj_name) const =0;
@@ -17,10 +22,21 @@ namespace textx::scoping {
         std::shared_ptr<textx::object::Object> resolve(std::shared_ptr<textx::object::Object> origin, std::string obj_name) const override;
     };
 
+    using PostponedOrObject = std::variant<Postponed, std::shared_ptr<textx::object::Object>>;
+
     std::vector<std::string> separate_name(std::string obj_name);
     std::shared_ptr<textx::object::Object> dot_separated_name_search(std::shared_ptr<textx::object::Object> origin, const std::vector<std::string> &v_obj_name, size_t idx=0);
     inline std::shared_ptr<textx::object::Object> dot_separated_name_search(std::shared_ptr<textx::object::Object> origin, std::string obj_name) {
         auto v = separate_name(obj_name);
         return dot_separated_name_search(origin, v);
+    }
+    inline bool is_valid(PostponedOrObject x) {
+        return std::holds_alternative<std::shared_ptr<textx::object::Object>>(x) && std::get<1>(x)!=nullptr;
+    }
+    inline bool is_postponed(PostponedOrObject x) {
+        return std::holds_alternative<Postponed>(x);
+    }
+    inline bool is_valid_or_postponed(PostponedOrObject x) {
+        return is_postponed(x) || is_valid(x);
     }
 }

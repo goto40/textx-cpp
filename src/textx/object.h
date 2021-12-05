@@ -42,6 +42,11 @@ namespace textx::object {
         bool is_ref() const {
             return std::holds_alternative<ObjectRef>(data);
         }
+        
+        bool is_resolved() const {
+            TEXTX_ASSERT(is_ref());
+            return obj()!=nullptr;
+        }        
         bool is_pure_obj() const {
             return std::holds_alternative<std::shared_ptr<Object>>(data);
         }
@@ -68,7 +73,9 @@ namespace textx::object {
             }
             else {
                 TEXTX_ASSERT(std::holds_alternative<ObjectRef>(data));
-                return std::get<ObjectRef>(data).obj.lock();
+                auto res = std::get<ObjectRef>(data).obj.lock();
+                TEXTX_ASSERT(res!=nullptr, "unexpected: reference expired/illegal");
+                return res;
             }
         }
 
@@ -128,6 +135,12 @@ namespace textx::object {
             auto &value = std::get<Value>(data);
             return std::holds_alternative<ObjectRef>(value.data);
         }
+
+        bool is_resolved() const {
+            TEXTX_ASSERT(is_ref());
+            return obj()!=nullptr;
+        }        
+
         bool is_pure_obj() const {
             if (!std::holds_alternative<Value>(data)) {
                 return false;
