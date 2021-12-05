@@ -24,6 +24,12 @@ namespace textx::scoping {
                 //     std::cout << "name ='" <<(*v.obj())["name"].str()<< "' ==? '" << obj_name<<"'\n";
                 // }
                 if (v.obj()->has_attr("name") && (*v.obj())["name"].str()==obj_name) {
+                    if(target_type.has_value()) {
+                        auto &mm = *v.obj()->tx_model()->tx_metamodel();
+                        if (!mm.is_base_of(target_type.value(),v.obj()->type)) {
+                            textx::arpeggio::raise(v.obj()->pos,"'", obj_name, "' has not expected type '", target_type.value(), "'");
+                        }
+                    }
                     //std::cout << "FOUND!" << obj_name << "\n";
                     return v.obj();
                 } 
