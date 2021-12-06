@@ -24,6 +24,22 @@ namespace textx::object {
         TEXTX_ASSERT(std::holds_alternative<std::vector<Value>>(data));
         return std::get<std::vector<Value>>(data)[idx];
     }
+    std::vector<Value>::iterator AttributeValue::begin() {
+        TEXTX_ASSERT(std::holds_alternative<std::vector<Value>>(data));
+        return std::get<std::vector<Value>>(data).begin();
+    }
+    std::vector<Value>::iterator AttributeValue::end() {
+        TEXTX_ASSERT(std::holds_alternative<std::vector<Value>>(data));
+        return std::get<std::vector<Value>>(data).end();
+    }
+    std::vector<Value>::const_iterator AttributeValue::begin() const {
+        TEXTX_ASSERT(std::holds_alternative<std::vector<Value>>(data));
+        return std::get<std::vector<Value>>(data).begin();
+    }
+    std::vector<Value>::const_iterator AttributeValue::end() const {
+        TEXTX_ASSERT(std::holds_alternative<std::vector<Value>>(data));
+        return std::get<std::vector<Value>>(data).end();
+    }
     size_t AttributeValue::size() const {
         TEXTX_ASSERT(std::holds_alternative<std::vector<Value>>(data));
         return std::get<std::vector<Value>>(data).size();

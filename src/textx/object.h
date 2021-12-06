@@ -219,6 +219,10 @@ namespace textx::object {
             return std::stoull(str(), nullptr, 0);
         }
 
+        std::vector<Value>::iterator begin();
+        std::vector<Value>::iterator end();
+        std::vector<Value>::const_iterator begin() const;
+        std::vector<Value>::const_iterator end() const;
         const AttributeValue& operator[](std::string name) const;
         AttributeValue& operator[](std::string name);
         const Value& operator[](size_t idx) const;
