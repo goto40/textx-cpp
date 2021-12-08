@@ -61,4 +61,3 @@
  * TODO handle referenced/included metamodels, in Metamodel::ref
  * TODO importURI
  * RREL
- * unordered group with choices
