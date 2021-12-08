@@ -1,7 +1,7 @@
 # textx-cpp
 
 This is an interpreter for [textx](https://github.com/textX/textX) grammars written in C++.
-It still has some limitation, but simple grammars can be parsed (see below, [open points](#openpoints)).
+It still has some limitations (see below, [open points](#openpoints)), but simple grammars can be parsed.
  * This is a just-for-fun project and a proof of concept...
  * Example: see [test/model.t.cpp](test/model.t.cpp)
 
