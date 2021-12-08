@@ -89,7 +89,12 @@ TEST_CASE("model_abstract_rule1", "[textx/metamodel]")
             CHECK_THROWS(mm->is_base_of("Unknown","Point"));
             CHECK_THROWS(mm->is_base_of("Point","Unknown"));
 
-            auto m = mm->model_from_str("Point(1,2), Circle(Point(333,4.5),9), Line(Point(0,0),Point(1,1))");
+            auto m = mm->model_from_str(R"(
+                Point(1,2),
+                Circle(Point(333,4.5),9),
+                Line(Point(0,0),Point(1,1))
+            )");
+            
             CHECK( (*mm)["Model"]["shapes"].cardinality == textx::AttributeCardinality::list );
             CHECK( (*mm)["Model"]["shapes"].type.value() == "Shape" );
             CHECK( (*m)["shapes"].size() == 3 );

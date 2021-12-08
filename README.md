@@ -5,6 +5,36 @@ It still has some limitation, but simple grammars can be parsed (see below, [ope
  * This is a just-for-fun project and a proof of concept...
  * Example: see [test/model.t.cpp](test/model.t.cpp)
 
+```c++
+  auto grammar1 = R"#(
+      Model: shapes+=Shape[','];
+      Shape: Point|Circle|Line;
+      Point: 'Point' '(' x=NUMBER ',' y=NUMBER ')';
+      Circle: 'Circle' '(' 
+        center=Point
+        ','
+        r=NUMBER 
+      ')';
+      Line: 'Line' '(' 
+        p1=Point
+        ','
+        p2=Point
+      ')';
+  )#";
+
+  auto mm = textx::metamodel_from_str(grammar1);
+  auto m = mm->model_from_str(R"(
+      Point(1,2),
+      Circle(Point(333,4.5),9),
+      Line(Point(0,0),Point(1,1))
+  )");
+
+  CHECK( (*m)["shapes"].size() == 3 );
+  CHECK( (*m)["shapes"][0].obj()->type == "Point" );
+  CHECK( (*m)["shapes"][1].obj()->type == "Circle" );
+  CHECK( (*m)["shapes"][1]["center"]["x"].i() == 333 );
+  CHECK( (*m)["shapes"][2].obj()->type == "Line" );
+```
 ## Implementation Details
 
  * arpeggio.h
