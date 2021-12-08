@@ -259,13 +259,15 @@ namespace textx::object {
             // nothing
         }
         else if (v.is_pure_obj()) {
-            for (auto &[k,av]: v.obj()->attributes) {
-                if (std::holds_alternative<textx::object::Value>(av.data)) {
-                    traverse(std::get<textx::object::Value>(av.data),f);
-                }
-                else {
-                    for (auto &iv: std::get<std::vector<textx::object::Value>>(av.data)) {
-                        traverse(iv,f);
+            if (v.obj()!=nullptr) {
+                for (auto &[k,av]: v.obj()->attributes) {
+                    if (std::holds_alternative<textx::object::Value>(av.data)) {
+                        traverse(std::get<textx::object::Value>(av.data),f);
+                    }
+                    else {
+                        for (auto &iv: std::get<std::vector<textx::object::Value>>(av.data)) {
+                            traverse(iv,f);
+                        }
                     }
                 }
             }

@@ -413,7 +413,7 @@ TEST_CASE("unordered_group_optional1", "[arpeggio]")
     CHECK(grammar.parse_or_throw("A"));
     CHECK(grammar.parse_or_throw("B"));
     CHECK(!grammar.parse("BAA")); // more than the allowed elements --> error
-    CHECK(!grammar.parse("")); // all optionals unmatched --> error
+    CHECK(grammar.parse("")); // all optionals unmatched --> ok
 
     auto match = grammar.parse_or_throw("B");
     CHECK(match.value().children[0].children.size()==1);

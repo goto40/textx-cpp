@@ -125,15 +125,35 @@ TEST_CASE("model_ordered_choice_regression1", "[textx/model]")
     }
     {
         auto grammar = R"(
-            Model: (a?='A' b?='B')#;
+            Model: (a?='A' (b=BObj)?)#;
+            BObj: x='B';
         )";
         {
             auto mm = textx::metamodel_from_str(grammar);
-            CHECK(mm->model_from_str("A B"));
-            CHECK(mm->model_from_str("B A"));
-            CHECK(mm->model_from_str("A"));
+            {
+                auto m = mm->model_from_str("A B");
+                CHECK(m);
+                CHECK(m->val()["a"].is_str());
+                CHECK(m->val()["a"].str()=="A");
+                CHECK(m->val()["b"].is_obj());
+                CHECK(m->val()["b"]["x"].str()=="B");
+            }
+            {
+                auto m = mm->model_from_str("B A");
+                CHECK(m);
+                CHECK(m->val()["a"].is_str());
+                CHECK(m->val()["a"].str()=="A");
+                CHECK(m->val()["b"].is_obj());
+                CHECK(m->val()["b"]["x"].str()=="B");
+            }
             CHECK(mm->model_from_str("B"));
-            CHECK_THROWS(mm->model_from_str(""));
+            CHECK(mm->model_from_str("A"));
+            auto m = mm->model_from_str("");
+            CHECK(m);
+            CHECK(m->val()["a"].is_str());
+            CHECK(m->val()["a"].str()=="");
+            CHECK(m->val()["b"].is_obj());
+            CHECK(m->val()["b"].obj()==nullptr);
         }
     }
 }

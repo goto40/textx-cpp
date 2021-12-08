@@ -48,7 +48,7 @@ namespace textx {
             }
             else if (info.cardinality == AttributeCardinality::scalar) {
                 obj->create_attribute_if_not_present(attr_name);
-                //std::cout << "create scalar " << attr_name << "\n";
+                //std::cout << "create scalar " << attr_name << " from " << m0 <<   "\n";
                 if (info.is_text()) {
                     std::string t="";
                     if (info.type.has_value()) {
@@ -90,6 +90,7 @@ namespace textx {
                 }
                 else { // no reference
                     if (mm[rule_name][attr_name].cardinality==AttributeCardinality::scalar) {
+                        //std::cout << "create " << attr_name << " from " << val << "\n";
                         (*obj)[attr_name].data = create_model(text, val, mm, obj);
                     }
                     else {

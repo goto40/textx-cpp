@@ -283,8 +283,22 @@ namespace textx
                     }
                 }
                 result.update_end(pos);
-                if (n==0) return std::nullopt; // special case, nothing was found
-                else if (n_req == patterns.size()-optional_elements_n) return result;
+                
+                /* TODO remove comments below...
+
+                "... If all elements are optional then even if there is no match of any of the 
+                optional parts the whole match still succeeds. At least that's how it should
+                work and a quick test confirms it. The only issue I noticed is that if the
+                whole unordered match is contained in a single common rule than a reference 
+                to that rule will return None in case all optionals are not matched. Is this 
+                "the correct" behavior I don't know. It can be either this or to return an 
+                object where all attributes are None. We can investigate this as a separate 
+                issue if needed.
+                */
+                /*if (n==0) return std::nullopt; // special case, nothing was found
+                else*/ 
+                
+                if (n_req == patterns.size()-optional_elements_n) return result;
                 else return std::nullopt; }, MatchType::unordered_group});
         }
 
