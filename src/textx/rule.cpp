@@ -51,17 +51,20 @@ namespace {
                 TEXTX_ASSERT_EQUAL(choice.children[1].type(), ta::MatchType::sequence);
                 TEXTX_ASSERT_EQUAL(choice.children[1].children.size(),2);
 
-                TEXTX_ASSERT_EQUAL(choice.children[1].children[1].children.size(),0); // only one entry + 0*zero_or_more
-                // if(choice.children[1].children[1].children.size()>0) {
-                //     // we have a choice here (e.g., "a|b|c") , nothing to permutate
-                //     // TODO: discuss / document
-                //     part_of_expression = transform_match2pattern(parsestate, mm, rule, expr.children[0].children[1].children[0]);
-                // }
-                // else {
-                auto &seq = choice.children[1].children[0]; // "(" .#1. ")"
-                std::vector<ta::Pattern> patterns;
-                for(auto &c : seq.children) {
-                    patterns.push_back(transform_match2pattern( parsestate, mm, rule, c));
+                std::vector<ta::Pattern> patterns={};
+                if(choice.children[1].children[1].children.size()>0) {
+                    // we have a choice here (e.g., "a|b|c")
+                    auto &seq = choice.children[1].children[0]; // "(" .#1. ")"
+                    patterns.push_back(transform_match2pattern(parsestate, mm, rule, seq));
+                    for(auto &c : choice.children[1].children[1].children) {
+                        patterns.push_back(transform_match2pattern( parsestate, mm, rule, c.children[1])); // see lang.cpp, use sequence after '|'
+                    }
+                }
+                else {
+                    auto &seq = choice.children[1].children[0]; // "(" .#1. ")"
+                    for(auto &c : seq.children) {
+                        patterns.push_back(transform_match2pattern( parsestate, mm, rule, c));
+                    }
                 }
                 if (std::holds_alternative<ta::Pattern>(repeat_modifiers)) {
                     part_of_expression = ta::unordered_group(patterns, std::get<ta::Pattern>(repeat_modifiers));

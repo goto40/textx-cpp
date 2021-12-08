@@ -157,3 +157,25 @@ TEST_CASE("model_ordered_choice_regression1", "[textx/model]")
         }
     }
 }
+
+TEST_CASE("model_ordered_choice2", "[textx/model]")
+{
+    std::ostringstream text1, text2;
+    {
+        auto mm = textx::metamodel_from_str("Model: ('A'|('B' 'C'))#;");
+        auto m = mm->model_from_str("B C A");
+        text1 << m << "\n";
+        CHECK(m);
+        CHECK(mm->model_from_str("A B C"));
+        CHECK_THROWS(mm->model_from_str("B A C"));
+    }
+    {
+        auto mm = textx::metamodel_from_str("Model: ('A' ('B' 'C'))#;");
+        auto m = mm->model_from_str("B C A");
+        text2 << m << "\n";
+        CHECK(m);
+        CHECK(mm->model_from_str("A B C"));
+        CHECK_THROWS(mm->model_from_str("B A C"));
+    }
+    CHECK(text1.str() == text2.str()); // no difference between with or without '|'
+}

@@ -62,3 +62,4 @@
  * TODO importURI
  * RREL
  * unordered group with choices
+ * boolean assignment (at the moment we have null/"" or the value instead of true/false)
