@@ -3,7 +3,10 @@
 This is an interpreter for [textx](https://github.com/textX/textX) grammars written in C++.
 It still has some limitations (see below, [open points](#openpoints)), but simple grammars can be parsed.
  * This is a just-for-fun project and a proof of concept...
- * Example: see [test/model.t.cpp](test/model.t.cpp)
+ * Examples, see: 
+   - [test/model.t.cpp](test/model.t.cpp)
+   - [test/scoping.t.cpp](test/scoping.t.cpp)
+   - [test/metamodel.t.cpp](test/metamodel.t.cpp)
 
 ```c++
   auto grammar1 = R"#(
