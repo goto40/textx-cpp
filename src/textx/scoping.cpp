@@ -18,6 +18,9 @@ namespace textx::scoping {
             else if (v.is_ref()) {
                 // nothing
             }
+            else if (v.is_boolean()) {
+                // nothing
+            }
             else if (v.is_pure_obj()) {
                 // std::cout << "resolve ... " << v.obj()->type << "\n";
                 // if (v.obj()->has_attr("name")) {
@@ -47,7 +50,7 @@ namespace textx::scoping {
                 }
             }
             else {
-                textx::arpeggio::raise(v.pos, "unexpected situaltion");
+                textx::arpeggio::raise(v.pos, "unexpected situaltion (scoping)");
             }
 
             return nullptr;

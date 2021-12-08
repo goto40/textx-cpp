@@ -12,6 +12,9 @@ namespace textx {
                 if (assignment_op=="*=" || assignment_op=="+=") {
                     return textx::AttributeCardinality::list;
                 }
+                else if (assignment_op=="?=") {
+                    return textx::AttributeCardinality::boolean;
+                }
             }
             if (match.name.value() == "rule://repeatable_expr") {
                 if (match.children[1].children.size()>0) {
@@ -143,8 +146,12 @@ namespace textx::parsetree {
 
     textx::AttributeCardinality RuleInfo::get_attribute_cardinality(std::string name) {
         TEXTX_ASSERT(attribute_info.count(name));
+        bool is_boolean_involved = false;
         std::function<size_t(textx::arpeggio::Match&,size_t)> traverse;
         traverse = [&](textx::arpeggio::Match& m,size_t c) -> size_t {
+            if (get_multiplicity(m)==AttributeCardinality::boolean) {
+                is_boolean_involved = true;
+            }
             if (get_multiplicity(m)==AttributeCardinality::list) {
                 c = 2; // more than 1 --> list
             }
@@ -170,10 +177,16 @@ namespace textx::parsetree {
         size_t ret = traverse(match, 1);
         //std::cout << match << "\n=="<< ret << " for " << name << "\n\n";
         if (ret>1) {
+            TEXTX_ASSERT(!is_boolean_involved, "only one boolean assignment is allowed (no list of booleans)");
             return AttributeCardinality::list;
         }
         else {
-            return AttributeCardinality::scalar;
+            if (is_boolean_involved)  {
+                return AttributeCardinality::boolean;
+            }
+            else {
+                return AttributeCardinality::scalar;
+            }
         }
     }
 

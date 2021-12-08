@@ -34,11 +34,16 @@ namespace textx::object {
 
     using MatchText = std::pair<std::string, std::string>; /// first: text, second: rule-type
     struct Value {
-        std::variant<MatchText, std::shared_ptr<Object>, ObjectRef> data;
+        std::variant<MatchText, std::shared_ptr<Object>, ObjectRef, bool> data;
         textx::arpeggio::TextPosition pos;
         Value(MatchText x,textx::arpeggio::TextPosition pos) : data{x},pos{pos} {}
         Value(std::shared_ptr<Object> x,textx::arpeggio::TextPosition pos) : data{x},pos{pos} {}
         Value(ObjectRef x,textx::arpeggio::TextPosition pos) : data{std::move(x)},pos{pos} {}
+        Value(bool x,textx::arpeggio::TextPosition pos) : data{x},pos{pos} {}
+
+        bool is_boolean() const {
+            return std::holds_alternative<bool>(data);
+        }
 
         bool is_ref() const {
             return std::holds_alternative<ObjectRef>(data);
@@ -56,6 +61,11 @@ namespace textx::object {
         }
         bool is_str() const {
             return std::holds_alternative<MatchText>(data);
+        }
+
+        bool boolean() {
+            TEXTX_ASSERT(std::holds_alternative<bool>(data), "no boolean");
+            return std::get<bool>(data);
         }
 
         ObjectRef& ref() {
@@ -129,6 +139,14 @@ namespace textx::object {
             std::get<std::vector<Value>>(data).push_back(v);
         }
 
+        bool is_boolean() const {
+            if (!std::holds_alternative<Value>(data)) {
+                return false;
+            }
+            auto &value = std::get<Value>(data);
+            return std::holds_alternative<bool>(value.data);
+        }
+
         bool is_ref() const {
             if (!std::holds_alternative<Value>(data)) {
                 return false;
@@ -161,6 +179,13 @@ namespace textx::object {
         }
         bool is_list() const {
             return std::holds_alternative<std::vector<Value>>(data);
+        }
+
+        bool boolean() {
+            TEXTX_ASSERT(std::holds_alternative<Value>(data));
+            auto &value = std::get<Value>(data);
+            TEXTX_ASSERT(std::holds_alternative<bool>(value.data), "no boolean");
+            return std::get<bool>(value.data);
         }
 
         ObjectRef& ref() {
@@ -258,6 +283,9 @@ namespace textx::object {
         else if (v.is_ref()) {
             // nothing
         }
+        else if (v.is_boolean()) {
+            // nothing
+        }
         else if (v.is_pure_obj()) {
             if (v.obj()!=nullptr) {
                 for (auto &[k,av]: v.obj()->attributes) {
@@ -273,7 +301,7 @@ namespace textx::object {
             }
         }
         else {
-            textx::arpeggio::raise(v.pos, "unexpected situation");
+            textx::arpeggio::raise(v.pos, "unexpected situation (traversing the object)");
         }
     }
 }

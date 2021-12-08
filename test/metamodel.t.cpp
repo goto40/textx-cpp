@@ -394,3 +394,25 @@ TEST_CASE("metamodel_simple_obj_ref1", "[textx/metamodel]")
         CHECK(mm["Model"]["a2"].type.value() == "A2");
     }
 }
+
+TEST_CASE("metamodel_boolean_assignment", "[textx/metamodel]")
+{
+    {
+        auto grammar1 = R"(
+            Model: 'value' a?='A' b?='B';
+        )";
+        CHECK(textx::metamodel_from_str(grammar1));
+    }
+    {
+        auto grammar1 = R"(
+            Model: 'value' a?='A' a?='B';
+        )";
+        CHECK_THROWS_WITH(textx::metamodel_from_str(grammar1), Catch::Matchers::Contains("no list of booleans"));
+    }
+    {
+        auto grammar1 = R"(
+            Model: 'value' (a?='A')*;
+        )";
+        CHECK_THROWS_WITH(textx::metamodel_from_str(grammar1), Catch::Matchers::Contains("no list of booleans"));
+    }
+}

@@ -8,7 +8,7 @@
 namespace textx {
     class Metamodel;
 
-    enum class AttributeCardinality {scalar, list};
+    enum class AttributeCardinality {scalar, list, boolean};
     enum class RuleType {
         illegal,
         common,    /// Common rules are rules that contain at least one assignment, i.e., they have attributes defined.  

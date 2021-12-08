@@ -133,27 +133,27 @@ TEST_CASE("model_ordered_choice_regression1", "[textx/model]")
             {
                 auto m = mm->model_from_str("A B");
                 CHECK(m);
-                CHECK(m->val()["a"].is_str());
-                CHECK(m->val()["a"].str()=="A");
-                CHECK(m->val()["b"].is_obj());
-                CHECK(m->val()["b"]["x"].str()=="B");
+                CHECK(m->val()["a"].is_boolean());
+                CHECK(m->val()["a"].boolean());
+                CHECK(m->val()["b"].is_boolean());
+                CHECK(m->val()["b"].boolean());
             }
             {
                 auto m = mm->model_from_str("B A");
                 CHECK(m);
-                CHECK(m->val()["a"].is_str());
-                CHECK(m->val()["a"].str()=="A");
-                CHECK(m->val()["b"].is_obj());
-                CHECK(m->val()["b"]["x"].str()=="B");
+                CHECK(m->val()["a"].is_boolean());
+                CHECK(m->val()["a"].boolean());
+                CHECK(m->val()["b"].is_boolean());
+                CHECK(m->val()["b"].boolean());
             }
             CHECK(mm->model_from_str("B"));
             CHECK(mm->model_from_str("A"));
             auto m = mm->model_from_str("");
             CHECK(m);
-            CHECK(m->val()["a"].is_str());
-            CHECK(m->val()["a"].str()=="");
-            CHECK(m->val()["b"].is_obj());
-            CHECK(m->val()["b"].obj()==nullptr);
+            CHECK(m->val()["a"].is_boolean());
+            CHECK(!m->val()["a"].boolean());
+            CHECK(m->val()["b"].is_boolean());
+            CHECK(!m->val()["b"].boolean());
         }
     }
 }
