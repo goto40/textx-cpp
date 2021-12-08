@@ -38,8 +38,8 @@ TEST_CASE("model_simple2", "[textx/metamodel]")
             auto mm = textx::metamodel_from_str(grammar1);
             auto m1 = mm->model_from_str("123");
             auto m2 = mm->model_from_str("'123'");
-            CHECK(m1->val()["x"].i() == 123);
-            CHECK(m2->val()["x"].str() == "'123'");
+            CHECK((*m1)["x"].i() == 123);
+            CHECK((*m2)["x"].str() == "'123'");
         }
     }
 }
@@ -55,14 +55,14 @@ TEST_CASE("model_simple3", "[textx/metamodel]")
         {
             auto mm = textx::metamodel_from_str(grammar1);
             auto m1 = mm->model_from_str("(1,2), (3,4.5)");
-            CHECK(std::get<std::shared_ptr<textx::object::Object>>(m1->val()["points"][0].data)->type == "Point");
-            CHECK(m1->val()["points"].size() == 2);
-            CHECK(m1->val()["points"][0]["x"].i() == 1);
-            CHECK(m1->val()["points"][0]["y"].i() == 2);
-            CHECK(m1->val()["points"][1]["x"].i() == 3);
-            CHECK(m1->val()["points"][1]["y"].str() == "4.5");
+            CHECK(std::get<std::shared_ptr<textx::object::Object>>((*m1)["points"][0].data)->type == "Point");
+            CHECK((*m1)["points"].size() == 2);
+            CHECK((*m1)["points"][0]["x"].i() == 1);
+            CHECK((*m1)["points"][0]["y"].i() == 2);
+            CHECK((*m1)["points"][1]["x"].i() == 3);
+            CHECK((*m1)["points"][1]["y"].str() == "4.5");
             //TODO: check if int was correctly converted: 
-            // CHECK_THROWS(m1->val()["points"][1]["y"].i() == 4);
+            // CHECK_THROWS((*m1)["points"][1]["y"].i() == 4);
         }
     }
 }
@@ -92,11 +92,11 @@ TEST_CASE("model_abstract_rule1", "[textx/metamodel]")
             auto m = mm->model_from_str("Point(1,2), Circle(Point(333,4.5),9), Line(Point(0,0),Point(1,1))");
             CHECK( (*mm)["Model"]["shapes"].cardinality == textx::AttributeCardinality::list );
             CHECK( (*mm)["Model"]["shapes"].type.value() == "Shape" );
-            CHECK( m->val()["shapes"].size() == 3 );
-            CHECK( m->val()["shapes"][0].obj()->type == "Point" );
-            CHECK( m->val()["shapes"][1].obj()->type == "Circle" );
-            CHECK( m->val()["shapes"][1]["center"]["x"].i() == 333 );
-            CHECK( m->val()["shapes"][2].obj()->type == "Line" );
+            CHECK( (*m)["shapes"].size() == 3 );
+            CHECK( (*m)["shapes"][0].obj()->type == "Point" );
+            CHECK( (*m)["shapes"][1].obj()->type == "Circle" );
+            CHECK( (*m)["shapes"][1]["center"]["x"].i() == 333 );
+            CHECK( (*m)["shapes"][2].obj()->type == "Line" );
         }
     }
 }
@@ -133,27 +133,27 @@ TEST_CASE("model_ordered_choice_regression1", "[textx/model]")
             {
                 auto m = mm->model_from_str("A B");
                 CHECK(m);
-                CHECK(m->val()["a"].is_boolean());
-                CHECK(m->val()["a"].boolean());
-                CHECK(m->val()["b"].is_boolean());
-                CHECK(m->val()["b"].boolean());
+                CHECK((*m)["a"].is_boolean());
+                CHECK((*m)["a"].boolean());
+                CHECK((*m)["b"].is_boolean());
+                CHECK((*m)["b"].boolean());
             }
             {
                 auto m = mm->model_from_str("B A");
                 CHECK(m);
-                CHECK(m->val()["a"].is_boolean());
-                CHECK(m->val()["a"].boolean());
-                CHECK(m->val()["b"].is_boolean());
-                CHECK(m->val()["b"].boolean());
+                CHECK((*m)["a"].is_boolean());
+                CHECK((*m)["a"].boolean());
+                CHECK((*m)["b"].is_boolean());
+                CHECK((*m)["b"].boolean());
             }
             CHECK(mm->model_from_str("B"));
             CHECK(mm->model_from_str("A"));
             auto m = mm->model_from_str("");
             CHECK(m);
-            CHECK(m->val()["a"].is_boolean());
-            CHECK(!m->val()["a"].boolean());
-            CHECK(m->val()["b"].is_boolean());
-            CHECK(!m->val()["b"].boolean());
+            CHECK((*m)["a"].is_boolean());
+            CHECK(!(*m)["a"].boolean());
+            CHECK((*m)["b"].is_boolean());
+            CHECK(!(*m)["b"].boolean());
         }
     }
 }
