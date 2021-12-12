@@ -73,10 +73,20 @@ namespace textx::scoping {
         auto mm = m->tx_metamodel();
         auto v_obj_name = separate_name(obj_name);
 
+        // own model
         while(origin!=nullptr) {
             auto res = dot_separated_name_search(origin, v_obj_name, target_type);
             if (res) return res;
             origin = origin->parent();
+        }
+        // build in models:
+        for (auto im: mm->tx_builtin_models()) {
+            if (im->val().is_obj()) {
+                origin = im->val().obj();
+                std::cout << origin << "\n";
+                auto res = dot_separated_name_search(origin, v_obj_name, target_type);
+                if (res) return res;
+            }
         }
         return nullptr;
     }

@@ -141,6 +141,42 @@ TEST_CASE("model_ref_fqn", "[textx/scoping]")
     }
 }
 
+TEST_CASE("model_ref_fqn_with_builtin", "[textx/scoping]")
+{
+    auto grammar1 = R"#(
+        Model: packages+=Package;
+        Package: 'package' name=ID
+            'begin'
+                ( packages=Package | items=Item | usings=Using )*
+            'end';
+        Item: 'item' name=ID;
+        Using: 'using' name=ID '=' ref=[ItemOrPackage|FQN];
+        FQN: ID ('.' ID)*;
+        Comment: /\/\/.*?$/;
+        ItemOrPackage: Item|Package;
+    )#";
+
+    auto modeltext = R"(
+        package p1 begin
+            item A
+            item C
+            using X = p1.builtin.X
+        end
+    )";
+    auto modeltext_builtin = R"(
+        package p1 begin
+            package builtin begin
+                item X
+            end
+        end
+    )";
+
+    auto mm = textx::metamodel_from_str(grammar1);
+    mm->set_resolver("*.*", std::make_unique<textx::scoping::FQNRefResolver>());
+    mm->add_builtin_model(mm->model_from_str(modeltext_builtin));
+    CHECK_NOTHROW(mm->model_from_str(modeltext));
+}
+
 TEST_CASE("model_ref_fqn_bad_target_type", "[textx/scoping]")
 {
     {
