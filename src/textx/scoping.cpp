@@ -84,7 +84,7 @@ namespace textx::scoping {
             auto im = wim.lock();
             if (im->val().is_obj()) {
                 origin = im->val().obj();
-                std::cout << origin << "\n";
+                //std::cout << origin << "\n";
                 auto res = dot_separated_name_search(origin, v_obj_name, target_type);
                 if (res) return res;
             }

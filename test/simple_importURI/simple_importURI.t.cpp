@@ -4,7 +4,7 @@
 #include <sstream>
 #include <filesystem>
 
-TEST_CASE("simple_importURI", "[textx/simple_importURI]")
+TEST_CASE("simple_importURI1", "[textx/simple_importURI]")
 {
     auto p_grammar = std::filesystem::path(__FILE__).parent_path().append("metamodel.tx");
     auto mm = textx::metamodel_from_file(p_grammar);
