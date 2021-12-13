@@ -38,7 +38,7 @@ namespace textx {
             return model_from_file(p, true);
         }
 
-        const auto& tx_builtin_models() const { return builtin_models; }
+        //const auto& tx_builtin_models() const { return builtin_models; }
         void add_builtin_model(std::shared_ptr<textx::Model> m) { builtin_models.push_back(std::move(m)); }
 
         const textx::scoping::RefResolver& get_resolver(std::string rule_name, std::string attr_name) const {

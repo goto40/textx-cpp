@@ -156,10 +156,11 @@ namespace textx {
                 }
             });
  
-            for (auto& builtin_model: tx_builtin_models()) {
+            for (auto& builtin_model: builtin_models) {
                 ret->add_imported_model(builtin_model);
             }
 
+            // TODO recusrive resolution
             if(ret->resolve_references()>0) {
                 std::stringstream error_text;
                 textx::arpeggio::TextPosition pos;
