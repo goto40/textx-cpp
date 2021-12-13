@@ -150,17 +150,11 @@ namespace textx {
         textx::object::traverse(root,[&](textx::object::Value& v) -> void {
             if (v.is_ref()) {
                 if (v.ref().obj.lock() == nullptr) {
-                    //resolve ref:
-                    //std::cout << "searching " << v.ref().name << ".\n";
                     v.ref().obj = mm->get_resolver(v.ref().rule, v.ref().attr)
                         .resolve(v.ref().parent.lock(),v.ref().name, v.ref().target_type);
                     if (v.ref().obj.lock() == nullptr) {
-                        //std::cout << "not found.\n";
                         unresolved++;
                     }
-                    // else {
-                    //     std::cout << "found.\n";
-                    // }
                 }
             }
         });

@@ -160,18 +160,20 @@ namespace textx {
                 ret->add_imported_model(builtin_model);
             }
 
-            // TODO recusrive resolution
-            if(ret->resolve_references()>0) {
-                std::stringstream error_text;
-                textx::arpeggio::TextPosition pos;
-                textx::object::traverse(ret->val(),[&](textx::object::Value& v) {
-                    if (v.is_ref() && !v.ref().obj.lock()) {
-                        error_text << "ref '" << v.ref().name << "' not found at " << v.pos << ";\n";
-                        pos = v.pos;
-                    }
-                });
-                //std::cout << ret->val() << "\n";
-                textx::arpeggio::raise(pos, error_text.str());
+            if (is_main_model) {
+                // TODO recursive resolution
+                if(ret->resolve_references()>0) {
+                    std::stringstream error_text;
+                    textx::arpeggio::TextPosition pos;
+                    textx::object::traverse(ret->val(),[&](textx::object::Value& v) {
+                        if (v.is_ref() && !v.ref().obj.lock()) {
+                            error_text << "ref '" << v.ref().name << "' not found at " << v.pos << ";\n";
+                            pos = v.pos;
+                        }
+                    });
+                    //std::cout << ret->val() << "\n";
+                    textx::arpeggio::raise(pos, error_text.str());
+                }
             }
             return ret;
         }
