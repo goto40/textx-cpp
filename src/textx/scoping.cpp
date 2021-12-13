@@ -60,7 +60,7 @@ namespace textx::scoping {
             auto p = traverse(m->val());
             if (p) return p;
         }
-        // build in models:
+        // imported/builtin models:
         for (auto im: m->tx_imported_models()) {
             auto p = traverse(im.lock()->val());
             if (p) return p;
@@ -79,7 +79,7 @@ namespace textx::scoping {
             if (res) return res;
             origin = origin->parent();
         }
-        // build in models:
+        // imported/builtin models:
         for (auto wim: m->tx_imported_models()) {
             auto im = wim.lock();
             if (im->val().is_obj()) {

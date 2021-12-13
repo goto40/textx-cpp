@@ -39,7 +39,7 @@ TEST_CASE("model_simple2", "[textx/metamodel]")
             auto m1 = mm->model_from_str("123");
             auto m2 = mm->model_from_str("'123'");
             CHECK((*m1)["x"].i() == 123);
-            CHECK((*m2)["x"].str() == "'123'");
+            CHECK((*m2)["x"].str() == "123"); // string is decoded.
         }
     }
 }

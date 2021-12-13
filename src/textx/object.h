@@ -102,7 +102,8 @@ namespace textx::object {
 
         std::string str() const {
             TEXTX_ASSERT(std::holds_alternative<MatchText>(data));
-            if (std::get<MatchText>(data).first=="STRING") {
+            if (std::get<MatchText>(data).second=="STRING") {
+                // TODO handle \n, \" etc...
                 return std::get<MatchText>(data).first.substr(1,std::get<MatchText>(data).first.size()-2);
             }
             else {

@@ -147,11 +147,20 @@ namespace textx {
             //std::cout << parsetree.value() << "\n";
             ret->init(text, *parsetree, shared_from_this());
 
+            auto basedir = std::filesystem::path(filename).parent_path();
+            auto basedir0 = std::filesystem::path(".");
             textx::object::traverse(ret->val(), [&, this](textx::object::Value& v) {
                 if (v.is_pure_obj() && v.obj()->has_attr("importURI")) {
                     TEXTX_ASSERT(v["importURI"].is_str(), "importURI must be a string");
-                    auto filename = v["importURI"].str();
-                    auto m = model_from_file(filename, false); // unresolved refs
+                    auto import_filename = v["importURI"].str();
+                    auto p = basedir/import_filename;
+                    if (!std::filesystem::exists(p)) {
+                        p = basedir0/import_filename;
+                    }
+                    if (!std::filesystem::exists(p)) {
+                        textx::arpeggio::raise(v.obj()->pos, import_filename+" not found.");
+                    }
+                    auto m = model_from_file(p, false); // unresolved refs
                     ret->add_imported_model(m);
                 }
             });
@@ -196,7 +205,7 @@ namespace textx {
         std::stringstream modeltext;
         modeltext << file.rdbuf();
         auto m = model_from_str(modeltext.str(), abspath.string(), is_main_model);
-        known_models[abspath.string()] = m;
+        known_models[abspath.string()] = m; // owning...
         return m;
     }
 
