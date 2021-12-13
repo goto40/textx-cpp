@@ -169,7 +169,7 @@ TEST_CASE("model_ordered_choice2", "[textx/model]")
     {
         auto mm = textx::metamodel_from_str("Model: ('A'|('B' 'C'))#;");
         auto m = mm->model_from_str("B C A");
-        text1 << m << "\n";
+        text1 << m->val() << "\n";
         CHECK(m);
         CHECK(mm->model_from_str("A B C"));
         CHECK_THROWS(mm->model_from_str("B A C"));
@@ -177,7 +177,7 @@ TEST_CASE("model_ordered_choice2", "[textx/model]")
     {
         auto mm = textx::metamodel_from_str("Model: ('A' ('B' 'C'))#;");
         auto m = mm->model_from_str("B C A");
-        text2 << m << "\n";
+        text2 << m->val() << "\n";
         CHECK(m);
         CHECK(mm->model_from_str("A B C"));
         CHECK_THROWS(mm->model_from_str("B A C"));

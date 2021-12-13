@@ -140,12 +140,26 @@ namespace textx {
         }
     }
 
-    std::shared_ptr<textx::Model> Metamodel::model_from_str(std::string_view text, std::string filename) {
+    std::shared_ptr<textx::Model> Metamodel::model_from_str(std::string_view text, std::string filename, bool is_main_model) {
         try {
             auto parsetree = parsetree_from_str(text);
             auto ret=std::shared_ptr<textx::Model>{new textx::Model()}; // call private constructor (new)
             //std::cout << parsetree.value() << "\n";
             ret->init(text, *parsetree, shared_from_this());
+
+            textx::object::traverse(ret->val(), [&, this](textx::object::Value& v) {
+                if (v.is_pure_obj() && v.obj()->has_attr("importURI")) {
+                    TEXTX_ASSERT(v["importURI"].is_str(), "importURI must be a string");
+                    auto filename = v["importURI"].str();
+                    auto m = model_from_file(filename, false); // unresolved refs
+                    ret->add_imported_model(m);
+                }
+            });
+ 
+            for (auto& builtin_model: tx_builtin_models()) {
+                ret->add_imported_model(builtin_model);
+            }
+
             if(ret->resolve_references()>0) {
                 std::stringstream error_text;
                 textx::arpeggio::TextPosition pos;
@@ -170,11 +184,17 @@ namespace textx {
         }
     }
 
-    std::shared_ptr<textx::Model> Metamodel::model_from_file(std::filesystem::path p) {
-        std::ifstream file(p);
+    std::shared_ptr<textx::Model> Metamodel::model_from_file(std::filesystem::path p, bool is_main_model) {
+        auto abspath = std::filesystem::canonical(p);
+        if (known_models.count(abspath.string())) {
+            return known_models[abspath.string()]; // cached model
+        }
+        std::ifstream file(abspath);
         std::stringstream modeltext;
         modeltext << file.rdbuf();
-        return model_from_str(modeltext.str(), p);
+        auto m = model_from_str(modeltext.str(), abspath.string(), is_main_model);
+        known_models[abspath.string()] = m;
+        return m;
     }
 
     bool Metamodel::is_base_of(std::string t1, std::string t2) const {

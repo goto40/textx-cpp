@@ -20,6 +20,9 @@ namespace textx {
         std::unique_ptr<textx::scoping::RefResolver> default_resolver = std::make_unique<textx::scoping::PlainNameRefResolver>();
         std::unordered_map<std::string, std::unique_ptr<textx::scoping::RefResolver>> resolver = {};
         std::vector<std::shared_ptr<textx::Model>> builtin_models={};
+        std::shared_ptr<textx::Model> model_from_str(std::string_view text, std::string filename, bool is_main_model);
+        std::shared_ptr<textx::Model> model_from_file(std::filesystem::path p, bool is_main_model);
+        std::unordered_map<std::string, std::shared_ptr<textx::Model>> known_models;
 
         public:
         Metamodel(std::string_view grammar, bool is_main_grammar=true, bool include_basic_metamodel=true, std::string filename="<str>");
@@ -28,8 +31,12 @@ namespace textx {
         const Rule& operator[](std::string name) const;
         bool has_rule(std::string name) const;
         textx::arpeggio::Pattern ref(std::string name);
-        std::shared_ptr<textx::Model> model_from_str(std::string_view text, std::string filename="<str>");
-        std::shared_ptr<textx::Model> model_from_file(std::filesystem::path p);
+        std::shared_ptr<textx::Model> model_from_str(std::string_view text, std::string filename="<str>") {
+            return model_from_str(text, filename, true);
+        }
+        std::shared_ptr<textx::Model> model_from_file(std::filesystem::path p) {
+            return model_from_file(p, true);
+        }
 
         const auto& tx_builtin_models() const { return builtin_models; }
         void add_builtin_model(std::shared_ptr<textx::Model> m) { builtin_models.push_back(std::move(m)); }

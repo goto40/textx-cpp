@@ -13,6 +13,7 @@ namespace textx {
         textx::object::Value create_model_from_abstract_rule(const std::string& rule_name, const std::string_view text, const textx::arpeggio::Match &m0, textx::Metamodel &mm, std::shared_ptr<textx::object::Object> parent);
         Model() = default;
         void init(const std::string_view text, const textx::arpeggio::Match &parsetree, std::shared_ptr<Metamodel> mm);
+        std::vector<std::weak_ptr<textx::Model>> weak_imported_models;
         
         /** return the number of unresolved refs */
         size_t resolve_references();
@@ -22,6 +23,15 @@ namespace textx {
         textx::object::Value& val() { 
             return root;
         }
+        const auto& tx_imported_models() const { return weak_imported_models; }
+        void add_imported_model(std::shared_ptr<textx::Model> im) { 
+            if (std::find_if(weak_imported_models.begin(), weak_imported_models.end(), [&](auto &x){
+                return x.lock() == im;
+            })==weak_imported_models.end()) {
+                weak_imported_models.push_back(im);
+            }
+        }
+        
         const textx::object::Value& val() const {
             return root;
         }
