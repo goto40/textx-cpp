@@ -43,6 +43,11 @@ It still has some limitations (see below, [open points](#openpoints)), but simpl
 The parsed model is presented as a `textx::Model` object. This model object allows
 to access the model data through the method `val()` (e.g., `model->val()`).
 
+Ownership:
+ * The model allows to access to the underlying metamodel object (stored as a weak reference). 
+ * The model allows to access imported model object (imported with `importURI`; stored as a weak reference). 
+ * The metamodel owns and caches all loaded models.
+
 The model value supports different access options:
  * query the value if it represents a certain type:
    * a string (`is_str()`)
