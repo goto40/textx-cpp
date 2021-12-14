@@ -41,7 +41,7 @@ It still has some limitations (see below, [open points](#openpoints)), but simpl
 ## Model representation
 
 The parsed model is represented as a `textx::Model` object. This model object allows
-to access the model data through the method `val()` (e.g., `model->val()`).
+to access the model data.
 
 Ownership:
  * The model allows to access to the underlying metamodel object (stored as a weak reference). 
