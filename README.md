@@ -40,7 +40,7 @@ It still has some limitations (see below, [open points](#openpoints)), but simpl
 ```
 ## Model representation
 
-The parsed model is presented as a `textx::Model` object. This model object allows
+The parsed model is represented as a `textx::Model` object. This model object allows
 to access the model data through the method `val()` (e.g., `model->val()`).
 
 Ownership:
