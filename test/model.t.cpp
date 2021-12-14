@@ -47,23 +47,19 @@ TEST_CASE("model_simple2", "[textx/metamodel]")
 TEST_CASE("model_simple3", "[textx/metamodel]")
 {
     {
-        auto grammar1 = R"#(
+        auto mm = textx::metamodel_from_str(R"#(
             Model: points+=Point[','];
             Point: "(" x=NUMBER "," y=NUMBER ")";
-        )#";
-
-        {
-            auto mm = textx::metamodel_from_str(grammar1);
-            auto m1 = mm->model_from_str("(1,2), (3,4.5)");
-            CHECK(std::get<std::shared_ptr<textx::object::Object>>((*m1)["points"][0].data)->type == "Point");
-            CHECK((*m1)["points"].size() == 2);
-            CHECK((*m1)["points"][0]["x"].i() == 1);
-            CHECK((*m1)["points"][0]["y"].i() == 2);
-            CHECK((*m1)["points"][1]["x"].i() == 3);
-            CHECK((*m1)["points"][1]["y"].str() == "4.5");
-            //TODO: check if int was correctly converted: 
-            // CHECK_THROWS((*m1)["points"][1]["y"].i() == 4);
-        }
+        )#");
+        auto m1 = mm->model_from_str("(1,2), (3,4.5)");
+        CHECK(std::get<std::shared_ptr<textx::object::Object>>((*m1)["points"][0].data)->type == "Point");
+        CHECK((*m1)["points"].size() == 2);
+        CHECK((*m1)["points"][0]["x"].i() == 1);
+        CHECK((*m1)["points"][0]["y"].i() == 2);
+        CHECK((*m1)["points"][1]["x"].i() == 3);
+        CHECK((*m1)["points"][1]["y"].str() == "4.5");
+        //TODO: check if int was correctly converted: 
+        // CHECK_THROWS((*m1)["points"][1]["y"].i() == 4);
     }
 }
 

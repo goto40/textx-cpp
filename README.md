@@ -38,6 +38,39 @@ It still has some limitations (see below, [open points](#openpoints)), but simpl
   CHECK( (*m)["shapes"][1]["center"]["x"].i() == 333 );
   CHECK( (*m)["shapes"][2].obj()->type == "Line" );
 ```
+## Model representation
+
+The parsed model is presented as a `textx::Model` object. This model object allows
+to access the model data through the method `val()` (e.g., `model->val()`).
+
+The model value supports different access options:
+ * query the value if it represents a certain type:
+   * a string (`is_str()`)
+   * an object = rule instance or a reference to an object (`is_obj()`)
+   * an object, but no reference (`is_pure_obj()`)
+   * a reference (`is_ref()`)
+   * a boolean (`is_boolean()`)
+   * a list (`is_list()`)
+ * direct access through the `operator[]`:
+   * object attribute access: `val["attr-name"]`
+   * list access: `val[index]`
+   * list size: `val.size()`
+   * text: `str()` or text converted to numbers: `boolean()`, `i()`, `u()`, `f()`.
+   * reference: `ref()`
+   * object: `obj()`
+
+Example:
+```
+   auto mm = textx::metamodel_from_str(R"#(
+      Model: points+=Point[','];
+      Point: "(" x=NUMBER "," y=NUMBER ")";
+   )#");
+   auto m1 = mm->model_from_str("(1,2), (3,4.5)");
+   CHECK((*m1)["points"].size() == 2);
+   CHECK((*m1)["points"][1]["x"].i() == 3);
+   CHECK((*m1)["points"][1]["y"].str() == "4.5");
+```
+
 ## Implementation Details
 
  * arpeggio.h
