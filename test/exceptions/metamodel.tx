@@ -1,0 +1,4 @@
+Model:  imports*=Import (defs=Def|refs=Ref)+;
+Def: 'def' name=ID;
+Ref: 'ref' ref=[Def];
+Import: 'import' importURI=STRING;

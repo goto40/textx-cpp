@@ -1,0 +1,2 @@
+Model: a=Rule1;
+Rule1 b=ID;  // missing colon

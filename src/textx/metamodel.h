@@ -25,13 +25,13 @@ namespace textx {
         std::unordered_map<std::string, std::shared_ptr<textx::Model>> known_models;
 
         public:
-        Metamodel(std::string_view grammar, bool is_main_grammar=true, bool include_basic_metamodel=true, std::string filename="<str>");
+        Metamodel(std::string_view grammar, bool is_main_grammar=true, bool include_basic_metamodel=true, std::string filename="");
         bool is_base_of(std::string t1, std::string t2) const;
         Rule& operator[](std::string name);
         const Rule& operator[](std::string name) const;
         bool has_rule(std::string name) const;
         textx::arpeggio::Pattern ref(std::string name);
-        std::shared_ptr<textx::Model> model_from_str(std::string_view text, std::string filename="<str>") {
+        std::shared_ptr<textx::Model> model_from_str(std::string_view text, std::string filename="") {
             return model_from_str(text, filename, true);
         }
         std::shared_ptr<textx::Model> model_from_file(std::filesystem::path p) {

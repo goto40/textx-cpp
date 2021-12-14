@@ -74,18 +74,32 @@ namespace textx
         struct Exception : std::exception {
             TextPosition pos;
             std::string error;
-            std::string filename="";
-            Exception(TextPosition pos, std::string error) : pos{pos}, error{error} {}
+            std::string filename;
+            Exception(std::string filename, TextPosition pos, std::string error) : pos{pos}, error{error}, filename{filename} {}
             const char* what() const noexcept override {
                 return error.c_str();
             }
         };
 
+        void print_error_position(std::ostream& s, std::string_view text, TextPosition pos); 
+
+        template<class ...T>
+        [[noreturn]] void raise(std::string_view text, std::string filename, TextPosition pos, T... params) {
+            std::ostringstream o;
+            if (text.size()>0) { 
+                o << filename << ":" << pos << ": ";
+                (o << ... << params) << "\n";
+                textx::arpeggio::print_error_position(o, text, pos);
+                o << "\n";
+            }
+            else {
+                (o << ... << params) << "\n";
+            }
+            throw Exception{filename, pos, o.str()};
+        }
         template<class ...T>
         [[noreturn]] void raise(TextPosition pos, T... params) {
-            std::ostringstream o;
-            (o << ... << params) << "\n";
-            throw Exception{pos, o.str()};
+            raise("", "", pos, params...);
         }
 
         class Match
@@ -137,8 +151,6 @@ namespace textx
             o<< Match::type2str.at(t);
             return o;
         }
-
-        void print_error_position(std::ostream& s, std::string_view text, TextPosition pos); 
 
         struct AnnotatedTextPosition
         {

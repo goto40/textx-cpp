@@ -63,12 +63,12 @@ namespace textx {
             }
         }
         catch(textx::arpeggio::Exception &e) {
-            std::ostringstream o;
-            o << filename << ":" << e.pos << ": textx grammar setup problem:\n";
-            textx::arpeggio::print_error_position(o, grammar_text, e.pos);
-            o << "\n" << e.what();
-            e.error = o.str();
-            throw e;
+            if (e.filename.size()==0) {
+                textx::arpeggio::raise(std::string{grammar_text},filename, e.pos, e.error);   
+            }
+            else {
+                throw;
+            }
         }
         catch(std::exception &e) {
             throw std::runtime_error(filename+": "+e.what());
@@ -140,12 +140,28 @@ namespace textx {
         }
     }
 
+    namespace {
+        // collect all imported models recursively
+        inline void find_all_imported_models(std::shared_ptr<textx::Model> m, std::unordered_set<std::shared_ptr<textx::Model>>& result) {
+            if (result.count(m)==0) {
+                result.insert(m);
+                for (auto p: m->tx_imported_models()) {
+                    find_all_imported_models(p.lock(), result);
+                }
+            }
+        }
+    }
+
     std::shared_ptr<textx::Model> Metamodel::model_from_str(std::string_view text, std::string filename, bool is_main_model) {
         try {
             auto parsetree = parsetree_from_str(text);
             auto ret=std::shared_ptr<textx::Model>{new textx::Model()}; // call private constructor (new)
             //std::cout << parsetree.value() << "\n";
-            ret->init(text, *parsetree, shared_from_this());
+            ret->init(filename, text, *parsetree, shared_from_this());
+
+            if (filename.size()>0) {
+                known_models[filename] = ret; // owning...
+            }
 
             auto basedir = std::filesystem::path(filename).parent_path();
             auto basedir0 = std::filesystem::path(".");
@@ -170,26 +186,44 @@ namespace textx {
             }
 
             if (is_main_model) {
-                // TODO recursive resolution
-                if(ret->resolve_references()>0) {
-                    std::stringstream error_text;
+                std::unordered_set<std::shared_ptr<Model>> all_models;
+                find_all_imported_models(ret, all_models);
+
+                size_t last_unresolved_refs=0;
+                size_t unresolved_refs=0;
+                do {
+                    last_unresolved_refs=unresolved_refs;
+                    unresolved_refs=0;
+                    for(auto m: all_models) {
+                        unresolved_refs += m->resolve_references();
+                    }
+                } while(unresolved_refs>0 && unresolved_refs!=last_unresolved_refs);
+
+                if (unresolved_refs>0) {
                     textx::arpeggio::TextPosition pos;
-                    textx::object::traverse(ret->val(),[&](textx::object::Value& v) {
-                        if (v.is_ref() && !v.ref().obj.lock()) {
-                            error_text << "ref '" << v.ref().name << "' not found at " << v.pos << ";\n";
-                            pos = v.pos;
-                        }
-                    });
-                    //std::cout << ret->val() << "\n";
-                    textx::arpeggio::raise(pos, error_text.str());
+                    std::shared_ptr<textx::Model> err_model;
+                    std::stringstream error_text;
+                    for(auto m: all_models) {
+                        textx::object::traverse(m->val(),[&](textx::object::Value& v) {
+                            if (v.is_ref() && !v.ref().obj.lock()) {
+                                error_text << "ref '" << v.ref().name << "' not found at " << v.pos << ";\n";
+                                pos = v.pos;
+                                err_model = m;
+                            }
+                        });
+                    }
+                    textx::arpeggio::raise(err_model->tx_text(), err_model->tx_filename(), pos, error_text.str());
                 }
             }
             return ret;
         }
         catch(textx::arpeggio::Exception &e) {
-            e.filename = filename;
-            e.error = filename + ":" + std::to_string(e.pos.line) +":" + std::to_string(e.pos.col) + ": " + e.error;
-            throw e;
+            if (e.filename.size()>0) {
+                throw;
+            }
+            else {
+                raise(std::string(text), filename, e.pos, e.error);
+            }
         }
         catch(std::exception &e) {
             throw std::runtime_error(filename+": "+e.what());
@@ -205,7 +239,6 @@ namespace textx {
         std::stringstream modeltext;
         modeltext << file.rdbuf();
         auto m = model_from_str(modeltext.str(), abspath.string(), is_main_model);
-        known_models[abspath.string()] = m; // owning...
         return m;
     }
 

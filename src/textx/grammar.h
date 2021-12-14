@@ -133,9 +133,9 @@ namespace textx
         {
             std::ostringstream s;
             auto pos = get_last_error_position();
-            if (text) {
-                textx::arpeggio::print_error_position(s, text.value(), pos.text_position);
-            }
+            // if (text) {
+            //     textx::arpeggio::print_error_position(s, text.value(), pos.text_position);
+            // }
             s << pos.text_position.line << ":" << pos.text_position.col << ":"
               << "expected\n" << pos;
             return s.str();

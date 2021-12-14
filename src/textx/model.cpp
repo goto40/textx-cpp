@@ -4,8 +4,10 @@
 
 namespace textx {
 
-    void Model::init(const std::string_view text, const textx::arpeggio::Match &parsetree, std::shared_ptr<Metamodel> mm) {
+    void Model::init(const std::string_view filename, const std::string_view text, const textx::arpeggio::Match &parsetree, std::shared_ptr<Metamodel> mm) {
        weak_mm = mm;
+       model_text = text;
+       model_filename = filename;
        std::shared_ptr<textx::object::Object> parent = nullptr;
        root = create_model(text, parsetree, *mm, parent);
     }
