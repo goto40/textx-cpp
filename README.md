@@ -75,9 +75,9 @@ It still has some limitations (see below, [open points](#openpoints)), but simpl
  * Motivation for basic Arpeggio re-impl: [https://blog.bruce-hill.com/](https://blog.bruce-hill.com/packrat-parsing-from-scratch)
 
 ## <a name="openpoints"></a> Open Points
+ * TODO RREL
  * TODO importURI from other metamodels
  * TODO handle referenced/included metamodels, in Metamodel::ref
  * TODO include/reference other metamodels
- * TODO RREL
  * TODO minor: it must be possible for "eolterm" to be combined with a separator pattern
  * TODO: use has_match_suppression
