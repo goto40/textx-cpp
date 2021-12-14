@@ -45,7 +45,7 @@ to access the model data.
 
 Ownership:
  * The model allows to access to the underlying metamodel object (stored as a weak reference). 
- * The model allows to access imported model object (imported with `importURI`; stored as a weak reference). 
+ * The model allows to access imported model objects (imported with `importURI`; stored as a weak references). 
  * The metamodel owns and caches all loaded models.
 
 The model value supports different access options:
