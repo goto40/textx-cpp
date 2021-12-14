@@ -75,7 +75,7 @@ It still has some limitations (see below, [open points](#openpoints)), but simpl
  * Motivation for basic Arpeggio re-impl: [https://blog.bruce-hill.com/](https://blog.bruce-hill.com/packrat-parsing-from-scratch)
 
 ## <a name="openpoints"></a> Open Points
- * TODO importURI
+ * TODO importURI from other metamodels
  * TODO handle referenced/included metamodels, in Metamodel::ref
  * TODO include/reference other metamodels
  * TODO RREL
