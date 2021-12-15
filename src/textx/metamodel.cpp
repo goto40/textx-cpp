@@ -1,12 +1,13 @@
 #include "textx/metamodel.h"
 #include "textx/rule.h"
+#include "textx/workspace.h"
 #include <cassert>
 #include <unordered_set>
 
 namespace textx {
 
-    Metamodel::Metamodel(std::string_view grammar_text, bool is_main_grammar, bool include_basic_metamodel, std::string filename) {
-        try {
+    Metamodel::Metamodel(std::string_view grammar_text, bool is_main_grammar, bool include_basic_metamodel, std::string filename) :  default_workspace{textx::Workspace::create()} {
+        try {            
             textx_grammar_parsetree.root = textx_grammar.parse_or_throw(grammar_text);
             auto &root = textx_grammar_parsetree.root.value();
 
@@ -152,15 +153,27 @@ namespace textx {
         }
     }
 
-    std::shared_ptr<textx::Model> Metamodel::model_from_str(std::string_view text, std::string filename, bool is_main_model) {
+    std::shared_ptr<textx::Workspace> Metamodel::tx_default_workspace() {
+        default_workspace->set_default_metamodel(shared_from_this()); 
+        return default_workspace;
+    }
+
+    std::shared_ptr<textx::Model> Metamodel::model_from_str(std::string_view text, std::string filename, bool is_main_model, std::shared_ptr<textx::Workspace> workspace) {
         try {
+            if (workspace==nullptr) {
+                workspace = tx_default_workspace();
+            }
+            if (workspace->has_model(filename)) {
+                return workspace->get_model(filename); // cached model
+            }
+
             auto parsetree = parsetree_from_str(text);
             auto ret=std::shared_ptr<textx::Model>{new textx::Model()}; // call private constructor (new)
             //std::cout << parsetree.value() << "\n";
             ret->init(filename, text, *parsetree, shared_from_this());
 
             if (filename.size()>0) {
-                known_models[filename] = ret; // owning...
+                workspace->add_model(filename, ret); // owning...
             }
 
             auto basedir = std::filesystem::path(filename).parent_path();
@@ -176,7 +189,7 @@ namespace textx {
                     if (!std::filesystem::exists(p)) {
                         textx::arpeggio::raise(v.obj()->pos, import_filename+" not found.");
                     }
-                    auto m = model_from_file(p, false); // unresolved refs
+                    auto m = workspace->model_from_file(p, false); // unresolved refs
                     ret->add_imported_model(m);
                 }
             });
@@ -230,15 +243,11 @@ namespace textx {
         }
     }
 
-    std::shared_ptr<textx::Model> Metamodel::model_from_file(std::filesystem::path p, bool is_main_model) {
-        auto abspath = std::filesystem::canonical(p);
-        if (known_models.count(abspath.string())) {
-            return known_models[abspath.string()]; // cached model
-        }
-        std::ifstream file(abspath);
+    std::shared_ptr<textx::Model> Metamodel::model_from_file(std::filesystem::path p, bool is_main_model, std::shared_ptr<textx::Workspace> workspace) {
+        std::ifstream file(p);
         std::stringstream modeltext;
         modeltext << file.rdbuf();
-        auto m = model_from_str(modeltext.str(), abspath.string(), is_main_model);
+        auto m = model_from_str(modeltext.str(), p.string(), is_main_model, workspace);
         return m;
     }
 
