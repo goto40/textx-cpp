@@ -170,15 +170,15 @@ namespace textx::rrel {
 
     // print:
 
-    void RRELParent::print(std::ostream& o) {
+    void RRELParent::print(std::ostream& o) const {
         o << "parent(" << type << ")";
     }
-    void RRELBrackets::print(std::ostream& o) {
+    void RRELBrackets::print(std::ostream& o) const {
         o << "(";
         seq->print(o);
         o << ")";
     }
-    void RRELSequence::print(std::ostream& o) {
+    void RRELSequence::print(std::ostream& o) const {
         bool first=true;
         for(auto& p: paths) {
             if (!first) { o << ","; }
@@ -186,18 +186,18 @@ namespace textx::rrel {
             first = false;
         }
     }
-    void RRELNavigation::print(std::ostream& o) { 
+    void RRELNavigation::print(std::ostream& o) const { 
         if (!consume_name) { o << "~"; }
         o << name;
     }
-    void RRELDots::print(std::ostream& o) {
+    void RRELDots::print(std::ostream& o) const {
         o << std::string(n, '.');
     }
-    void RRELZeroOrMore::print(std::ostream& o) {
+    void RRELZeroOrMore::print(std::ostream& o) const {
         path_element->print(o);
         o << "*";
     }
-    void RRELPath::print(std::ostream& o) {
+    void RRELPath::print(std::ostream& o) const {
         bool first=true;
         for(auto& e: path_elements) {
             if (!first) { o << "."; }
@@ -205,9 +205,82 @@ namespace textx::rrel {
             first = false;
         }
     }
-    void RRELExpression::print(std::ostream& o) {
+    void RRELExpression::print(std::ostream& o) const {
         o << flags;
         seq->print(o);
+    }
+
+    // resolve:
+    cppcoro::generator<const RRELResult> RRELParent::get_next_matches(
+        std::shared_ptr<textx::object::Object>, 
+        std::vector<std::string> lookup_list,
+        AllowedFunc allowed,
+        bool first_element
+    ) const {
+        co_yield RRELResult{textx::scoping::Postponed{},{}};
+    }
+
+    cppcoro::generator<const RRELResult> RRELBrackets::get_next_matches(
+        std::shared_ptr<textx::object::Object>, 
+        std::vector<std::string> lookup_list,
+        AllowedFunc allowed,
+        bool first_element
+    ) const {
+        co_yield RRELResult{textx::scoping::Postponed{},{}};
+    }
+
+    cppcoro::generator<const RRELResult> RRELSequence::get_next_matches(
+        std::shared_ptr<textx::object::Object>, 
+        std::vector<std::string> lookup_list,
+        AllowedFunc allowed,
+        bool first_element
+    ) const {
+        co_yield RRELResult{textx::scoping::Postponed{},{}};
+    }
+
+    cppcoro::generator<const RRELResult> RRELNavigation::get_next_matches(
+        std::shared_ptr<textx::object::Object>, 
+        std::vector<std::string> lookup_list,
+        AllowedFunc allowed,
+        bool first_element
+    ) const {
+        co_yield RRELResult{textx::scoping::Postponed{},{}};
+    }
+
+    cppcoro::generator<const RRELResult> RRELDots::get_next_matches(
+        std::shared_ptr<textx::object::Object>, 
+        std::vector<std::string> lookup_list,
+        AllowedFunc allowed,
+        bool first_element
+    ) const {
+        co_yield RRELResult{textx::scoping::Postponed{},{}};
+    }
+
+    cppcoro::generator<const RRELResult> RRELZeroOrMore::get_next_matches(
+        std::shared_ptr<textx::object::Object>, 
+        std::vector<std::string> lookup_list,
+        AllowedFunc allowed,
+        bool first_element
+    ) const {
+        co_yield RRELResult{textx::scoping::Postponed{},{}};
+    }
+
+    cppcoro::generator<const RRELResult> RRELPath::get_next_matches(
+        std::shared_ptr<textx::object::Object>, 
+        std::vector<std::string> lookup_list,
+        AllowedFunc allowed,
+        bool first_element
+    ) const {
+        co_yield RRELResult{textx::scoping::Postponed{},{}};
+    }
+
+    cppcoro::generator<const RRELResult> RRELExpression::get_next_matches(
+        std::shared_ptr<textx::object::Object>, 
+        std::vector<std::string> lookup_list,
+        AllowedFunc allowed,
+        bool first_element
+    ) const {
+        co_yield RRELResult{textx::scoping::Postponed{},{}};
     }
 
 }

@@ -109,6 +109,16 @@ Example:
 
  * textx_grammar_parsetree.h
     * Responsibility: internal helper to parse user grammars.
+
+## Dependencies
+
+ * boost regex
+   * faster than built-in regex
+   * some special cases (unittests) fail with the built-in regex
+
+ * cppcoro (gcc compatible fork https://github.com/andreasbuhr/cppcoro)
+   * for the `coro::generator<..>` required for the
+   RREL implementation (breadth-first search).
 ## Links
 
  * Textx, Arpeggio, etc: [https://github.com/textX](https://github.com/textX)
@@ -116,7 +126,7 @@ Example:
 
 ## <a name="openpoints"></a> Open Points
 Prio 0 (most important):
- * TODO RREL
+ * TODO RREL (wip)
 
 Prio 1:
  * TODO importURI from other metamodels
