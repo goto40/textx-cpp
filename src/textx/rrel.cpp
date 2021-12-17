@@ -275,12 +275,14 @@ namespace textx::rrel {
     }
 
     cppcoro::generator<const RRELResult> RRELExpression::get_next_matches(
-        std::shared_ptr<textx::object::Object>, 
+        std::shared_ptr<textx::object::Object> obj, 
         std::vector<std::string> lookup_list,
         AllowedFunc allowed,
         bool first_element
     ) const {
-        co_yield RRELResult{textx::scoping::Postponed{},{}};
+        for (const auto& res: seq->get_next_matches(obj, lookup_list, allowed, first_element) {
+            co_yield res;
+        }
     }
 
 }
