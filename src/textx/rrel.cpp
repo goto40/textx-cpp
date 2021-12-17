@@ -280,7 +280,7 @@ namespace textx::rrel {
         AllowedFunc allowed,
         bool first_element
     ) const {
-        for (const auto& res: seq->get_next_matches(obj, lookup_list, allowed, first_element) {
+        for (const auto& res: seq->get_next_matches(obj, lookup_list, allowed, first_element)) {
             co_yield res;
         }
     }
