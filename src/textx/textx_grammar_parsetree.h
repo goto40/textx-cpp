@@ -48,7 +48,7 @@ namespace textx::parsetree {
         std::unordered_map<std::string, AttributeInfo> attribute_info;
         std::unordered_set<std::string> tx_inh_by; // for abstract rules 
         std::unordered_set<std::string> tx_bases;
-        textx::RuleType rule_type;
+        textx::RuleType rule_type=textx::RuleType::illegal;
         bool external_rule=false;
 
         RuleInfo(textx::arpeggio::Match &match, std::string name) :match{match}, name(name) {}

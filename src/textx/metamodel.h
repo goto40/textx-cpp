@@ -13,6 +13,7 @@
 
 namespace textx {
     class Workspace;
+
     class Metamodel : public std::enable_shared_from_this<Metamodel> {
         textx::lang::TextxGrammar textx_grammar={};
         textx::Grammar<textx::Rule> grammar={};
@@ -22,7 +23,7 @@ namespace textx {
         std::unordered_map<std::string, std::unique_ptr<textx::scoping::RefResolver>> resolver = {};
         std::vector<std::shared_ptr<textx::Model>> builtin_models={};
         std::shared_ptr<textx::Workspace> default_workspace;
-        
+
         public:
         Metamodel(std::string_view grammar, bool is_main_grammar=true, bool include_basic_metamodel=true, std::string filename="");
         std::shared_ptr<textx::Workspace> tx_default_workspace();

@@ -102,7 +102,7 @@ namespace textx
             auto &main = rules[main_rule_name];
             state = textx::arpeggio::ParserState{text};
             auto res = main(config, state, {});
-            ok = {res};
+            ok = res.has_value();
             return res;
         }
 

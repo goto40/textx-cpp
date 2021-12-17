@@ -158,7 +158,7 @@ namespace textx
                                                   ref("rrel_id"),
                                                   ta::str_match(")")}));
 
-            add_rule("rrel_navigation", ta::sequence({ta::optional(ta::str_match("~")),
+            add_rule("rrel_navigation", ta::sequence({ta::capture(ta::optional(ta::str_match("~"))),
                                                       ref("rrel_id")}));
 
             add_rule("rrel_brackets", ta::sequence({ta::str_match("("),
@@ -174,14 +174,14 @@ namespace textx
             add_rule("rrel_zero_or_more", ta::sequence({ref("rrel_path_element"),
                                                         ta::str_match("*")}));
 
-            add_rule("rrel_path", ta::ordered_choice({ta::sequence({ta::optional(ta::ordered_choice({ta::str_match("^"),
+            add_rule("rrel_path", ta::ordered_choice({ta::sequence({ta::optional(ta::ordered_choice({ta::capture(ta::str_match("^")),
                                                                                                      ref("rrel_dots")})),
                                                                     ta::zero_or_more(
                                                                         ta::sequence({ta::ordered_choice({ref("rrel_zero_or_more"), ref("rrel_path_element")}),
                                                                                       ta::str_match(".")})),
                                                                     ta::ordered_choice({ref("rrel_zero_or_more"),
                                                                                         ref("rrel_path_element")})}),
-                                                      ta::ordered_choice({ta::str_match("^"),
+                                                      ta::ordered_choice({ta::capture(ta::str_match("^")),
                                                                           ref("rrel_dots")})}));
 
             add_rule("rrel_sequence", ta::sequence({ta::zero_or_more(ta::sequence({ref("rrel_path"),

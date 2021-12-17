@@ -6,7 +6,9 @@
 
 namespace textx {
 
-    Metamodel::Metamodel(std::string_view grammar_text, bool is_main_grammar, bool include_basic_metamodel, std::string filename) :  default_workspace{textx::Workspace::create()} {
+    Metamodel::Metamodel(std::string_view grammar_text, bool is_main_grammar, bool include_basic_metamodel, std::string filename)
+        : default_workspace{textx::WorkspaceImpl<std::weak_ptr>::create()} // ownership! The default workspace uses *this --> weak_pointer, else we get a memory hole
+    {
         try {            
             textx_grammar_parsetree.root = textx_grammar.parse_or_throw(grammar_text);
             auto &root = textx_grammar_parsetree.root.value();

@@ -46,7 +46,9 @@ to access the model data.
 Ownership:
  * The model allows to access to the underlying metamodel object (stored as a weak reference). 
  * The model allows to access imported model objects (imported with `importURI`; stored as a weak references). 
- * The metamodel owns and caches all loaded models.
+ * The workspace owns and caches all loaded models. In case you use no workspace, an internal default workspace of the Metamodel is employed.
+
+ ![doc/images/ownership.png](doc/images/ownership.png)
 
 The model value supports different access options:
  * query the value if it represents a certain type:
