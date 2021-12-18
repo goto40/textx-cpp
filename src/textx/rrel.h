@@ -11,14 +11,21 @@
 
 namespace textx::rrel {
 
-    using RRELInternalResult = std::tuple<
-        std::variant<std::shared_ptr<textx::object::Object>,textx::scoping::Postponed>,
-        std::vector<std::string>,
+    using RRELInternalResult = std::variant<
+        std::tuple<
+            std::shared_ptr<textx::object::Object>,
+            std::vector<std::string>,
+            std::vector<std::shared_ptr<textx::object::Object>>
+        >,
+        textx::scoping::Postponed
+    >;
+    using RRELResultData = std::tuple<
+        std::shared_ptr<textx::object::Object>,
         std::vector<std::shared_ptr<textx::object::Object>>
     >;
-    using RRELResult = std::tuple<
-        std::variant<std::shared_ptr<textx::object::Object>,textx::scoping::Postponed>,
-        std::vector<std::shared_ptr<textx::object::Object>>
+    using RRELResult = std::variant<
+        RRELResultData,
+        textx::scoping::Postponed
     >;
 
     struct RRELBase;

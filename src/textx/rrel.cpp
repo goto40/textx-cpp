@@ -228,7 +228,7 @@ namespace textx::rrel {
         AllowedFunc allowed,
         bool first_element
     ) const {
-        co_yield RRELInternalResult{textx::scoping::Postponed{},{},{}};
+        co_yield textx::scoping::Postponed{};
     }
 
     cppcoro::generator<const RRELInternalResult> RRELBrackets::get_next_matches(
@@ -237,7 +237,7 @@ namespace textx::rrel {
         AllowedFunc allowed,
         bool first_element
     ) const {
-        co_yield RRELInternalResult{textx::scoping::Postponed{},{},{}};
+        co_yield textx::scoping::Postponed{};
     }
 
     cppcoro::generator<const RRELInternalResult> RRELSequence::get_next_matches(
@@ -246,7 +246,7 @@ namespace textx::rrel {
         AllowedFunc allowed,
         bool first_element
     ) const {
-        co_yield RRELInternalResult{textx::scoping::Postponed{},{},{}};
+        co_yield textx::scoping::Postponed{};
     }
 
     cppcoro::generator<const RRELInternalResult> RRELNavigation::get_next_matches(
@@ -255,7 +255,7 @@ namespace textx::rrel {
         AllowedFunc allowed,
         bool first_element
     ) const {
-        co_yield RRELInternalResult{textx::scoping::Postponed{},{},{}};
+        co_yield textx::scoping::Postponed{};
     }
 
     cppcoro::generator<const RRELInternalResult> RRELDots::get_next_matches(
@@ -264,7 +264,7 @@ namespace textx::rrel {
         AllowedFunc allowed,
         bool first_element
     ) const {
-        co_yield RRELInternalResult{textx::scoping::Postponed{},{},{}};
+        co_yield textx::scoping::Postponed{};
     }
 
     cppcoro::generator<const RRELInternalResult> RRELZeroOrMore::get_next_matches(
@@ -273,7 +273,7 @@ namespace textx::rrel {
         AllowedFunc allowed,
         bool first_element
     ) const {
-        co_yield RRELInternalResult{textx::scoping::Postponed{},{},{}};
+        co_yield textx::scoping::Postponed{};
     }
 
     cppcoro::generator<const RRELInternalResult> RRELPath::get_next_matches(
@@ -282,7 +282,7 @@ namespace textx::rrel {
         AllowedFunc allowed,
         bool first_element
     ) const {
-        co_yield RRELInternalResult{textx::scoping::Postponed{},{},{}};
+        co_yield textx::scoping::Postponed{};
     }
 
     cppcoro::generator<const RRELInternalResult> RRELExpression::get_next_matches(
@@ -312,14 +312,14 @@ namespace textx::rrel {
         };
         // important: use ref(...) here to protect (do not duplicate) the state
         for (const RRELInternalResult& res : rrel_tree.get_next_matches(obj, lookup, std::ref(allowed), "")) {
-            if(std::holds_alternative<textx::scoping::Postponed>(std::get<0>(res))) {
-                return RRELResult{textx::scoping::Postponed{},{}};
+            if(std::holds_alternative<textx::scoping::Postponed>(res)) {
+                return textx::scoping::Postponed{};
             }
             else {
-                return RRELResult{std::get<0>(res),std::get<2>(res)};
+                return RRELResultData{std::get<0>(std::get<0>(res)),std::get<2>(std::get<0>(res))};
             }
         }
-        return RRELResult{nullptr,{}};
+        return RRELResultData{nullptr,{}};
     }
 
 }
