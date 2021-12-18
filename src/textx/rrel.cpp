@@ -13,6 +13,28 @@ namespace {
             return h1 ^ h2;  
         }
     };    
+
+    template<class Func>
+    cppcoro::generator<const textx::rrel::RRELInternalResult> get_next_matches_helper(
+            textx::rrel::RRELBase* self,
+            std::shared_ptr<textx::object::Object> obj, 
+            std::vector<std::string> lookup_list,
+            textx::rrel::AllowedFunc allowed,
+            Func f
+    ) {
+        if (allowed(obj, lookup_list, self)) {            
+            // obj, lookup_list, matched_path = self.apply(
+            //     obj, lookup_list, matched_path, first_element)
+            // if obj is None:
+            //     return
+            // elif isinstance(obj, list):
+            //     for iobj in obj:
+            //         if iobj is not None:
+            //             yield iobj, lookup_list, matched_path
+            // else:
+            //     yield obj, lookup_list, matched_path
+        }
+    }
 }
 
 namespace ta=textx::arpeggio;
