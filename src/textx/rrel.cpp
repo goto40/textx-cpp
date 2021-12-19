@@ -13,28 +13,6 @@ namespace {
             return h1 ^ h2;  
         }
     };    
-
-    template<class Func>
-    cppcoro::generator<const textx::rrel::RRELInternalResult> get_next_matches_helper(
-            textx::rrel::RRELBase* self,
-            std::shared_ptr<textx::object::Object> obj, 
-            std::vector<std::string> lookup_list,
-            textx::rrel::AllowedFunc allowed,
-            Func f
-    ) {
-        if (allowed(obj, lookup_list, self)) {            
-            // obj, lookup_list, matched_path = self.apply(
-            //     obj, lookup_list, matched_path, first_element)
-            // if obj is None:
-            //     return
-            // elif isinstance(obj, list):
-            //     for iobj in obj:
-            //         if iobj is not None:
-            //             yield iobj, lookup_list, matched_path
-            // else:
-            //     yield obj, lookup_list, matched_path
-        }
-    }
 }
 
 namespace ta=textx::arpeggio;
@@ -244,86 +222,79 @@ namespace textx::rrel {
     }
 
     // resolve:
-    cppcoro::generator<const RRELInternalResult> RRELParent::get_next_matches(
-        std::shared_ptr<textx::object::Object>, 
-        std::vector<std::string> lookup_list,
+    cppcoro::generator<const py::RRELInternalResult> RRELParent::get_next_matches(
+        py::RRELInternalResultData data,
         AllowedFunc allowed,
         bool first_element
     ) const {
         co_yield textx::scoping::Postponed{};
     }
 
-    cppcoro::generator<const RRELInternalResult> RRELBrackets::get_next_matches(
-        std::shared_ptr<textx::object::Object>, 
-        std::vector<std::string> lookup_list,
+    cppcoro::generator<const py::RRELInternalResult> RRELBrackets::get_next_matches(
+        py::RRELInternalResultData data,
         AllowedFunc allowed,
         bool first_element
     ) const {
         co_yield textx::scoping::Postponed{};
     }
 
-    cppcoro::generator<const RRELInternalResult> RRELSequence::get_next_matches(
-        std::shared_ptr<textx::object::Object>, 
-        std::vector<std::string> lookup_list,
+    cppcoro::generator<const py::RRELInternalResult> RRELSequence::get_next_matches(
+        py::RRELInternalResultData data,
         AllowedFunc allowed,
         bool first_element
     ) const {
         co_yield textx::scoping::Postponed{};
     }
 
-    cppcoro::generator<const RRELInternalResult> RRELNavigation::get_next_matches(
-        std::shared_ptr<textx::object::Object>, 
-        std::vector<std::string> lookup_list,
+    cppcoro::generator<const py::RRELInternalResult> RRELNavigation::get_next_matches(
+        py::RRELInternalResultData data,
         AllowedFunc allowed,
         bool first_element
     ) const {
         co_yield textx::scoping::Postponed{};
     }
 
-    cppcoro::generator<const RRELInternalResult> RRELDots::get_next_matches(
-        std::shared_ptr<textx::object::Object>, 
-        std::vector<std::string> lookup_list,
+    cppcoro::generator<const py::RRELInternalResult> RRELDots::get_next_matches(
+        py::RRELInternalResultData data,
         AllowedFunc allowed,
         bool first_element
     ) const {
         co_yield textx::scoping::Postponed{};
     }
 
-    cppcoro::generator<const RRELInternalResult> RRELZeroOrMore::get_next_matches(
-        std::shared_ptr<textx::object::Object>, 
-        std::vector<std::string> lookup_list,
+    cppcoro::generator<const py::RRELInternalResult> RRELZeroOrMore::get_next_matches(
+        py::RRELInternalResultData data,
         AllowedFunc allowed,
         bool first_element
     ) const {
         co_yield textx::scoping::Postponed{};
     }
 
-    cppcoro::generator<const RRELInternalResult> RRELPath::get_next_matches(
-        std::shared_ptr<textx::object::Object>, 
-        std::vector<std::string> lookup_list,
+    cppcoro::generator<const py::RRELInternalResult> RRELPath::get_next_matches(
+        py::RRELInternalResultData data,
         AllowedFunc allowed,
         bool first_element
     ) const {
         co_yield textx::scoping::Postponed{};
     }
 
-    cppcoro::generator<const RRELInternalResult> RRELExpression::get_next_matches(
-        std::shared_ptr<textx::object::Object> obj, 
-        std::vector<std::string> lookup_list,
+    cppcoro::generator<const py::RRELInternalResult> RRELExpression::get_next_matches(
+        py::RRELInternalResultData data,
         AllowedFunc allowed,
         bool first_element
     ) const {
-        for (const auto& res: seq->get_next_matches(obj, lookup_list, allowed, first_element)) {
+        TEXTX_ASSERT(allowed(data.obj, data.lookup_list, this));
+        for (const auto& res: seq->get_next_matches(data, allowed, first_element)) {
             co_yield res;
         }
     }
 
-    RRELResult find_object_with_path(std::shared_ptr<textx::object::Object> obj, std::vector<std::string> lookup, textx::rrel::RRELExpression& rrel_tree, std::string obj_cls)
+    py::RRELResult find_object_with_path(std::shared_ptr<textx::object::Object> obj, std::vector<std::string> lookup, textx::rrel::RRELExpression& rrel_tree, std::string obj_cls)
     {
         auto allowed = [
-            visited=std::vector<std::unordered_set<std::pair<textx::object::Object*, textx::rrel::RRELBase*>,pair_hash>>(lookup.size()) // recursion breaker
-        ](std::shared_ptr<textx::object::Object> obj, std::vector<std::string> lookup_list, textx::rrel::RRELBase* e) mutable {
-            std::pair<textx::object::Object*, textx::rrel::RRELBase*> elem{obj.get(), e};
+            visited=std::vector<std::unordered_set<std::pair<textx::object::Object*, const textx::rrel::RRELBase*>,pair_hash>>(lookup.size()) // recursion breaker
+        ](std::shared_ptr<textx::object::Object> obj, std::vector<std::string> lookup_list, const textx::rrel::RRELBase* e) mutable {
+            std::pair<textx::object::Object*, const textx::rrel::RRELBase*> elem{obj.get(), e};
             if (visited[lookup_list.size()].count(elem)>0) {
                 return false;
             }
@@ -333,15 +304,15 @@ namespace textx::rrel {
             }
         };
         // important: use ref(...) here to protect (do not duplicate) the state
-        for (const RRELInternalResult& res : rrel_tree.get_next_matches(obj, lookup, std::ref(allowed), "")) {
+        for (const py::RRELInternalResult& res : rrel_tree.get_next_matches({obj, lookup, {}}, std::ref(allowed), "")) {
             if(std::holds_alternative<textx::scoping::Postponed>(res)) {
                 return textx::scoping::Postponed{};
             }
             else {
-                return RRELResultData{std::get<0>(std::get<0>(res)),std::get<2>(std::get<0>(res))};
+                return py::RRELResultData{std::get<0>(res).obj, std::get<0>(res).matched_path};
             }
         }
-        return RRELResultData{nullptr,{}};
+        return py::RRELResultData{nullptr,{}};
     }
 
 }

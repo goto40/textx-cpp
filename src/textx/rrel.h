@@ -11,32 +11,34 @@
 
 namespace textx::rrel {
 
-    using RRELInternalResult = std::variant<
-        std::tuple<
-            std::shared_ptr<textx::object::Object>,
-            std::vector<std::string>,
-            std::vector<std::shared_ptr<textx::object::Object>>
-        >,
-        textx::scoping::Postponed
-    >;
-    using RRELResultData = std::tuple<
-        std::shared_ptr<textx::object::Object>,
-        std::vector<std::shared_ptr<textx::object::Object>>
-    >;
-    using RRELResult = std::variant<
-        RRELResultData,
-        textx::scoping::Postponed
-    >;
+    namespace py {
+        struct RRELInternalResultData {
+            std::shared_ptr<textx::object::Object> obj;
+            std::vector<std::string> lookup_list;
+            std::vector<std::shared_ptr<textx::object::Object>> matched_path;
+        };
+        using RRELInternalResult = std::variant<
+            RRELInternalResultData,
+            textx::scoping::Postponed
+        >;
+        struct RRELResultData {
+            std::shared_ptr<textx::object::Object> obj;
+            std::vector<std::shared_ptr<textx::object::Object>> matched_path;
+        };
+        using RRELResult = std::variant<
+            RRELResultData,
+            textx::scoping::Postponed
+        >;
+    }
 
     struct RRELBase;
-    using AllowedFunc = std::function<bool(std::shared_ptr<textx::object::Object>, std::vector<std::string>, RRELBase*)>;
+    using AllowedFunc = std::function<bool(std::shared_ptr<textx::object::Object>, std::vector<std::string>, const RRELBase*)>;
 
     struct RRELBase {
         virtual ~RRELBase() = default;
         virtual void print(std::ostream& o) const=0;
-        virtual cppcoro::generator<const RRELInternalResult> get_next_matches(
-            std::shared_ptr<textx::object::Object>, 
-            std::vector<std::string> lookup_list,
+        virtual cppcoro::generator<const py::RRELInternalResult> get_next_matches(
+            py::RRELInternalResultData data,
             AllowedFunc allowed,
             bool first_element=false
         ) const =0;
@@ -54,9 +56,8 @@ namespace textx::rrel {
         std::string type;
         RRELParent(std::string type) : type{std::move(type)} {}
         void print(std::ostream& o) const override;
-        cppcoro::generator<const RRELInternalResult> get_next_matches(
-            std::shared_ptr<textx::object::Object>, 
-            std::vector<std::string> lookup_list,
+        cppcoro::generator<const py::RRELInternalResult> get_next_matches(
+            py::RRELInternalResultData data,
             AllowedFunc allowed,
             bool first_element=false
         ) const override;
@@ -67,9 +68,8 @@ namespace textx::rrel {
         bool consume_name;
         RRELNavigation(std::string name, bool consume_name) : name{std::move(name)}, consume_name{consume_name} {}
         void print(std::ostream& o) const override;
-        cppcoro::generator<const RRELInternalResult> get_next_matches(
-            std::shared_ptr<textx::object::Object>, 
-            std::vector<std::string> lookup_list,
+        cppcoro::generator<const py::RRELInternalResult> get_next_matches(
+            py::RRELInternalResultData data,
             AllowedFunc allowed,
             bool first_element=false
         ) const override;
@@ -80,9 +80,8 @@ namespace textx::rrel {
         std::unique_ptr<RRELSequence> seq;
         RRELBrackets(std::unique_ptr<RRELSequence> &&seq) : seq{std::move(seq)} {}
         void print(std::ostream& o) const override;
-        cppcoro::generator<const RRELInternalResult> get_next_matches(
-            std::shared_ptr<textx::object::Object>, 
-            std::vector<std::string> lookup_list,
+        cppcoro::generator<const py::RRELInternalResult> get_next_matches(
+            py::RRELInternalResultData data,
             AllowedFunc allowed,
             bool first_element=false
         ) const override;
@@ -92,9 +91,8 @@ namespace textx::rrel {
         size_t n;
         RRELDots(size_t n) : n{n} {}
         void print(std::ostream& o) const override;
-        cppcoro::generator<const RRELInternalResult> get_next_matches(
-            std::shared_ptr<textx::object::Object>, 
-            std::vector<std::string> lookup_list,
+        cppcoro::generator<const py::RRELInternalResult> get_next_matches(
+            py::RRELInternalResultData data,
             AllowedFunc allowed,
             bool first_element=false
         ) const override;
@@ -105,9 +103,8 @@ namespace textx::rrel {
         std::vector<std::unique_ptr<RRELPath>> paths;
         RRELSequence(std::vector<std::unique_ptr<RRELPath>> &&paths) : paths{std::move(paths)} {};
         void print(std::ostream& o) const override;
-        cppcoro::generator<const RRELInternalResult> get_next_matches(
-            std::shared_ptr<textx::object::Object>, 
-            std::vector<std::string> lookup_list,
+        cppcoro::generator<const py::RRELInternalResult> get_next_matches(
+            py::RRELInternalResultData data,
             AllowedFunc allowed,
             bool first_element=false
         ) const override;
@@ -117,9 +114,8 @@ namespace textx::rrel {
         std::unique_ptr<RRELPathElement> path_element;
         RRELZeroOrMore(std::unique_ptr<RRELPathElement> path_element) : path_element{std::move(path_element)} {}
         void print(std::ostream& o) const override;
-        cppcoro::generator<const RRELInternalResult> get_next_matches(
-            std::shared_ptr<textx::object::Object>, 
-            std::vector<std::string> lookup_list,
+        cppcoro::generator<const py::RRELInternalResult> get_next_matches(
+            py::RRELInternalResultData data,
             AllowedFunc allowed,
             bool first_element=false
         ) const override;
@@ -129,9 +125,8 @@ namespace textx::rrel {
         std::vector<std::unique_ptr<RRELPathElement>> path_elements;
         RRELPath(std::vector<std::unique_ptr<RRELPathElement>> &&path_elements) : path_elements{std::move(path_elements)} {};       
         void print(std::ostream& o) const override;
-        cppcoro::generator<const RRELInternalResult> get_next_matches(
-            std::shared_ptr<textx::object::Object>, 
-            std::vector<std::string> lookup_list,
+        cppcoro::generator<const py::RRELInternalResult> get_next_matches(
+            py::RRELInternalResultData data,
             AllowedFunc allowed,
             bool first_element=false
         ) const override;
@@ -144,9 +139,8 @@ namespace textx::rrel {
         // note: importURI handled differently (ignored here)
         RRELExpression(std::unique_ptr<RRELSequence> &&seq, bool use_proxy, std::string flags) : seq{std::move(seq)}, use_proxy{use_proxy}, flags{flags} {}
         void print(std::ostream& o) const override;
-        cppcoro::generator<const RRELInternalResult> get_next_matches(
-            std::shared_ptr<textx::object::Object>, 
-            std::vector<std::string> lookup_list,
+        cppcoro::generator<const py::RRELInternalResult> get_next_matches(
+            py::RRELInternalResultData data,
             AllowedFunc allowed,
             bool first_element=false
         ) const override;
@@ -155,8 +149,8 @@ namespace textx::rrel {
     std::unique_ptr<RRELExpression> create_RREL_expression(textx::arpeggio::Match m);
     std::unique_ptr<RRELExpression> create_RREL_expression(std::string rrel_expression_string);
 
-    RRELResult find_object_with_path(std::shared_ptr<textx::object::Object> obj, std::vector<std::string> lookup, textx::rrel::RRELExpression& rrel_tree, std::string obj_cls="");
-    inline RRELResult find_object_with_path(
+    py::RRELResult find_object_with_path(std::shared_ptr<textx::object::Object> obj, std::vector<std::string> lookup, textx::rrel::RRELExpression& rrel_tree, std::string obj_cls="");
+    inline py::RRELResult find_object_with_path(
         std::shared_ptr<textx::object::Object> obj,
         std::variant<std::string,std::vector<std::string>> lookup,
         textx::rrel::RRELExpression& rrel_tree, 
@@ -181,7 +175,7 @@ namespace textx::rrel {
         }
         return find_object_with_path(obj, new_lookup, rrel_tree, obj_cls);
     }
-    inline RRELResult find_object_with_path(
+    inline py::RRELResult find_object_with_path(
         std::shared_ptr<textx::object::Object> obj,
         std::variant<std::string,std::vector<std::string>> lookup,
         std::string rrel_tree, 
