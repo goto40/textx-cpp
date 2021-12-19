@@ -294,7 +294,9 @@ namespace textx::rrel {
                         };
                         auto matched_path_copy = data.matched_path;
                         matched_path_copy.push_back( itarget.obj() );
+                        std::cout << "yield..."<<itarget.obj().get()<<"\n";
                         co_yield py::RRELInternalResultData{itarget.obj(), lookup_copy, matched_path_copy};
+                        std::cout << "end of consume...\n";
                         co_return;
                     }
                     else {
@@ -370,6 +372,10 @@ namespace textx::rrel {
                 co_yield res;
             }
             else {
+                if (std::get<0>(res).obj == nullptr) {
+                    co_yield py::RRELInternalResultData{nullptr, data.lookup_list, data.matched_path};
+                    co_return;
+                }
                 for (const auto& ires: intern_get_next_matches(std::get<0>(res), allowed, false,idx+1)) {
                     co_yield ires;
                 }
