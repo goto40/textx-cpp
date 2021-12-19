@@ -243,7 +243,13 @@ namespace textx::rrel {
         AllowedFunc allowed,
         bool first_element
     ) const {
-        co_yield textx::scoping::Postponed{};
+        if (allowed(data.obj, data.lookup_list, this)) {
+            for (const auto& p: paths) {
+                for (const auto& res: p->get_next_matches(data, allowed, first_element)) {
+                    co_yield res;
+                }
+            }
+        }
     }
 
     cppcoro::generator<const py::RRELInternalResult> RRELNavigation::get_next_matches(
@@ -270,12 +276,38 @@ namespace textx::rrel {
         co_yield textx::scoping::Postponed{};
     }
 
+    cppcoro::generator<const py::RRELInternalResult> RRELPath::intern_get_next_matches(
+        py::RRELInternalResultData data,
+        AllowedFunc allowed,
+        bool first_element,
+        size_t idx
+    ) const {
+        TEXTX_ASSERT(path_elements.size() > idx);
+        auto &e = path_elements[idx];
+        for (const auto& res: e->get_next_matches(data, allowed, first_element)) {
+            if( std::holds_alternative<textx::scoping::Postponed>(res)) {
+                co_yield textx::scoping::Postponed{};
+                co_return;
+            }
+            if (path_elements.size() - 1 == idx) {
+                co_yield res;
+            }
+            else {
+                for (const auto& ires: intern_get_next_matches(std::get<0>(res), allowed, false,idx+1)) {
+                    co_yield ires;
+                }
+            }
+        }
+    }
+
     cppcoro::generator<const py::RRELInternalResult> RRELPath::get_next_matches(
         py::RRELInternalResultData data,
         AllowedFunc allowed,
         bool first_element
     ) const {
-        co_yield textx::scoping::Postponed{};
+        for (const auto& res: intern_get_next_matches(data, allowed, first_element)) {
+            co_yield res;
+        }
     }
 
     cppcoro::generator<const py::RRELInternalResult> RRELExpression::get_next_matches(

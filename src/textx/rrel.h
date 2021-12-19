@@ -130,6 +130,13 @@ namespace textx::rrel {
             AllowedFunc allowed,
             bool first_element=false
         ) const override;
+        private:
+        cppcoro::generator<const py::RRELInternalResult> intern_get_next_matches(
+            py::RRELInternalResultData data,
+            AllowedFunc allowed,
+            bool first_element=false,
+            size_t idx=0
+        ) const;
     };
 
     struct RRELExpression : RRELBase {
