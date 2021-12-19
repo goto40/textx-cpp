@@ -4,6 +4,7 @@
 #include "textx/lang.h"
 #include "textx/arpeggio.h"
 #include "textx/rrel.h"
+#include "textx/metamodel.h"
 
 TEST_CASE("adapted_from_python_textx_tests_test_rrel_basic_parser1", "[textx/rrel]")
 {
@@ -50,4 +51,21 @@ TEST_CASE("adapted_from_python_textx_tests_test_rrel_basic_parser2", "[textx/rre
     CHECK(r->str() == "+p:a.b.c");
     r = textx::rrel::create_RREL_expression("+mp:a.b.c");
     CHECK(r->str() == "+mp:a.b.c");
+}
+
+TEST_CASE("simple_rrel1", "[textx/rrel]")
+{
+    auto mm = textx::metamodel_from_str(R"#(
+        Model: packages+=Package;
+        Package: "package" name=ID "{" packages*=Package objects*=Object "}";
+        Object: "object" name=ID;
+    )#");
+    auto m = mm->model_from_str(R"(
+        package a {
+            package b {
+                object c
+            }
+        }
+    )");    
+    auto res = textx::rrel::find_object_with_path(m->val().obj(), "a.b.c", "packages.packages.objects");
 }

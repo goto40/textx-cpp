@@ -265,23 +265,29 @@ namespace textx::rrel {
             co_yield py::RRELInternalResultData{nullptr, data.lookup_list, data.matched_path};
             co_return;
         }
+        std::cout << "lookup:" << data.lookup_list[0] << "\n";
+        
+        if (data.obj == nullptr) {
+            std::cout << "is null...\n";
+            co_yield py::RRELInternalResultData{nullptr, data.lookup_list, data.matched_path};
+            co_return;
+        }
         else if (data.obj->has_attr(this->name)) {
+            std::cout << "name found...\n";
             auto &target = (*data.obj)[this->name];
             if (target.is_list()) {
+                std::cout << "is list...\n";
                 for (auto& itarget: target) {
                     if (itarget.is_ref() && !itarget.is_resolved()) {
                         co_yield textx::scoping::Postponed{};
                         co_return;
                     }
-
-                    if (itarget.is_ref() && !itarget.is_resolved()) {
-                        co_yield textx::scoping::Postponed{};
-                        co_return;
-                    }
                     else if (!consume_name) {
+                        std::cout << "no consume...\n";
                         co_yield py::RRELInternalResultData{ itarget.obj(), data.lookup_list, data.matched_path };
                     }
                     else if (itarget.obj()->has_attr("name") && itarget["name"].str() == data.lookup_list[0]) {
+                        std::cout << "consume...\n";
                         std::vector<std::string> lookup_copy{
                             data.lookup_list.begin()+1,
                             data.lookup_list.end()
@@ -299,6 +305,7 @@ namespace textx::rrel {
                 }
             }
             else { // scalar
+                std::cout << "is scalar...\n";
                 auto &itarget = target;
                 if (itarget.is_ref() && !itarget.is_resolved()) {
                     co_yield textx::scoping::Postponed{};
@@ -324,6 +331,7 @@ namespace textx::rrel {
             }
         }
         else {
+            std::cout << "name "<< name << " not found in "<< data.obj->type <<"...\n";
             co_yield py::RRELInternalResultData{nullptr, data.lookup_list, data.matched_path};
             co_return;
         }
@@ -393,8 +401,9 @@ namespace textx::rrel {
     py::RRELResult find_object_with_path(std::shared_ptr<textx::object::Object> obj, std::vector<std::string> lookup, textx::rrel::RRELExpression& rrel_tree, std::string obj_cls)
     {
         auto allowed = [
-            visited=std::vector<std::unordered_set<std::pair<textx::object::Object*, const textx::rrel::RRELBase*>,pair_hash>>(lookup.size()) // recursion breaker
+            visited=std::vector<std::unordered_set<std::pair<textx::object::Object*, const textx::rrel::RRELBase*>,pair_hash>>(lookup.size()+1) // recursion breaker
         ](std::shared_ptr<textx::object::Object> obj, std::vector<std::string> lookup_list, const textx::rrel::RRELBase* e) mutable {
+            TEXTX_ASSERT(lookup_list.size()<visited.size())
             std::pair<textx::object::Object*, const textx::rrel::RRELBase*> elem{obj.get(), e};
             if (visited[lookup_list.size()].count(elem)>0) {
                 return false;
