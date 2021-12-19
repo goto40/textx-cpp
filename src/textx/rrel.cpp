@@ -257,7 +257,76 @@ namespace textx::rrel {
         AllowedFunc allowed,
         bool first_element
     ) const {
-        co_yield textx::scoping::Postponed{};
+        if (first_element) {
+            data.obj = data.obj->tx_model()->val().obj();
+        }
+
+        if (data.lookup_list.size()==0 and this->consume_name) {
+            co_yield py::RRELInternalResultData{nullptr, data.lookup_list, data.matched_path};
+            co_return;
+        }
+        else if (data.obj->has_attr(this->name)) {
+            auto &target = (*data.obj)[this->name];
+            if (target.is_list()) {
+                for (auto& itarget: target) {
+                    if (itarget.is_ref() && !itarget.is_resolved()) {
+                        co_yield textx::scoping::Postponed{};
+                        co_return;
+                    }
+
+                    if (itarget.is_ref() && !itarget.is_resolved()) {
+                        co_yield textx::scoping::Postponed{};
+                        co_return;
+                    }
+                    else if (!consume_name) {
+                        co_yield py::RRELInternalResultData{ itarget.obj(), data.lookup_list, data.matched_path };
+                    }
+                    else if (itarget.obj()->has_attr("name") && itarget["name"].str() == data.lookup_list[0]) {
+                        std::vector<std::string> lookup_copy{
+                            data.lookup_list.begin()+1,
+                            data.lookup_list.end()
+                        };
+                        auto matched_path_copy = data.matched_path;
+                        matched_path_copy.push_back( itarget.obj() );
+                        co_yield py::RRELInternalResultData{itarget.obj(), lookup_copy, matched_path_copy};
+                        co_return;
+                    }
+                    else {
+                        co_yield py::RRELInternalResultData{nullptr, data.lookup_list, data.matched_path};
+                        co_return;
+                    }
+
+                }
+            }
+            else { // scalar
+                auto &itarget = target;
+                if (itarget.is_ref() && !itarget.is_resolved()) {
+                    co_yield textx::scoping::Postponed{};
+                    co_return;
+                }
+                else if (!consume_name) {
+                    co_yield py::RRELInternalResultData{ itarget.obj(), data.lookup_list, data.matched_path };
+                }
+                else if (itarget.obj()->has_attr("name") && itarget["name"].str() == data.lookup_list[0]) {
+                    std::vector<std::string> lookup_copy{
+                        data.lookup_list.begin()+1,
+                        data.lookup_list.end()
+                    };
+                    auto matched_path_copy = data.matched_path;
+                    matched_path_copy.push_back( itarget.obj() );
+                    co_yield py::RRELInternalResultData{itarget.obj(), lookup_copy, matched_path_copy};
+                    co_return;
+                }
+                else {
+                    co_yield py::RRELInternalResultData{nullptr, data.lookup_list, data.matched_path};
+                    co_return;
+                }
+            }
+        }
+        else {
+            co_yield py::RRELInternalResultData{nullptr, data.lookup_list, data.matched_path};
+            co_return;
+        }
     }
 
     cppcoro::generator<const py::RRELInternalResult> RRELDots::get_next_matches(
