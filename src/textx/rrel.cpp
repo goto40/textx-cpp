@@ -265,18 +265,18 @@ namespace textx::rrel {
             co_yield py::RRELInternalResultData{nullptr, data.lookup_list, data.matched_path};
             co_return;
         }
-        std::cout << "lookup:" << data.lookup_list[0] << "\n";
+        //std::cout << "lookup:" << data.lookup_list[0] << "\n";
         
         if (data.obj == nullptr) {
-            std::cout << "is null...\n";
+            //std::cout << "is null...\n";
             co_yield py::RRELInternalResultData{nullptr, data.lookup_list, data.matched_path};
             co_return;
         }
         else if (data.obj->has_attr(this->name)) {
-            std::cout << "name found...\n";
+            //std::cout << "name found...\n";
             auto &target = (*data.obj)[this->name];
             if (target.is_list()) {
-                std::cout << "is list...\n";
+                //std::cout << "is list...\n";
                 for (auto& itarget: target) {
                     if (itarget.is_ref() && !itarget.is_resolved()) {
                         co_yield textx::scoping::Postponed{};
@@ -287,7 +287,7 @@ namespace textx::rrel {
                         co_yield py::RRELInternalResultData{ itarget.obj(), data.lookup_list, data.matched_path };
                     }
                     else if (itarget.obj()->has_attr("name") && itarget["name"].str() == data.lookup_list[0]) {
-                        std::cout << "consume...\n";
+                        //std::cout << "consume...\n";
                         TEXTX_ASSERT(data.lookup_list.size()>0);
                         std::vector<std::string> lookup_copy{
                             data.lookup_list.begin()+1,
@@ -295,12 +295,12 @@ namespace textx::rrel {
                         };
                         auto matched_path_copy = data.matched_path;
                         matched_path_copy.push_back( itarget.obj() );
-                        std::cout << "yield..."<<itarget.obj().get()<<"\n";
+                        //std::cout << "yield..."<<itarget.obj().get()<<"\n";
                         py::RRELInternalResultData res{itarget.obj(), lookup_copy, matched_path_copy};
                         co_yield res;
                         // Problem was... (local copy solved the problem...)
                         //co_yield py::RRELInternalResultData{itarget.obj(), lookup_copy, matched_path_copy};
-                        std::cout << "end of consume...\n";
+                        //std::cout << "end of consume...\n";
                         co_return;
                     }
                     else {
@@ -311,7 +311,7 @@ namespace textx::rrel {
                 }
             }
             else { // scalar
-                std::cout << "is scalar...\n";
+                //std::cout << "is scalar...\n";
                 auto &itarget = target;
                 if (itarget.is_ref() && !itarget.is_resolved()) {
                     co_yield textx::scoping::Postponed{};
@@ -337,7 +337,7 @@ namespace textx::rrel {
             }
         }
         else {
-            std::cout << "name "<< name << " not found in "<< data.obj->type <<"...\n";
+            //std::cout << "name "<< name << " not found in "<< data.obj->type <<"...\n";
             co_yield py::RRELInternalResultData{nullptr, data.lookup_list, data.matched_path};
             co_return;
         }
@@ -426,13 +426,13 @@ namespace textx::rrel {
         // important: use ref(...) here to protect (do not duplicate) the state
         for (const py::RRELInternalResult& res : rrel_tree.get_next_matches({obj, lookup, {}}, std::ref(allowed), "")) {
             if(std::holds_alternative<textx::scoping::Postponed>(res)) {
-                std::cout << "FINAL: POSTPONED\n";
+                //std::cout << "FINAL: POSTPONED\n";
                 return textx::scoping::Postponed{};
             }
             else {
-                std::cout << "FINAL: RES, ";
-                std::get<0>(res).obj->print(std::cout);
-                std::cout <<"\n";
+                //std::cout << "FINAL: RES, ";
+                //std::get<0>(res).obj->print(std::cout);
+                //std::cout <<"\n";
                 return py::RRELResultData{std::get<0>(res).obj, std::get<0>(res).matched_path};
             }
         }
