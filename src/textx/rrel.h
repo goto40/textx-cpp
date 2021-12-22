@@ -123,6 +123,13 @@ namespace textx::rrel {
             AllowedFunc allowed,
             bool first_element=false
         ) const override;
+        private:
+        rrel_generator<const py::RRELInternalResult> intern_get_next_matches(
+            py::RRELInternalResultData data,
+            AllowedFunc allowed,
+            bool first_element,
+            std::unordered_set<std::pair<const textx::object::Object*,size_t>,textx::utils::pair_hash> prevent_doubles
+        ) const;
     };
 
     struct RRELPath : RRELBase {

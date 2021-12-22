@@ -2,9 +2,22 @@
 #include <coroutine>
 #include <type_traits>
 #include <exception>
+#include <utility>
+#include <functional>
 
 namespace textx::utils
 {
+    struct pair_hash {
+        template <class T1, class T2>
+        std::size_t operator () (const std::pair<T1,T2> &p) const {
+            auto h1 = std::hash<T1>{}(p.first);
+            auto h2 = std::hash<T2>{}(p.second);
+            return h1 ^ h2;  
+        }
+    };    
+
+    template<class T, class U>
+    bool is_instance(U& obj) { return dynamic_cast<T*>(&obj)!=nullptr; }
 
     /* adapted from https://www.scs.stanford.edu/~dm/blog/c++-coroutines.html
        (added for-each begin/end support and other minor points) */
