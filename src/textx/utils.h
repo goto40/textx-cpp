@@ -6,7 +6,8 @@
 namespace textx::utils
 {
 
-    /* adapted from https://www.scs.stanford.edu/~dm/blog/c++-coroutines.html */
+    /* adapted from https://www.scs.stanford.edu/~dm/blog/c++-coroutines.html
+       (added for-each begin/end support and other minor points) */
     template <typename T>
     struct Generator
     {
