@@ -4,6 +4,7 @@
 #include "textx/lang.h"
 #include <unordered_map>
 
+#define MYDBG(x)
 namespace {
     struct pair_hash {
         template <class T1, class T2>
@@ -260,38 +261,42 @@ namespace textx::rrel {
         if (first_element) {
             data.obj = data.obj->tx_model()->val().obj();
         }
+        MYDBG(std::cout << "---- NAVIGATION ----\n";)
 
         if (data.lookup_list.size()==0 and this->consume_name) {
-            co_yield py::RRELInternalResultData{nullptr, data.lookup_list, data.matched_path};
+            auto res = py::RRELInternalResultData{nullptr, data.lookup_list, data.matched_path};
+            co_yield res;
+            //co_yield py::RRELInternalResultData{nullptr, data.lookup_list, data.matched_path};
             co_return;
         }
-        //std::cout << "lookup:" << data.lookup_list[0] << "\n";
+        MYDBG(std::cout << "lookup:" << data.lookup_list[0] << "\n";)
         
         if (data.obj == nullptr) {
-            //std::cout << "is null...\n";
+            MYDBG(std::cout << "is null...\n";)
             auto res = py::RRELInternalResultData{nullptr, data.lookup_list, data.matched_path};
             co_yield res;
             // co_yield py::RRELInternalResultData{nullptr, data.lookup_list, data.matched_path};
             co_return;
         }
         else if (data.obj->has_attr(this->name)) {
-            //std::cout << "name found...\n";
+            MYDBG(std::cout << "name found...\n";)
             auto &target = (*data.obj)[this->name];
             if (target.is_list()) {
-                //std::cout << "is list...\n";
+                MYDBG(std::cout << "is list...\n";)
                 for (auto& itarget: target) {
                     if (itarget.is_ref() && !itarget.is_resolved()) {
+                        MYDBG(std::cout << "postponed...\n";)
                         co_yield textx::scoping::Postponed{};
                         co_return;
                     }
                     else if (!consume_name) {
-                        //std::cout << "no consume...\n";
+                        MYDBG(std::cout << "no consume...\n";)
                         auto res = py::RRELInternalResultData{ itarget.obj(), data.lookup_list, data.matched_path };
                         co_yield res;
                         // co_yield py::RRELInternalResultData{ itarget.obj(), data.lookup_list, data.matched_path };
                     }
                     else if (itarget.obj()->has_attr("name") && itarget["name"].str() == data.lookup_list[0]) {
-                        //std::cout << "consume...\n";
+                        MYDBG(std::cout << "consume...\n";)
                         TEXTX_ASSERT(data.lookup_list.size()>0);
                         std::vector<std::string> lookup_copy{
                             data.lookup_list.begin()+1,
@@ -299,7 +304,7 @@ namespace textx::rrel {
                         };
                         auto matched_path_copy = data.matched_path;
                         matched_path_copy.push_back( itarget.obj() );
-                        //std::cout << "yield..."<<itarget.obj().get()<<"\n";
+                        MYDBG(std::cout << "yield..."<<itarget.obj().get()<<"\n";)
                         auto res = py::RRELInternalResultData{itarget.obj(), lookup_copy, matched_path_copy};
                         co_yield res;
                         // Problem was... (local copy solved the problem...)
@@ -308,6 +313,7 @@ namespace textx::rrel {
                         co_return;
                     }
                     else {
+                        MYDBG(std::cout << "nullptr...\n";)
                         auto res = py::RRELInternalResultData{nullptr, data.lookup_list, data.matched_path};
                         co_yield res;
                         //co_yield py::RRELInternalResultData{nullptr, data.lookup_list, data.matched_path};
@@ -347,7 +353,7 @@ namespace textx::rrel {
             }
         }
         else {
-            //std::cout << "name "<< name << " not found in "<< data.obj->type <<"...\n";
+            MYDBG(std::cout << "name "<< name << " not found in "<< data.obj->type <<"...\n";)
             auto res = py::RRELInternalResultData{nullptr, data.lookup_list, data.matched_path};
             co_yield res;
             // co_yield py::RRELInternalResultData{nullptr, data.lookup_list, data.matched_path};
@@ -438,13 +444,13 @@ namespace textx::rrel {
         // important: use ref(...) here to protect (do not duplicate) the state
         for (const py::RRELInternalResult res : rrel_tree.get_next_matches({obj, lookup, {}}, std::ref(allowed), "")) {
             if(std::holds_alternative<textx::scoping::Postponed>(res)) {
-                //std::cout << "FINAL: POSTPONED\n";
+                MYDBG(std::cout << "FINAL: POSTPONED\n";)
                 return textx::scoping::Postponed{};
             }
-            else if (std::get<0>(res).lookup_list.size()==0) {
-                // std::cout << "FINAL: RES, ";
-                // std::get<0>(res).obj->print(std::cout);
-                // std::cout <<"\n";
+            else if (std::get<0>(res).lookup_list.size()==0 && std::get<0>(res).obj!=nullptr) {
+                MYDBG(std::cout << "FINAL: RES, ";)
+                MYDBG(std::get<0>(res).obj->print(std::cout);)
+                MYDBG(std::cout <<"\n";)
                 return py::RRELResultData{std::get<0>(res).obj, std::get<0>(res).matched_path};
             }
         }

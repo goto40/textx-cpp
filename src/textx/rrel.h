@@ -3,7 +3,7 @@
 #include "textx/object.h"
 #include "textx/scoping.h"
 #include "textx/utils.h"
-//#include <cppcoro/generator.hpp>
+#include <cppcoro/generator.hpp>
 #include <string>
 #include <memory>
 #include <vector>
@@ -12,7 +12,8 @@
 
 namespace textx::rrel {
 
-    template<class T> using rrel_generator = textx::utils::Generator<T>;
+    //template<class T> using rrel_generator = textx::utils::Generator<T>;
+    template<class T> using rrel_generator = cppcoro::generator<T>;
 
     namespace py {
         struct RRELInternalResultData {
