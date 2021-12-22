@@ -46,6 +46,8 @@ namespace textx::rrel {
             AllowedFunc allowed,
             bool first_element=false
         ) const =0;
+        virtual bool start_locally() { return false; }
+        virtual bool start_at_root() { return false; }
         std::string str() {
             std::ostringstream o;
             print(o);
@@ -65,6 +67,7 @@ namespace textx::rrel {
             AllowedFunc allowed,
             bool first_element=false
         ) const override;
+        bool start_locally() override { return true; }
     };
 
     struct RRELNavigation : RRELPathElement {
@@ -77,6 +80,7 @@ namespace textx::rrel {
             AllowedFunc allowed,
             bool first_element=false
         ) const override;
+        bool start_at_root() override { return true; }
     };
 
     struct RRELSequence;
@@ -89,6 +93,9 @@ namespace textx::rrel {
             AllowedFunc allowed,
             bool first_element=false
         ) const override;
+        bool start_locally() override;
+        bool start_at_root() override;
+        
     };
 
     struct RRELDots : RRELPathElement {
@@ -100,6 +107,7 @@ namespace textx::rrel {
             AllowedFunc allowed,
             bool first_element=false
         ) const override;
+        bool start_locally() override { return true; }
     };
 
     struct RRELPath;
@@ -112,6 +120,8 @@ namespace textx::rrel {
             AllowedFunc allowed,
             bool first_element=false
         ) const override;
+        bool start_locally() override;
+        bool start_at_root() override;
     };
 
     struct RRELZeroOrMore : RRELPathElement {
@@ -123,6 +133,8 @@ namespace textx::rrel {
             AllowedFunc allowed,
             bool first_element=false
         ) const override;
+        bool start_locally() override { return path_element->start_locally(); }
+        bool start_at_root() override { return path_element->start_at_root(); }
         private:
         rrel_generator<const py::RRELInternalResult> intern_get_next_matches(
             py::RRELInternalResultData data,
@@ -141,6 +153,14 @@ namespace textx::rrel {
             AllowedFunc allowed,
             bool first_element=false
         ) const override;
+        bool start_locally() override {
+            if (path_elements.size()==0) return false;
+            else return path_elements[0]->start_locally();
+        }
+        bool start_at_root() override {
+            if (path_elements.size()==0) return false;
+            else return path_elements[0]->start_at_root();
+        }
         private:
         rrel_generator<const py::RRELInternalResult> intern_get_next_matches(
             py::RRELInternalResultData data,

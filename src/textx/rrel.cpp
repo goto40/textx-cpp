@@ -173,6 +173,24 @@ namespace textx::rrel {
         return textx::rrel::create_RREL_expression(parser.parse_or_throw(rrel_expression_string)->children[0]);
     }
 
+    // misc:
+    bool RRELSequence::start_locally() { 
+        bool res = false;
+        for(auto &p: paths) {
+            res = res || p->start_locally();
+        }
+        return res;
+    }
+    bool RRELSequence::start_at_root() {
+        bool res = false;
+        for(auto &p: paths) {
+            res = res || p->start_at_root();
+        }
+        return res;
+    }
+    bool RRELBrackets::start_locally() { return seq->start_locally(); }
+    bool RRELBrackets::start_at_root() { return seq->start_at_root(); }
+
     // print:
 
     void RRELParent::print(std::ostream& o) const {
@@ -257,7 +275,7 @@ namespace textx::rrel {
     ) const {
         if (allowed(data.obj, data.lookup_list, this)) {
             if (first_element) {
-                //TODO: if (start_locally())
+                //TODO: if (start_locally()) + as root...
                 data.obj = data.obj->tx_model()->val().obj();
             }
             MYDBG(std::cout << "---- NAVIGATION ----\n";)
@@ -331,7 +349,16 @@ namespace textx::rrel {
         AllowedFunc allowed,
         bool first_element
     ) const {
-        co_yield textx::scoping::Postponed{}; // TODO
+        size_t counter = n;
+        auto obj = data.obj;
+        while(counter>1 && obj->parent()!=nullptr) {
+            obj = obj->parent();
+            counter--;
+        }
+        if (counter==1) {
+            co_yield py::RRELInternalResult{py::RRELInternalResultData{obj,data.lookup_list,data.matched_path}};
+        }
+        co_return;
     }
 
     rrel_generator<const py::RRELInternalResult> RRELZeroOrMore::intern_get_next_matches(
