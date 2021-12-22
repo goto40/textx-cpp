@@ -228,7 +228,7 @@ namespace textx::rrel {
         AllowedFunc allowed,
         bool first_element
     ) const {
-        co_yield textx::scoping::Postponed{};
+        co_yield textx::scoping::Postponed{}; // TODO
     }
 
     rrel_generator<const py::RRELInternalResult> RRELBrackets::get_next_matches(
@@ -236,7 +236,11 @@ namespace textx::rrel {
         AllowedFunc allowed,
         bool first_element
     ) const {
-        co_yield textx::scoping::Postponed{};
+        if (allowed(data.obj, data.lookup_list, this)) {
+            for (const auto& res: seq->get_next_matches(data, allowed, first_element)) {
+                co_yield res;
+            }
+        }
     }
 
     rrel_generator<const py::RRELInternalResult> RRELSequence::get_next_matches(
@@ -366,7 +370,7 @@ namespace textx::rrel {
         AllowedFunc allowed,
         bool first_element
     ) const {
-        co_yield textx::scoping::Postponed{};
+        co_yield textx::scoping::Postponed{}; // TODO
     }
 
     rrel_generator<const py::RRELInternalResult> RRELZeroOrMore::get_next_matches(
@@ -374,7 +378,7 @@ namespace textx::rrel {
         AllowedFunc allowed,
         bool first_element
     ) const {
-        co_yield textx::scoping::Postponed{};
+TODO
     }
 
     rrel_generator<const py::RRELInternalResult> RRELPath::intern_get_next_matches(
