@@ -123,6 +123,7 @@ Example:
 
  * Textx, Arpeggio, etc: [https://github.com/textX](https://github.com/textX)
  * Motivation for basic Arpeggio re-impl: [https://blog.bruce-hill.com/](https://blog.bruce-hill.com/packrat-parsing-from-scratch)
+ * Coroutine tutorial [https://www.scs.stanford.edu/~dm/blog/c++-coroutines.html](https://www.scs.stanford.edu/~dm/blog/c++-coroutines.html) (useful for the RREL implementation)
 
 ## <a name="openpoints"></a> Open Points
 Prio 0 (most important):
