@@ -5,6 +5,10 @@
 #include <unordered_map>
 
 #define MYDBG(x)
+#define MYYIELD(x) {auto res = x; co_yield res;}
+// In some cases this seems problematic (see valgrid memory violations...) UNCLEAR!
+//#define MYYIELD(x) co_yield x;
+
 namespace {
     struct pair_hash {
         template <class T1, class T2>
@@ -268,18 +272,14 @@ namespace textx::rrel {
         MYDBG(std::cout << "---- NAVIGATION ----\n";)
 
         if (data.lookup_list.size()==0 and this->consume_name) {
-            auto res = py::RRELInternalResultData{nullptr, data.lookup_list, data.matched_path};
-            co_yield res;
-            //co_yield py::RRELInternalResultData{nullptr, data.lookup_list, data.matched_path};
+            MYYIELD((py::RRELInternalResultData{nullptr, data.lookup_list, data.matched_path}));
             co_return;
         }
         MYDBG(std::cout << "lookup:" << data.lookup_list[0] << "\n";)
         
         if (data.obj == nullptr) {
             MYDBG(std::cout << "is null...\n";)
-            auto res = py::RRELInternalResultData{nullptr, data.lookup_list, data.matched_path};
-            co_yield res;
-            // co_yield py::RRELInternalResultData{nullptr, data.lookup_list, data.matched_path};
+            MYYIELD((py::RRELInternalResultData{nullptr, data.lookup_list, data.matched_path}));
             co_return;
         }
         else if (data.obj->has_attr(this->name)) {
@@ -290,14 +290,12 @@ namespace textx::rrel {
                 for (auto& itarget: target) {
                     if (itarget.is_ref() && !itarget.is_resolved()) {
                         MYDBG(std::cout << "postponed...\n";)
-                        co_yield textx::scoping::Postponed{};
+                        MYYIELD((textx::scoping::Postponed{}));
                         co_return;
                     }
                     else if (!consume_name) {
                         MYDBG(std::cout << "no consume...\n";)
-                        auto res = py::RRELInternalResultData{ itarget.obj(), data.lookup_list, data.matched_path };
-                        co_yield res;
-                        // co_yield py::RRELInternalResultData{ itarget.obj(), data.lookup_list, data.matched_path };
+                        MYYIELD((py::RRELInternalResultData{ itarget.obj(), data.lookup_list, data.matched_path }));
                     }
                     else if (itarget.obj()->has_attr("name") && itarget["name"].str() == data.lookup_list[0]) {
                         MYDBG(std::cout << "consume...\n";)
@@ -309,18 +307,13 @@ namespace textx::rrel {
                         auto matched_path_copy = data.matched_path;
                         matched_path_copy.push_back( itarget.obj() );
                         MYDBG(std::cout << "yield..."<<itarget.obj().get()<<"\n";)
-                        auto res = py::RRELInternalResultData{itarget.obj(), lookup_copy, matched_path_copy};
-                        co_yield res;
-                        // Problem was... (local copy solved the problem...)
-                        //co_yield py::RRELInternalResultData{itarget.obj(), lookup_copy, matched_path_copy};
+                        MYYIELD((py::RRELInternalResultData{itarget.obj(), lookup_copy, matched_path_copy}));
                         //std::cout << "end of consume...\n";
                         co_return;
                     }
                     else {
                         MYDBG(std::cout << "nullptr...\n";)
-                        auto res = py::RRELInternalResultData{nullptr, data.lookup_list, data.matched_path};
-                        co_yield res;
-                        //co_yield py::RRELInternalResultData{nullptr, data.lookup_list, data.matched_path};
+                        MYYIELD((py::RRELInternalResultData{nullptr, data.lookup_list, data.matched_path}));
                         co_return;
                     }
 
@@ -330,11 +323,11 @@ namespace textx::rrel {
                 //std::cout << "is scalar...\n";
                 auto &itarget = target;
                 if (itarget.is_ref() && !itarget.is_resolved()) {
-                    co_yield textx::scoping::Postponed{};
+                    MYYIELD((textx::scoping::Postponed{}));
                     co_return;
                 }
                 else if (!consume_name) {
-                    co_yield py::RRELInternalResultData{ itarget.obj(), data.lookup_list, data.matched_path };
+                    MYYIELD((py::RRELInternalResultData{ itarget.obj(), data.lookup_list, data.matched_path }));
                 }
                 else if (itarget.obj()->has_attr("name") && itarget["name"].str() == data.lookup_list[0]) {
                     std::vector<std::string> lookup_copy{
@@ -343,24 +336,18 @@ namespace textx::rrel {
                     };
                     auto matched_path_copy = data.matched_path;
                     matched_path_copy.push_back( itarget.obj() );
-                    auto res = py::RRELInternalResultData{itarget.obj(), lookup_copy, matched_path_copy};
-                    co_yield res;
-                    //co_yield py::RRELInternalResultData{itarget.obj(), lookup_copy, matched_path_copy};
+                    MYYIELD((py::RRELInternalResultData{itarget.obj(), lookup_copy, matched_path_copy}));
                     co_return;
                 }
                 else {
-                    auto res = py::RRELInternalResultData{nullptr, data.lookup_list, data.matched_path};
-                    co_yield res;
-                    //co_yield py::RRELInternalResultData{nullptr, data.lookup_list, data.matched_path};
+                    MYYIELD((py::RRELInternalResultData{nullptr, data.lookup_list, data.matched_path}));
                     co_return;
                 }
             }
         }
         else {
             MYDBG(std::cout << "name "<< name << " not found in "<< data.obj->type <<"...\n";)
-            auto res = py::RRELInternalResultData{nullptr, data.lookup_list, data.matched_path};
-            co_yield res;
-            // co_yield py::RRELInternalResultData{nullptr, data.lookup_list, data.matched_path};
+            MYYIELD((py::RRELInternalResultData{nullptr, data.lookup_list, data.matched_path}))
             co_return;
         }
     }
@@ -378,7 +365,7 @@ namespace textx::rrel {
         AllowedFunc allowed,
         bool first_element
     ) const {
-TODO
+        co_yield textx::scoping::Postponed{}; // TODO
     }
 
     rrel_generator<const py::RRELInternalResult> RRELPath::intern_get_next_matches(
