@@ -150,7 +150,141 @@ TEST_CASE("adapted_from_python_test_rrel_basic_lookup", "[textx/rrel]")
     CHECK((*P2)["name"].str() == "P2");
     auto Part2 = textx::rrel::find(m->val().obj(), "P2.Part2", "packages.classes");
     CHECK((*Part2)["name"].str() == "Part2");
-    // rec = find(my_model, "P2.Part2.rec", "packages.classes.attributes")
-    // assert rec.name == "rec"
-    // assert rec.parent == Part2
+
+    /*
+    rec = find(my_model, "P2.Part2.rec", "packages.classes.attributes")
+    assert rec.name == "rec"
+    assert rec.parent == Part2
+
+    P2 = find(my_model, "P2", "(packages)")
+    assert P2.name == "P2"
+
+    from textx import get_model
+    assert get_model(my_model) is my_model
+
+    P2 = find(my_model, "P2", "packages*")
+    assert P2.name == "P2"
+    Part2 = find(my_model, "P2.Part2", "packages*.classes")
+    assert Part2.name == "Part2"
+    rec = find(my_model, "P2.Part2.rec", "packages*.classes.attributes")
+    assert rec.name == "rec"
+    assert rec.parent == Part2
+
+    Part2_tst = find(rec, "", "..")
+    assert Part2_tst is Part2
+
+    P2_from_inner_node = find(rec, "P2", "(packages)")
+    assert P2_from_inner_node is P2
+
+    P2_tst = find(rec, "", "parent(Package)")
+    assert P2_tst is P2
+
+    P2_tst = find(rec, "", "...")
+    assert P2_tst is P2
+
+    P2_tst = find(rec, "", ".(..).(..)")
+    assert P2_tst is P2
+
+    P2_tst = find(rec, "", "(..).(..)")
+    assert P2_tst is P2
+
+    P2_tst = find(rec, "", "...(.).(.)")
+    assert P2_tst is P2
+
+    P2_tst = find(rec, "", "..(.).(..)")
+    assert P2_tst is P2
+
+    P2_tst = find(rec, "", "..((.)*)*.(..)")
+    assert P2_tst is P2
+
+    none = find(my_model, "", "..")
+    assert none is None
+
+    m = find(my_model, "", ".")  # '.' references the current element
+    assert m is my_model
+
+    inner = find(my_model, "inner", "~packages.~packages.~classes.attributes")
+    assert inner.name == "inner"
+
+    package_Inner = find(inner, "Inner", "parent(OBJECT)*.packages")
+    assert textx_isinstance(package_Inner, my_metamodel["Package"])
+    assert not textx_isinstance(package_Inner, my_metamodel["Class"])
+
+    assert None is find(inner, "P2", "parent(Class)*.packages")
+
+    # expensive version of a "Plain Name" scope provider:
+    inner = find(my_model, "inner", "~packages*.~classes.attributes")
+    assert inner.name == "inner"
+
+    rec2 = find(my_model, "P2.Part2.rec", "other1,other2,packages*.classes.attributes")
+    assert rec2 is rec
+
+    rec2 = find(my_model, "P2.Part2.rec", "other1,packages*.classes.attributes,other2")
+    assert rec2 is rec
+
+    rec2 = find(my_model, "P2::Part2::rec", "other1,packages*.classes.attributes,other2",
+                split_string="::")
+    assert rec2 is rec
+
+    rec2 = find(my_model, "P2.Part2.rec", "other1,other2,other3")
+    assert rec2 is None
+
+    rec2 = find(my_model, "P2.Part2.rec", "(packages,classes,attributes)*")
+    assert rec2 is rec
+
+    rec2 = find(my_model, "P2.Part2.rec", "(packages,(classes,attributes)*)*.attributes")
+    assert rec2 is rec
+
+    rec2 = find(my_model, "rec", "(~packages,~classes,attributes,classes)*")
+    assert rec2.name == "rec"
+
+    rec2 = find(my_model, "rec",
+                "(~packages,~classes,attributes,classes)*", my_metamodel["OBJECT"])
+    assert rec2.name == "rec"
+
+    rec2 = find(my_model, "rec",
+                "(~packages,~classes,attributes,classes)*", my_metamodel["Attribute"])
+    assert rec2 is rec
+
+    rec2 = find(my_model, "rec",
+                "(~packages,~classes,attributes,classes)*", my_metamodel["Package"])
+    assert rec2 is None
+
+    rec2 = find(my_model, "rec",
+                "(~packages,classes,attributes,~classes)*", my_metamodel["Class"])
+    assert rec2.name == "rec"
+    assert rec2 is not rec  # it is the class...
+
+    rec2 = find(my_model, "rec",
+                "(~packages,~classes,attributes,classes)*", my_metamodel["Class"])
+    assert rec2.name == "rec"
+    assert rec2 is not rec  # it is the class...
+
+    t = find(my_model, "", ".")
+    assert t is my_model
+
+    t = find(my_model, "", "(.)")
+    assert t is my_model
+
+    t = find(my_model, "", "(.)*")
+    assert t is my_model
+
+    t = find(my_model, "", "(.)*.no_existent")  # inifite recursion stopper
+    assert t is None
+
+    rec2 = find(my_model, "rec",
+                "(.)*.(~packages,~classes,attributes,classes)*", my_metamodel["Class"])
+    assert rec2.name == "rec"
+    assert rec2 is not rec  # it is the class...
+
+    # Here, we test the start_from_root/start_locally logic:
+    P2t = find(rec, "P2", "(.)*.packages")
+    assert P2t is None
+    P2t = find(rec, "P2", "(.,not_existent_but_root)*.packages")
+    assert P2t is P2
+    rect = find(rec, "rec", "(~packages)*.(..).attributes")
+    assert rect is None
+    rect = find(rec, "rec", "(.,~packages)*.(..).attributes")
+    assert rect is rec
+    */
 }
