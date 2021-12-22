@@ -27,7 +27,8 @@ namespace textx {
         public:
         Metamodel(std::string_view grammar, bool is_main_grammar=true, bool include_basic_metamodel=true, std::string filename="");
         std::shared_ptr<textx::Workspace> tx_default_workspace();
-        bool is_base_of(std::string t1, std::string t2) const;
+        bool is_base_of(std::string base, std::string special) const;
+        bool is_instance(std::string special, std::string base) const { return is_base_of(base,special); };
         Rule& operator[](std::string name);
         const Rule& operator[](std::string name) const;
         bool has_rule(std::string name) const;

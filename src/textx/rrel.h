@@ -223,4 +223,20 @@ namespace textx::rrel {
         auto rrel = create_RREL_expression(rrel_tree);
         return find_object_with_path(obj, lookup, *rrel, obj_cls, split_string);
     }
+
+    /** note: return nullptr in case of postponed elements */
+    inline std::shared_ptr<textx::object::Object> find(
+        std::shared_ptr<textx::object::Object> obj,
+        std::string lookup,
+        std::string rrel_tree) 
+    {
+        auto res = find_object_with_path(obj, lookup, rrel_tree);
+        if(std::holds_alternative<textx::scoping::Postponed>(res)) {
+            return nullptr;
+        }
+        else {
+            return std::get<0>(res).obj;
+        }
+    }
+
 }

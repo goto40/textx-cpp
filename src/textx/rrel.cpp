@@ -2,6 +2,7 @@
 #include "textx/assert.h"
 #include "textx/arpeggio.h"
 #include "textx/lang.h"
+#include "textx/metamodel.h"
 #include <unordered_map>
 
 #define MYDBG(x)
@@ -239,7 +240,17 @@ namespace textx::rrel {
         AllowedFunc allowed,
         bool first_element
     ) const {
-        co_yield textx::scoping::Postponed{}; // TODO
+        auto obj = data.obj;
+        auto mm = obj->tx_model()->tx_metamodel();
+        obj = obj->parent();
+        while(obj!=nullptr) {
+            if (mm->is_instance(obj->type, type)) break;
+            obj = obj->parent();
+        }
+        if (obj!=nullptr) {
+            co_yield py::RRELInternalResult{py::RRELInternalResultData{obj,data.lookup_list,data.matched_path}};
+        }
+        co_return;
     }
 
     rrel_generator<const py::RRELInternalResult> RRELBrackets::get_next_matches(

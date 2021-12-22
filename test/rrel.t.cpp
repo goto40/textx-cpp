@@ -86,5 +86,71 @@ TEST_CASE("simple_rrel1", "[textx/rrel]")
 
     res = textx::rrel::find_object_with_path(m->val().obj(), "a.b", "packages*.objects");
     CHECK( std::get<0>(res).obj == nullptr );
+}
 
+namespace {
+    const char* metamodel_str = R"#(
+        Model:
+            packages*=Package
+        ;
+
+        Package:
+            'package' name=ID '{'
+            packages*=Package
+            classes*=Class
+            '}'
+        ;
+
+        Class:
+            'class' name=ID '{'
+                attributes*=Attribute
+            '}'
+        ;
+
+        Attribute:
+                'attr' name=ID ';'
+        ;
+
+        Comment: /#.*/;
+        FQN: ID('.'ID)*;
+    )#";
+
+    const char* modeltext=modeltext = R"#(
+        package P1 {
+            class Part1 {
+            }
+        }
+        package P2 {
+            package Inner {
+                class Inner {
+                    attr inner;
+                }
+            }
+            class Part2 {
+                attr rec;
+            }
+            class C2 {
+                attr p1;
+                attr p2a;
+                attr p2b;
+            }
+            class rec {
+                attr p1;
+            }
+        }
+    )#";
+}
+
+TEST_CASE("adapted_from_python_test_rrel_basic_lookup", "[textx/rrel]")
+{
+    auto mm = textx::metamodel_from_str(metamodel_str);
+    auto m = mm->model_from_str(modeltext);
+
+    auto P2 = textx::rrel::find(m->val().obj(), "P2", "packages");
+    CHECK((*P2)["name"].str() == "P2");
+    auto Part2 = textx::rrel::find(m->val().obj(), "P2.Part2", "packages.classes");
+    CHECK((*Part2)["name"].str() == "Part2");
+    // rec = find(my_model, "P2.Part2.rec", "packages.classes.attributes")
+    // assert rec.name == "rec"
+    // assert rec.parent == Part2
 }
