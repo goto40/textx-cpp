@@ -222,7 +222,7 @@ namespace textx::rrel {
     }
 
     // resolve:
-    cppcoro::generator<const py::RRELInternalResult> RRELParent::get_next_matches(
+    rrel_generator<const py::RRELInternalResult> RRELParent::get_next_matches(
         py::RRELInternalResultData data,
         AllowedFunc allowed,
         bool first_element
@@ -230,7 +230,7 @@ namespace textx::rrel {
         co_yield textx::scoping::Postponed{};
     }
 
-    cppcoro::generator<const py::RRELInternalResult> RRELBrackets::get_next_matches(
+    rrel_generator<const py::RRELInternalResult> RRELBrackets::get_next_matches(
         py::RRELInternalResultData data,
         AllowedFunc allowed,
         bool first_element
@@ -238,7 +238,7 @@ namespace textx::rrel {
         co_yield textx::scoping::Postponed{};
     }
 
-    cppcoro::generator<const py::RRELInternalResult> RRELSequence::get_next_matches(
+    rrel_generator<const py::RRELInternalResult> RRELSequence::get_next_matches(
         py::RRELInternalResultData data,
         AllowedFunc allowed,
         bool first_element
@@ -252,7 +252,7 @@ namespace textx::rrel {
         }
     }
 
-    cppcoro::generator<const py::RRELInternalResult> RRELNavigation::get_next_matches(
+    rrel_generator<const py::RRELInternalResult> RRELNavigation::get_next_matches(
         py::RRELInternalResultData data,
         AllowedFunc allowed,
         bool first_element
@@ -355,7 +355,7 @@ namespace textx::rrel {
         }
     }
 
-    cppcoro::generator<const py::RRELInternalResult> RRELDots::get_next_matches(
+    rrel_generator<const py::RRELInternalResult> RRELDots::get_next_matches(
         py::RRELInternalResultData data,
         AllowedFunc allowed,
         bool first_element
@@ -363,7 +363,7 @@ namespace textx::rrel {
         co_yield textx::scoping::Postponed{};
     }
 
-    cppcoro::generator<const py::RRELInternalResult> RRELZeroOrMore::get_next_matches(
+    rrel_generator<const py::RRELInternalResult> RRELZeroOrMore::get_next_matches(
         py::RRELInternalResultData data,
         AllowedFunc allowed,
         bool first_element
@@ -371,7 +371,7 @@ namespace textx::rrel {
         co_yield textx::scoping::Postponed{};
     }
 
-    cppcoro::generator<const py::RRELInternalResult> RRELPath::intern_get_next_matches(
+    rrel_generator<const py::RRELInternalResult> RRELPath::intern_get_next_matches(
         py::RRELInternalResultData data,
         AllowedFunc allowed,
         bool first_element,
@@ -399,7 +399,7 @@ namespace textx::rrel {
         }
     }
 
-    cppcoro::generator<const py::RRELInternalResult> RRELPath::get_next_matches(
+    rrel_generator<const py::RRELInternalResult> RRELPath::get_next_matches(
         py::RRELInternalResultData data,
         AllowedFunc allowed,
         bool first_element
@@ -409,7 +409,7 @@ namespace textx::rrel {
         }
     }
 
-    cppcoro::generator<const py::RRELInternalResult> RRELExpression::get_next_matches(
+    rrel_generator<const py::RRELInternalResult> RRELExpression::get_next_matches(
         py::RRELInternalResultData data,
         AllowedFunc allowed,
         bool first_element

@@ -2,7 +2,8 @@
 #include "textx/arpeggio.h"
 #include "textx/object.h"
 #include "textx/scoping.h"
-#include <cppcoro/generator.hpp>
+#include "textx/utils.h"
+//#include <cppcoro/generator.hpp>
 #include <string>
 #include <memory>
 #include <vector>
@@ -10,6 +11,8 @@
 #include <sstream>
 
 namespace textx::rrel {
+
+    template<class T> using rrel_generator = textx::utils::Generator<T>;
 
     namespace py {
         struct RRELInternalResultData {
@@ -37,7 +40,7 @@ namespace textx::rrel {
     struct RRELBase {
         virtual ~RRELBase() = default;
         virtual void print(std::ostream& o) const=0;
-        virtual cppcoro::generator<const py::RRELInternalResult> get_next_matches(
+        virtual rrel_generator<const py::RRELInternalResult> get_next_matches(
             py::RRELInternalResultData data,
             AllowedFunc allowed,
             bool first_element=false
@@ -56,7 +59,7 @@ namespace textx::rrel {
         std::string type;
         RRELParent(std::string type) : type{std::move(type)} {}
         void print(std::ostream& o) const override;
-        cppcoro::generator<const py::RRELInternalResult> get_next_matches(
+        rrel_generator<const py::RRELInternalResult> get_next_matches(
             py::RRELInternalResultData data,
             AllowedFunc allowed,
             bool first_element=false
@@ -68,7 +71,7 @@ namespace textx::rrel {
         bool consume_name;
         RRELNavigation(std::string name, bool consume_name) : name{std::move(name)}, consume_name{consume_name} {}
         void print(std::ostream& o) const override;
-        cppcoro::generator<const py::RRELInternalResult> get_next_matches(
+        rrel_generator<const py::RRELInternalResult> get_next_matches(
             py::RRELInternalResultData data,
             AllowedFunc allowed,
             bool first_element=false
@@ -80,7 +83,7 @@ namespace textx::rrel {
         std::unique_ptr<RRELSequence> seq;
         RRELBrackets(std::unique_ptr<RRELSequence> &&seq) : seq{std::move(seq)} {}
         void print(std::ostream& o) const override;
-        cppcoro::generator<const py::RRELInternalResult> get_next_matches(
+        rrel_generator<const py::RRELInternalResult> get_next_matches(
             py::RRELInternalResultData data,
             AllowedFunc allowed,
             bool first_element=false
@@ -91,7 +94,7 @@ namespace textx::rrel {
         size_t n;
         RRELDots(size_t n) : n{n} {}
         void print(std::ostream& o) const override;
-        cppcoro::generator<const py::RRELInternalResult> get_next_matches(
+        rrel_generator<const py::RRELInternalResult> get_next_matches(
             py::RRELInternalResultData data,
             AllowedFunc allowed,
             bool first_element=false
@@ -103,7 +106,7 @@ namespace textx::rrel {
         std::vector<std::unique_ptr<RRELPath>> paths;
         RRELSequence(std::vector<std::unique_ptr<RRELPath>> &&paths) : paths{std::move(paths)} {};
         void print(std::ostream& o) const override;
-        cppcoro::generator<const py::RRELInternalResult> get_next_matches(
+        rrel_generator<const py::RRELInternalResult> get_next_matches(
             py::RRELInternalResultData data,
             AllowedFunc allowed,
             bool first_element=false
@@ -114,7 +117,7 @@ namespace textx::rrel {
         std::unique_ptr<RRELPathElement> path_element;
         RRELZeroOrMore(std::unique_ptr<RRELPathElement> path_element) : path_element{std::move(path_element)} {}
         void print(std::ostream& o) const override;
-        cppcoro::generator<const py::RRELInternalResult> get_next_matches(
+        rrel_generator<const py::RRELInternalResult> get_next_matches(
             py::RRELInternalResultData data,
             AllowedFunc allowed,
             bool first_element=false
@@ -125,13 +128,13 @@ namespace textx::rrel {
         std::vector<std::unique_ptr<RRELPathElement>> path_elements;
         RRELPath(std::vector<std::unique_ptr<RRELPathElement>> &&path_elements) : path_elements{std::move(path_elements)} {};       
         void print(std::ostream& o) const override;
-        cppcoro::generator<const py::RRELInternalResult> get_next_matches(
+        rrel_generator<const py::RRELInternalResult> get_next_matches(
             py::RRELInternalResultData data,
             AllowedFunc allowed,
             bool first_element=false
         ) const override;
         private:
-        cppcoro::generator<const py::RRELInternalResult> intern_get_next_matches(
+        rrel_generator<const py::RRELInternalResult> intern_get_next_matches(
             py::RRELInternalResultData data,
             AllowedFunc allowed,
             bool first_element=false,
@@ -146,7 +149,7 @@ namespace textx::rrel {
         // note: importURI handled differently (ignored here)
         RRELExpression(std::unique_ptr<RRELSequence> &&seq, bool use_proxy, std::string flags) : seq{std::move(seq)}, use_proxy{use_proxy}, flags{flags} {}
         void print(std::ostream& o) const override;
-        cppcoro::generator<const py::RRELInternalResult> get_next_matches(
+        rrel_generator<const py::RRELInternalResult> get_next_matches(
             py::RRELInternalResultData data,
             AllowedFunc allowed,
             bool first_element=false
