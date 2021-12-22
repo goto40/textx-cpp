@@ -69,4 +69,10 @@ TEST_CASE("simple_rrel1", "[textx/rrel]")
     )");    
     auto res = textx::rrel::find_object_with_path(m->val().obj(), "a.b.c", "packages.packages.objects");
     CHECK( std::get<0>(res).obj == m->fqn("a.b.c") );
+    
+    res = textx::rrel::find_object_with_path(m->val().obj(), "a.b.c.d", "packages.packages.objects");
+    CHECK( std::get<0>(res).obj == nullptr );
+
+    res = textx::rrel::find_object_with_path(m->val().obj(), "a.b", "packages.packages.objects");
+    CHECK( std::get<0>(res).obj == nullptr );
 }

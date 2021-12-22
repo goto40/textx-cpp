@@ -269,7 +269,9 @@ namespace textx::rrel {
         
         if (data.obj == nullptr) {
             //std::cout << "is null...\n";
-            co_yield py::RRELInternalResultData{nullptr, data.lookup_list, data.matched_path};
+            auto res = py::RRELInternalResultData{nullptr, data.lookup_list, data.matched_path};
+            co_yield res;
+            // co_yield py::RRELInternalResultData{nullptr, data.lookup_list, data.matched_path};
             co_return;
         }
         else if (data.obj->has_attr(this->name)) {
@@ -283,8 +285,10 @@ namespace textx::rrel {
                         co_return;
                     }
                     else if (!consume_name) {
-                        std::cout << "no consume...\n";
-                        co_yield py::RRELInternalResultData{ itarget.obj(), data.lookup_list, data.matched_path };
+                        //std::cout << "no consume...\n";
+                        auto res = py::RRELInternalResultData{ itarget.obj(), data.lookup_list, data.matched_path };
+                        co_yield res;
+                        // co_yield py::RRELInternalResultData{ itarget.obj(), data.lookup_list, data.matched_path };
                     }
                     else if (itarget.obj()->has_attr("name") && itarget["name"].str() == data.lookup_list[0]) {
                         //std::cout << "consume...\n";
@@ -296,7 +300,7 @@ namespace textx::rrel {
                         auto matched_path_copy = data.matched_path;
                         matched_path_copy.push_back( itarget.obj() );
                         //std::cout << "yield..."<<itarget.obj().get()<<"\n";
-                        py::RRELInternalResultData res{itarget.obj(), lookup_copy, matched_path_copy};
+                        auto res = py::RRELInternalResultData{itarget.obj(), lookup_copy, matched_path_copy};
                         co_yield res;
                         // Problem was... (local copy solved the problem...)
                         //co_yield py::RRELInternalResultData{itarget.obj(), lookup_copy, matched_path_copy};
@@ -304,7 +308,9 @@ namespace textx::rrel {
                         co_return;
                     }
                     else {
-                        co_yield py::RRELInternalResultData{nullptr, data.lookup_list, data.matched_path};
+                        auto res = py::RRELInternalResultData{nullptr, data.lookup_list, data.matched_path};
+                        co_yield res;
+                        //co_yield py::RRELInternalResultData{nullptr, data.lookup_list, data.matched_path};
                         co_return;
                     }
 
@@ -327,18 +333,24 @@ namespace textx::rrel {
                     };
                     auto matched_path_copy = data.matched_path;
                     matched_path_copy.push_back( itarget.obj() );
-                    co_yield py::RRELInternalResultData{itarget.obj(), lookup_copy, matched_path_copy};
+                    auto res = py::RRELInternalResultData{itarget.obj(), lookup_copy, matched_path_copy};
+                    co_yield res;
+                    //co_yield py::RRELInternalResultData{itarget.obj(), lookup_copy, matched_path_copy};
                     co_return;
                 }
                 else {
-                    co_yield py::RRELInternalResultData{nullptr, data.lookup_list, data.matched_path};
+                    auto res = py::RRELInternalResultData{nullptr, data.lookup_list, data.matched_path};
+                    co_yield res;
+                    //co_yield py::RRELInternalResultData{nullptr, data.lookup_list, data.matched_path};
                     co_return;
                 }
             }
         }
         else {
             //std::cout << "name "<< name << " not found in "<< data.obj->type <<"...\n";
-            co_yield py::RRELInternalResultData{nullptr, data.lookup_list, data.matched_path};
+            auto res = py::RRELInternalResultData{nullptr, data.lookup_list, data.matched_path};
+            co_yield res;
+            // co_yield py::RRELInternalResultData{nullptr, data.lookup_list, data.matched_path};
             co_return;
         }
     }
@@ -424,15 +436,15 @@ namespace textx::rrel {
             }
         };
         // important: use ref(...) here to protect (do not duplicate) the state
-        for (const py::RRELInternalResult& res : rrel_tree.get_next_matches({obj, lookup, {}}, std::ref(allowed), "")) {
+        for (const py::RRELInternalResult res : rrel_tree.get_next_matches({obj, lookup, {}}, std::ref(allowed), "")) {
             if(std::holds_alternative<textx::scoping::Postponed>(res)) {
                 //std::cout << "FINAL: POSTPONED\n";
                 return textx::scoping::Postponed{};
             }
-            else {
-                //std::cout << "FINAL: RES, ";
-                //std::get<0>(res).obj->print(std::cout);
-                //std::cout <<"\n";
+            else if (std::get<0>(res).lookup_list.size()==0) {
+                // std::cout << "FINAL: RES, ";
+                // std::get<0>(res).obj->print(std::cout);
+                // std::cout <<"\n";
                 return py::RRELResultData{std::get<0>(res).obj, std::get<0>(res).matched_path};
             }
         }
