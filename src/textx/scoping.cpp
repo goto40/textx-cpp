@@ -26,7 +26,7 @@ namespace textx::scoping {
                 // if (v.obj()->has_attr("name")) {
                 //     std::cout << "name ='" <<(*v.obj())["name"].str()<< "' ==? '" << obj_name<<"'\n";
                 // }
-                if (v.obj()->has_attr("name") && (*v.obj())["name"].str()==obj_name) {
+                if (!v.is_null() && v.obj()->has_attr("name") && (*v.obj())["name"].str()==obj_name) {
                     if(target_type.has_value()) {
                         auto &mm = *v.obj()->tx_model()->tx_metamodel();
                         if (!mm.is_base_of(target_type.value(),v.obj()->type)) {
@@ -38,8 +38,11 @@ namespace textx::scoping {
                 } 
                 for (auto &[k,av]: v.obj()->attributes) {
                     if (std::holds_alternative<textx::object::Value>(av.data)) {
-                        auto p = traverse(std::get<textx::object::Value>(av.data));
-                        if (p) return p;
+                        auto &the_value = std::get<textx::object::Value>(av.data);
+                        if (!the_value.is_null()) {
+                            auto p = traverse(the_value);
+                            if (p) return p;
+                        }
                     }
                     else {
                         for (auto &iv: std::get<std::vector<textx::object::Value>>(av.data)) {

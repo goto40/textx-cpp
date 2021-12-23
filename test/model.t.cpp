@@ -180,3 +180,45 @@ TEST_CASE("model_ordered_choice2", "[textx/model]")
     }
     CHECK(text1.str() == text2.str()); // no difference between with or without '|'
 }
+
+TEST_CASE("model_with_optional_parts", "[textx/model]")
+{
+    auto mm = textx::metamodel_from_str(R"#(
+        Model: entries*=Entry;
+        Entry: A|B; 
+        A: 'A' name=ID (':' ref=[Entry])?;
+        B: 'B' name=ID (':' refs+=[Entry][','])?;
+        Comment: /\/\/.*?$/;
+    )#");
+
+    auto m = mm->model_from_str(R"#(
+        A a0
+        B b0
+
+        A a1: b1
+        A a2: b1
+        B b1: a1,a2
+    )#");
+
+    CHECK( (*m->fqn("a0"))["ref"].is_null());
+    CHECK( (*m->fqn("a0"))["ref"].obj() == nullptr );
+    CHECK( (*m->fqn("a0"))["ref"].is_obj() );
+    CHECK( !(*m->fqn("a0"))["ref"].is_ref() );  // empty refs are mapped to null-objs.
+    CHECK( !(*m->fqn("a0"))["ref"].is_list() );
+
+    CHECK( !(*m->fqn("b0"))["refs"].is_obj() );
+    CHECK( (*m->fqn("b0"))["refs"].is_list() );
+    CHECK( (*m->fqn("b0"))["refs"].size()==0 );
+
+    CHECK( (*m->fqn("a1"))["ref"].obj() == m->fqn("b1") );
+    CHECK( (*m->fqn("a1"))["ref"].is_obj() );
+    CHECK( (*m->fqn("a1"))["ref"].is_ref() );
+    CHECK( !(*m->fqn("a1"))["ref"].is_list() );
+
+    CHECK( (*m->fqn("b1"))["refs"].size()==2);
+    CHECK( (*m->fqn("b1"))["refs"][0].obj() == m->fqn("a1") );
+    CHECK( (*m->fqn("b1"))["refs"][1].obj() == m->fqn("a2") );
+    CHECK( (*m->fqn("b1"))["refs"].is_list() );
+    CHECK( (*m->fqn("b1"))["refs"][0].is_obj() );
+    CHECK( (*m->fqn("b1"))["refs"][0].is_ref() );
+}

@@ -181,7 +181,7 @@ namespace textx {
             auto basedir = std::filesystem::path(filename).parent_path();
             auto basedir0 = std::filesystem::path(".");
             textx::object::traverse(ret->val(), [&, this](textx::object::Value& v) {
-                if (v.is_pure_obj() && v.obj()->has_attr("importURI")) {
+                if (v.is_pure_obj() && !v.is_null() && v.obj()->has_attr("importURI")) {
                     TEXTX_ASSERT(v["importURI"].is_str(), "importURI must be a string");
                     auto import_filename = v["importURI"].str();
                     auto p = basedir/import_filename;

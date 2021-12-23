@@ -49,6 +49,14 @@ namespace textx::object {
             return std::holds_alternative<ObjectRef>(data);
         }
 
+        bool is_null() const {
+            if (is_obj() && obj()==nullptr) {
+                return true;
+            }
+            else {
+                return false;
+            }
+        }
         bool is_resolved() const {
             TEXTX_ASSERT(is_ref());
             return obj()!=nullptr;
@@ -138,6 +146,14 @@ namespace textx::object {
         void append(Value v) {
             TEXTX_ASSERT(std::holds_alternative<std::vector<Value>>(data), "error appending data:", v);
             std::get<std::vector<Value>>(data).push_back(v);
+        }
+
+        bool is_null() const {
+            if (!std::holds_alternative<Value>(data)) {
+                return false;
+            }
+            auto &value = std::get<Value>(data);
+            return value.is_null();
         }
 
         bool is_boolean() const {
@@ -288,16 +304,17 @@ namespace textx::object {
         else if (v.is_boolean()) {
             // nothing
         }
+        else if (v.is_null()) {
+            // nothing
+        }
         else if (v.is_pure_obj()) {
-            if (v.obj()!=nullptr) {
-                for (auto &[k,av]: v.obj()->attributes) {
-                    if (std::holds_alternative<textx::object::Value>(av.data)) {
-                        traverse(std::get<textx::object::Value>(av.data),f);
-                    }
-                    else {
-                        for (auto &iv: std::get<std::vector<textx::object::Value>>(av.data)) {
-                            traverse(iv,f);
-                        }
+            for (auto &[k,av]: v.obj()->attributes) {
+                if (std::holds_alternative<textx::object::Value>(av.data)) {
+                    traverse(std::get<textx::object::Value>(av.data),f);
+                }
+                else {
+                    for (auto &iv: std::get<std::vector<textx::object::Value>>(av.data)) {
+                        traverse(iv,f);
                     }
                 }
             }
