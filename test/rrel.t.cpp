@@ -285,3 +285,20 @@ TEST_CASE("adapted_from_python_test_rrel_basic_lookup", "[textx/rrel]")
     rect = textx::rrel::find(rec, "rec", "(.,~packages)*.(..).attributes");
     CHECK( rect == rec );
 }
+
+// This is a basic extra test to demonstrate `()*`
+// in RREL expressions.
+TEST_CASE("adapted_from_python_test_rrel_repetitions", "[textx/rrel]")
+{
+    auto my_metamodel = textx::metamodel_from_str(R"#(
+        Model: entries*=Entry;
+        Entry: name=ID (':' ref=[Entry])?;
+    )#");
+
+    auto my_model = my_metamodel->model_from_str(R"#(
+        a: b
+        c
+        b: a
+    )#");
+
+}
