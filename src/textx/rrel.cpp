@@ -36,7 +36,7 @@ namespace {
         if (choice.children[0].type()==ta::MatchType::str_match && choice.children[0].captured.value() == "^") {
             path_elements.push_back(create_circumflex());
         }
-        else if (choice.children[0].name_is("textx://rrel_dots")) {
+        else if (choice.children[0].name_is("rule://rrel_dots")) {
             path_elements.push_back(std::make_unique<tr::RRELDots>(choice.children[0].captured.value().size()));
         }
         else {
