@@ -96,6 +96,15 @@ namespace textx
         }
 
         const Match* Match::search(std::string name) const {
+            if (name_is(name)) {
+                return this;
+            }
+            else {
+                for (auto &c: children) {
+                    auto ret = c.search(name);
+                    if (ret!=nullptr) { return ret; }
+                }
+            }
             return nullptr;
         }
 

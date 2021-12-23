@@ -480,3 +480,21 @@ TEST_CASE("details_get_is_optional", "[arpeggio]")
     CHECK(is_opt[1]);
     CHECK(!is_opt[2]);
 }
+
+TEST_CASE("match_search", "[arpeggio]")
+{
+    using namespace textx::arpeggio;
+    auto grammar = textx::Grammar<textx::arpeggio::Pattern>{sequence({
+        unordered_group({        
+            optional(capture(str_match("A"))),
+            optional(capture(str_match("B"))),
+            named("TEST123", capture(str_match("C"))),
+        }),
+        end_of_file()
+    })};
+    auto match = grammar.parse_or_throw("BC");
+    CHECK(nullptr == match.value().search("UNKNOWN"));
+    auto test123 = match.value().search("TEST123");
+    CHECK(test123 != nullptr);
+    CHECK(test123->captured.value() == "C");
+}

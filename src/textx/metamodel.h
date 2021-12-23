@@ -42,6 +42,7 @@ namespace textx {
 
         const textx::scoping::RefResolver& get_resolver(std::string rule_name, std::string attr_name, std::shared_ptr<textx::scoping::RefResolver> resolver_override=nullptr) const {
             if (resolver_override!=nullptr) {
+                // std::cout << "use resolver_override " << rule_name << "." << attr_name << "\n";
                 return *resolver_override;
             }
             std::string lookup[] = {

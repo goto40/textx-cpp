@@ -251,7 +251,9 @@ namespace {
                 {
                     auto rrel_match = match.search("rule://rrel_expression");
                     if (rrel_match!=nullptr) {
-                        rule.attribute_info[attribute_name].local_resolver = std::make_shared<textx::rrel::RRELScopeProvider>(*rrel_match);
+                        auto resolver = std::make_shared<textx::rrel::RRELScopeProvider>(*rrel_match);
+                        rule.attribute_info[attribute_name].local_resolver = resolver;
+                        //std::cout << "found: " << rule.name << "." << attribute_name << "\n";
                     }
                 }
 
