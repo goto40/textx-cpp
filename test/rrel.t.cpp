@@ -204,7 +204,6 @@ TEST_CASE("adapted_from_python_test_rrel_basic_lookup", "[textx/rrel]")
     auto inner = textx::rrel::find(m->val().obj(), "inner", "~packages.~packages.~classes.attributes");
     CHECK((*inner)["name"].str() == "inner");
 
-    std::cout << "----START---\n";
     auto package_Inner = textx::rrel::find(inner, "Inner", "parent(OBJECT)*.packages");
     REQUIRE( package_Inner != nullptr );
     CHECK( package_Inner->is_instance("Package") );
@@ -212,24 +211,23 @@ TEST_CASE("adapted_from_python_test_rrel_basic_lookup", "[textx/rrel]")
 
     CHECK( nullptr == textx::rrel::find(inner, "P2", "parent(Class)*.packages") );
 
+    // expensive version of a "Plain Name" scope provider:
+    auto other_inner = textx::rrel::find(m->val().obj(), "inner", "~packages*.~classes.attributes");
+    CHECK( inner == other_inner );
+
+    auto rec2 = textx::rrel::find(m->val().obj(), "P2.Part2.rec", "other1,other2,packages*.classes.attributes");
+    CHECK( rec2 == rec );
+
+    rec2 = textx::rrel::find(m->val().obj(), "P2.Part2.rec", "other1,packages*.classes.attributes,other2");
+    CHECK( rec2 == rec );
+
+    rec2 = textx::rrel::find(m->val().obj(), "P2::Part2::rec", "other1,packages*.classes.attributes,other2","", "::");
+    CHECK( rec2 == rec );
+
+    rec2 = textx::rrel::find(m->val().obj(), "P2.Part2.rec", "other1,other2,other3");
+    CHECK( rec2 == nullptr );
+
 /*
-    # expensive version of a "Plain Name" scope provider:
-    inner = textx::rrel::find(m->val().obj(), "inner", "~packages*.~classes.attributes")
-    CHECK((*inner)["name"].str() == "inner"
-
-    rec2 = textx::rrel::find(m->val().obj(), "P2.Part2.rec", "other1,other2,packages*.classes.attributes")
-    CHECK((*rec2 is rec
-
-    rec2 = textx::rrel::find(m->val().obj(), "P2.Part2.rec", "other1,packages*.classes.attributes,other2")
-    CHECK((*rec2 is rec
-
-    rec2 = textx::rrel::find(m->val().obj(), "P2::Part2::rec", "other1,packages*.classes.attributes,other2",
-                split_string="::")
-    CHECK((*rec2 is rec
-
-    rec2 = textx::rrel::find(m->val().obj(), "P2.Part2.rec", "other1,other2,other3")
-    CHECK((*rec2 is None
-
     rec2 = textx::rrel::find(m->val().obj(), "P2.Part2.rec", "(packages,classes,attributes)*")
     CHECK((*rec2 is rec
 

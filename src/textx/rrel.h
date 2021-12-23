@@ -228,9 +228,11 @@ namespace textx::rrel {
     inline std::shared_ptr<textx::object::Object> find(
         std::shared_ptr<textx::object::Object> obj,
         std::string lookup,
-        std::string rrel_tree) 
+        std::string rrel_tree,
+        std::string obj_cls="",
+        std::string split_string=".") 
     {
-        auto res = find_object_with_path(obj, lookup, rrel_tree);
+        auto res = find_object_with_path(obj, lookup, rrel_tree, obj_cls, split_string);
         if(std::holds_alternative<textx::scoping::Postponed>(res)) {
             return nullptr;
         }
