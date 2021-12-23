@@ -6,7 +6,7 @@
 
 namespace textx::scoping {
 
-    std::shared_ptr<textx::object::Object> PlainNameRefResolver::resolve(std::shared_ptr<textx::object::Object> origin, std::string obj_name, std::optional<std::string> target_type) const {
+    std::tuple<std::shared_ptr<textx::object::Object>, MatchedPath> PlainNameRefResolver::resolve(std::shared_ptr<textx::object::Object> origin, std::string obj_name, std::optional<std::string> target_type) const {
         auto m = origin->tx_model();
         auto mm = m->tx_metamodel();
 
@@ -61,17 +61,17 @@ namespace textx::scoping {
         // own model:
         {
             auto p = traverse(m->val());
-            if (p) return p;
+            if (p) return {p, {}};
         }
         // imported/builtin models:
         for (auto im: m->tx_imported_models()) {
             auto p = traverse(im.lock()->val());
-            if (p) return p;
+            if (p) return {p, {}};
         }
-        return nullptr;
+        return {nullptr, {}};
     }
 
-    std::shared_ptr<textx::object::Object> FQNRefResolver::resolve(std::shared_ptr<textx::object::Object> origin, std::string obj_name, std::optional<std::string> target_type) const {
+    std::tuple<std::shared_ptr<textx::object::Object>, MatchedPath> FQNRefResolver::resolve(std::shared_ptr<textx::object::Object> origin, std::string obj_name, std::optional<std::string> target_type) const {
         auto m = origin->tx_model();
         auto mm = m->tx_metamodel();
         auto v_obj_name = separate_name(obj_name);
@@ -79,7 +79,7 @@ namespace textx::scoping {
         // own model
         while(origin!=nullptr) {
             auto res = dot_separated_name_search(origin, v_obj_name, target_type);
-            if (res) return res;
+            if (res) return {res, {}};
             origin = origin->parent();
         }
         // imported/builtin models:
@@ -89,10 +89,10 @@ namespace textx::scoping {
                 origin = im->val().obj();
                 //std::cout << origin << "\n";
                 auto res = dot_separated_name_search(origin, v_obj_name, target_type);
-                if (res) return res;
+                if (res) return {res, {}};
             }
         }
-        return nullptr;
+        return {nullptr, {}};
     }
 
     std::vector<std::string> separate_name(std::string obj_name) {

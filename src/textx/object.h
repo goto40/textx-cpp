@@ -22,6 +22,8 @@ namespace textx::object {
     class Object;
     struct AttributeValue;
 
+    using MatchedPath = std::vector<std::weak_ptr<Object>>;
+
     struct ObjectRef {
         std::weak_ptr<textx::Model> tx_model;
         std::string name;
@@ -30,6 +32,7 @@ namespace textx::object {
         std::string attr;
         std::weak_ptr<Object> parent = {};
         std::weak_ptr<Object> obj = {};
+        MatchedPath objpath;
     };
 
     using MatchText = std::pair<std::string, std::string>; /// first: text, second: rule-type

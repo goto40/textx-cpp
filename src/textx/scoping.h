@@ -1,25 +1,28 @@
 #pragma once
 #include "textx/model.h"
 #include "textx/object.h"
+#include <tuple>
 #include <variant>
 #include <memory>
 #include <vector>
 
 namespace textx::scoping {
+    using MatchedPath = textx::object::MatchedPath;
+
     struct Postponed {};
 
     struct RefResolver {
         /** looks for obj_name in attr_name, starting form origin */
-        virtual std::shared_ptr<textx::object::Object> resolve(std::shared_ptr<textx::object::Object> origin, std::string obj_name, std::optional<std::string> target_type) const =0;
+        virtual std::tuple<std::shared_ptr<textx::object::Object>, MatchedPath> resolve(std::shared_ptr<textx::object::Object> origin, std::string obj_name, std::optional<std::string> target_type) const =0;
         virtual ~RefResolver() = default;
     };
 
     struct PlainNameRefResolver : RefResolver {
-        std::shared_ptr<textx::object::Object> resolve(std::shared_ptr<textx::object::Object> origin, std::string obj_name, std::optional<std::string> target_type) const override;
+        std::tuple<std::shared_ptr<textx::object::Object>, MatchedPath> resolve(std::shared_ptr<textx::object::Object> origin, std::string obj_name, std::optional<std::string> target_type) const override;
     };
 
     struct FQNRefResolver : RefResolver {
-        std::shared_ptr<textx::object::Object> resolve(std::shared_ptr<textx::object::Object> origin, std::string obj_name, std::optional<std::string> target_type) const override;
+        std::tuple<std::shared_ptr<textx::object::Object>, MatchedPath> resolve(std::shared_ptr<textx::object::Object> origin, std::string obj_name, std::optional<std::string> target_type) const override;
     };
 
     using PostponedOrObject = std::variant<Postponed, std::shared_ptr<textx::object::Object>>;

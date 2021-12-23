@@ -160,7 +160,7 @@ namespace {
 }
 
 namespace textx::rrel {
-    std::unique_ptr<RRELExpression> create_RREL_expression(textx::arpeggio::Match m) {
+    std::unique_ptr<RRELExpression> create_RREL_expression(const textx::arpeggio::Match& m) {
         return rrel_expression(m);
     }
     std::unique_ptr<RRELExpression> create_RREL_expression(std::string rrel_expression_string) {
@@ -509,4 +509,25 @@ namespace textx::rrel {
         }
         return py::RRELResultData{nullptr,{}};
     }
+
+    std::tuple<std::shared_ptr<textx::object::Object>, MatchedPath> RRELScopeProvider::resolve(std::shared_ptr<textx::object::Object> origin, std::string obj_name, std::optional<std::string> target_type) const
+    {
+        std::string type="";
+        if (target_type.has_value()) {
+            type = *target_type;
+        }
+        auto res = textx::rrel::find_object_with_path(
+            origin,
+            obj_name,
+            *rrel_expression,
+            type);
+        if (std::holds_alternative<textx::scoping::Postponed>(res)) {
+            return {nullptr, {}};
+        }
+        else {
+            auto [obj, objpath] = std::get<0>(res);
+            return {obj, objpath};
+        }
+    }
+
 }

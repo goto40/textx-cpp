@@ -15,7 +15,7 @@ namespace textx::rrel {
     //template<class T> using rrel_generator = textx::utils::Generator<T>;
     template<class T> using rrel_generator = cppcoro::generator<T>;
 
-    using MatchedPath = std::vector<std::shared_ptr<textx::object::Object>>;
+    using MatchedPath = textx::scoping::MatchedPath;
     namespace py {
         struct RRELInternalResultData {
             std::shared_ptr<textx::object::Object> obj;
@@ -185,7 +185,7 @@ namespace textx::rrel {
         ) const override;
     };
 
-    std::unique_ptr<RRELExpression> create_RREL_expression(textx::arpeggio::Match m);
+    std::unique_ptr<RRELExpression> create_RREL_expression(const textx::arpeggio::Match& m);
     std::unique_ptr<RRELExpression> create_RREL_expression(std::string rrel_expression_string);
 
     py::RRELResult find_object_with_path(std::shared_ptr<textx::object::Object> obj, std::vector<std::string> lookup, textx::rrel::RRELExpression& rrel_tree, std::string obj_cls="");
@@ -244,9 +244,18 @@ namespace textx::rrel {
         std::string n="";
         for (size_t i=0;i<objpath.size();i++) {
             if (i>0) { n = n + separator; }
-            n = n+(*objpath[i])["name"].str();
+            auto pe = objpath[i].lock();
+            TEXTX_ASSERT(pe != nullptr);
+            n = n+(*pe)["name"].str();
         }
         return n;
     }
 
+    class RRELScopeProvider : public textx::scoping::RefResolver {
+        std::unique_ptr<RRELExpression> rrel_expression;
+    public:
+        RRELScopeProvider(const textx::arpeggio::Match& m) : rrel_expression{create_RREL_expression(m)} {}
+        RRELScopeProvider(std::string rrel_string) : rrel_expression{create_RREL_expression(rrel_string)} {}
+        std::tuple<std::shared_ptr<textx::object::Object>, MatchedPath> resolve(std::shared_ptr<textx::object::Object> origin, std::string obj_name, std::optional<std::string> target_type) const override;
+    };
 }

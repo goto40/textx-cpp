@@ -322,7 +322,7 @@ TEST_CASE("adapted_from_python_test_rrel_repetitions", "[textx/rrel]")
         auto [res, objpath] = std::get<0>(textx::rrel::find_object_with_path(my_model->val().obj(), "b.a.b", "entries.ref*"));
         CHECK( res == b );
         CHECK( objpath.size() == 3 );
-        CHECK( objpath[objpath.size()-1] == res );
+        CHECK( objpath[objpath.size()-1].lock() == res );
         CHECK( textx::rrel::build_fqn(objpath) == "b.a.b" );
 
         a2 = textx::rrel::find(my_model->val().obj(), "b.a.b.a", "entries.ref*");
@@ -332,7 +332,7 @@ TEST_CASE("adapted_from_python_test_rrel_repetitions", "[textx/rrel]")
         auto [res, objpath] = std::get<0>(textx::rrel::find_object_with_path(my_model->val().obj(), "b.a.b.a", "entries.ref*"));
         CHECK( res == a );
         CHECK( objpath.size() == 4 );
-        CHECK( objpath[objpath.size()-1] == res );
+        CHECK( objpath[objpath.size()-1].lock() == res );
         CHECK( textx::rrel::build_fqn(objpath,".") == "b.a.b.a" );
         CHECK( textx::rrel::build_fqn(objpath,"::") == "b::a::b::a" );
 
@@ -341,4 +341,39 @@ TEST_CASE("adapted_from_python_test_rrel_repetitions", "[textx/rrel]")
         b2 = textx::rrel::find(my_model->val().obj(), "b.a.b.a.b.a.b.a.b.a.b", "entries.ref*");
         CHECK( b2 == my_model->fqn("b") );
     }
+}
+
+TEST_CASE("rrel_scope_provider", "[textx/rrel]")
+{
+    auto mm = textx::metamodel_from_str(R"#(
+        Model: a+=A r+=R;
+        A: 'A' name=ID '{' a*=A  '}';
+        R: 'R' a+=[A|FQN][','];
+        FQN: ID ('.' ID)*;
+    )#");
+    mm->set_resolver("R.a", std::make_unique<textx::rrel::RRELScopeProvider>("+p:a*"));
+    auto m = mm->model_from_str(R"#(
+        A a1 {
+            A aa1 {
+                A aaa1 {}
+                A aab1 {}
+            }
+        }
+        A a2 {
+            A aa2 {}
+        }
+        A R {
+            A r2 {}
+        }
+        R a1.aa1.aaa1, a1.aa1.aab1, R, R.r2
+        R R
+        R a2.aa2
+    )#");    
+    CHECK( m->val()["r"].size() == 3 );
+    CHECK( m->val()["r"][0]["a"][0].obj() == m->fqn("a1.aa1.aaa1") );
+    CHECK( m->val()["r"][0]["a"][1].obj() == m->fqn("a1.aa1.aab1") );
+    CHECK( m->val()["r"][0]["a"][2].obj() == m->fqn("R") );
+    CHECK( m->val()["r"][0]["a"][3].obj() == m->fqn("R.r2") );
+    CHECK( m->val()["r"][1]["a"][0].obj() == m->fqn("R") );
+    CHECK( m->val()["r"][2]["a"][0].obj() == m->fqn("a2.aa2") );
 }
