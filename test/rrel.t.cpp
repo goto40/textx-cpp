@@ -189,28 +189,30 @@ TEST_CASE("adapted_from_python_test_rrel_basic_lookup", "[textx/rrel]")
     P2_tst = textx::rrel::find(rec, "", "...(.).(.)");
     CHECK( P2_tst == P2 );
 
-    //P2_tst = textx::rrel::find(rec, "", "..(.).(..)");
-    //CHECK( P2_tst == P2 ); // p!
+    P2_tst = textx::rrel::find(rec, "", "..(.).(..)");
+    CHECK( P2_tst == P2 ); // p!
 
-    //P2_tst = textx::rrel::find(rec, "", "..((.)*)*.(..)");
-    //CHECK( P2_tst == P2 );
+    P2_tst = textx::rrel::find(rec, "", "..((.)*)*.(..)");
+    CHECK( P2_tst == P2 );
 
-    //auto none = textx::rrel::find(m->val().obj(), "", "..");
-    //CHECK( none == nullptr );
+    auto none = textx::rrel::find(m->val().obj(), "", "..");
+    CHECK( none == nullptr );
+
+    auto mobj = textx::rrel::find(m->val().obj(), "", ".");  // '.' references the current element
+    CHECK(mobj == m->val().obj());
+
+    auto inner = textx::rrel::find(m->val().obj(), "inner", "~packages.~packages.~classes.attributes");
+    CHECK((*inner)["name"].str() == "inner");
+
+    std::cout << "----START---\n";
+    auto package_Inner = textx::rrel::find(inner, "Inner", "parent(OBJECT)*.packages");
+    REQUIRE( package_Inner != nullptr );
+    CHECK( package_Inner->is_instance("Package") );
+    CHECK( !package_Inner->is_instance("Class") );
+
+    CHECK( nullptr == textx::rrel::find(inner, "P2", "parent(Class)*.packages") );
+
 /*
-
-    m = textx::rrel::find(m->val().obj(), "", ".")  # '.' references the current element
-    CHECK((*m is my_model
-
-    inner = textx::rrel::find(m->val().obj(), "inner", "~packages.~packages.~classes.attributes")
-    CHECK((*inner)["name"].str() == "inner"
-
-    package_Inner = textx::rrel::find(inner, "Inner", "parent(OBJECT)*.packages")
-    CHECK((*textx_isinstance(package_Inner, my_metamodel["Package"])
-    CHECK((*not textx_isinstance(package_Inner, my_metamodel["Class"])
-
-    CHECK((*None is find(inner, "P2", "parent(Class)*.packages")
-
     # expensive version of a "Plain Name" scope provider:
     inner = textx::rrel::find(m->val().obj(), "inner", "~packages*.~classes.attributes")
     CHECK((*inner)["name"].str() == "inner"

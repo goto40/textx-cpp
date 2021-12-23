@@ -1,4 +1,5 @@
-#include "object.h"
+#include "textx/object.h"
+#include "textx/metamodel.h"
 
 namespace textx::object {
 
@@ -45,6 +46,9 @@ namespace textx::object {
         return std::get<std::vector<Value>>(data).size();
     }
 
+    bool Object::is_instance(std::string base) {
+        return tx_model()->tx_metamodel()->is_instance(type, base);
+    }
 
     const AttributeValue& Object::operator[](std::string name) const {
         auto r = attributes.find(name);

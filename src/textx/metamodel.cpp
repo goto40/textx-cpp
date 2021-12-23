@@ -254,7 +254,12 @@ namespace textx {
     }
 
     bool Metamodel::is_base_of(std::string base, std::string special) const {
-        //std::cout << "is_base_of " << t1 << " " << t2 << "?\n";
+        std::cout << "is_base_of " << base << " " << special << "?\n";
+        
+        // special case:
+        if (base=="OBJECT") {
+            return true;
+        }
         TEXTX_ASSERT(has_rule(base));
         TEXTX_ASSERT(has_rule(special));
         if ( base==special) return true;
