@@ -95,6 +95,10 @@ namespace textx
 
         }
 
+        const Match* Match::search(std::string name) const {
+            return nullptr;
+        }
+
         void Match::print(std::ostream &o, size_t indent) const
         {
             const Match &match = *this; 

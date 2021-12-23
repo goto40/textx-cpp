@@ -8,7 +8,12 @@
 #include <variant>
 #include <vector>
 #include <unordered_set>
+#include <memory>
 #include <algorithm>
+
+namespace textx::scoping {
+    class RefResolver;
+}
 
 namespace textx {
 
@@ -16,6 +21,7 @@ namespace textx {
         AttributeCardinality cardinality = AttributeCardinality::scalar;
         std::optional<std::string> type = std::nullopt;
         bool is_text() const { return !type.has_value(); }
+        std::shared_ptr<textx::scoping::RefResolver> local_resolver = nullptr; // for refs!
     };
 
     inline std::ostream& operator<<(std::ostream &o, const AttributeInfo& ai) {
@@ -49,10 +55,10 @@ namespace textx {
     class Rule {
         textx::arpeggio::Pattern pattern;
         std::string name = "unnamed";
-        std::unordered_map<std::string, AttributeInfo> attribute_info; 
-        std::unordered_set<std::string> m_tx_inh_by; // for abstract rules 
-        std::unordered_set<std::string> m_tx_bases;
-        RuleType m_type = RuleType::illegal;        
+        std::unordered_map<std::string, AttributeInfo> attribute_info = {}; 
+        std::unordered_set<std::string> m_tx_inh_by = {}; // for abstract rules 
+        std::unordered_set<std::string> m_tx_bases = {};
+        RuleType m_type = RuleType::illegal;
     public:
         friend Metamodel;
 

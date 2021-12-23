@@ -2,6 +2,7 @@
 #include <unordered_map>
 #include "textx/assert.h"
 #include "textx/metamodel.h"
+#include "textx/rrel.h"
 
 namespace {
 
@@ -245,6 +246,13 @@ namespace {
                 }
                 else {
                     rule.add_attribute(attribute_name); // add type here
+                }
+
+                {
+                    auto rrel_match = match.search("rule://rrel_expression");
+                    if (rrel_match!=nullptr) {
+                        rule.attribute_info[attribute_name].local_resolver = std::make_shared<textx::rrel::RRELScopeProvider>(*rrel_match);
+                    }
                 }
 
                 if (assignment_op=="=") {

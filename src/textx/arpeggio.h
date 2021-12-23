@@ -120,6 +120,8 @@ namespace textx
                 }
             }
 
+            const Match* search(std::string name) const;
+
             bool name_starts_with(const std::string_view p) const {
                 return name.has_value() && name.value().starts_with(p);
             }

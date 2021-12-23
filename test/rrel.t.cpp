@@ -377,3 +377,11 @@ TEST_CASE("rrel_scope_provider", "[textx/rrel]")
     CHECK( m->val()["r"][1]["a"][0].obj() == m->fqn("R") );
     CHECK( m->val()["r"][2]["a"][0].obj() == m->fqn("a2.aa2") );
 }
+
+TEST_CASE("from_python_tests_components1", "[textx/rrel]")
+{
+    auto p_grammar = std::filesystem::path(__FILE__).parent_path().append("components/ComponentsRrel.tx");
+    auto mm = textx::metamodel_from_file(p_grammar);
+    auto m = mm->model_from_file(std::filesystem::path(__FILE__).parent_path().append("components/example_A.components"));
+    CHECK(m!=nullptr);
+}

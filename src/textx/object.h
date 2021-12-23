@@ -32,7 +32,7 @@ namespace textx::object {
         std::string attr;
         std::weak_ptr<Object> parent = {};
         std::weak_ptr<Object> obj = {};
-        MatchedPath objpath;
+        MatchedPath objpath = {};
     };
 
     using MatchText = std::pair<std::string, std::string>; /// first: text, second: rule-type

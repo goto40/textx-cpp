@@ -4,6 +4,7 @@
 #include "textx/assert.h"
 #include <unordered_map>
 #include <unordered_set>
+#include <memory>
 
 namespace textx {
     class Metamodel;
@@ -33,12 +34,16 @@ namespace textx {
     AttributeCardinality get_multiplicity(textx::arpeggio::Match &match);
     bool is_assignment_to_attribute(textx::arpeggio::Match &match, std::string name);
 }
+namespace textx::scoping {
+    class RefResolver;    
+}
 
 namespace textx::parsetree {
 
     struct AttributeInfo {
         std::vector<std::string> types={};
         std::optional<std::string> type = std::nullopt;
+        std::shared_ptr<textx::scoping::RefResolver> local_resolver = nullptr; // for refs!
     };
 
     class TextxGrammarParsetree;
