@@ -160,15 +160,15 @@ TEST_CASE("adapted_from_python_test_rrel_basic_lookup", "[textx/rrel]")
 
     CHECK( m->val().obj()->tx_model() == m );
 
-/*
-    P2 = textx::rrel::find(m->val().obj(), "P2", "packages*")
-    CHECK((*P2)["name"].str() == "P2"
-    Part2 = textx::rrel::find(m->val().obj(), "P2.Part2", "packages*.classes")
-    CHECK((*Part2)["name"].str() == "Part2"
-    rec = textx::rrel::find(m->val().obj(), "P2.Part2.rec", "packages*.classes.attributes")
-    CHECK((*rec)["name"].str() == "rec"
-    CHECK((*rec.parent == Part2
+    auto other2_P2 = textx::rrel::find(m->val().obj(), "P2", "packages*");
+    CHECK( other2_P2 == P2 );
+    auto other_Part2 = textx::rrel::find(m->val().obj(), "P2.Part2", "packages*.classes");
+    CHECK( other_Part2 == Part2 );
+    auto other_rec = textx::rrel::find(m->val().obj(), "P2.Part2.rec", "packages*.classes.attributes");
+    CHECK( other_rec == rec );
+    CHECK( other_rec->parent() == Part2 );
 
+/*
     Part2_tst = textx::rrel::find(rec, "", "..")
     CHECK((*Part2_tst is Part2
 
