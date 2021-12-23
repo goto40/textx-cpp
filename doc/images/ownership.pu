@@ -5,5 +5,5 @@ Workspace o-- Model
 Model o.. Model : "imported\nmodels\n(non-owning)"
 Model o-- Object
 Model o.. Metamodel : "non\nowning"
-Object o.. Model : "non\nwoning"
+Object o.. Model : "non\nowning"
 Object o-- Object
