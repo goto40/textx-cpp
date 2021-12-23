@@ -177,17 +177,17 @@ TEST_CASE("adapted_from_python_test_rrel_basic_lookup", "[textx/rrel]")
     auto P2_tst = textx::rrel::find(rec, "", "parent(Package)");
     CHECK( P2_tst == P2 );
 
-    //P2_tst = textx::rrel::find(rec, "", "...");
-    //CHECK( P2_tst == P2 );
+    P2_tst = textx::rrel::find(rec, "", "...");
+    CHECK( P2_tst == P2 );
 
-    //P2_tst = textx::rrel::find(rec, "", ".(..).(..)");
-    //CHECK( P2_tst == P2 );
+    P2_tst = textx::rrel::find(rec, "", ".(..).(..)");
+    CHECK( P2_tst == P2 );
 
-    //P2_tst = textx::rrel::find(rec, "", "(..).(..)");
-    //CHECK( P2_tst == P2 );
+    P2_tst = textx::rrel::find(rec, "", "(..).(..)");
+    CHECK( P2_tst == P2 );
 
-    //P2_tst = textx::rrel::find(rec, "", "...(.).(.)");
-    //CHECK( P2_tst == P2 );
+    P2_tst = textx::rrel::find(rec, "", "...(.).(.)");
+    CHECK( P2_tst == P2 );
 
     //P2_tst = textx::rrel::find(rec, "", "..(.).(..)");
     //CHECK( P2_tst == P2 ); // p!
