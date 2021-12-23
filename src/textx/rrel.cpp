@@ -500,5 +500,4 @@ namespace textx::rrel {
         }
         return py::RRELResultData{nullptr,{}};
     }
-
 }
