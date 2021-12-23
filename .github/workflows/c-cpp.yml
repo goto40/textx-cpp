@@ -15,11 +15,11 @@ jobs:
         with:
             submodules: recursive
       - name: install
-        run: sudo apt install -y cmake clang libboost-regex-dev
+        run: sudo apt install -y cmake g++-10 libboost-regex-dev
       - name: build
         run: |
           mkdir build
           cd build
-          cmake .. -DCMAKE_CXX_COMPILER=clang++
+          cmake .. -DCMAKE_CXX_COMPILER=g++-10
           make
           ./textx_unit_tests 
