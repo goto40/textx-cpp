@@ -498,10 +498,13 @@ namespace textx::rrel {
                 return textx::scoping::Postponed{};
             }
             else if (std::get<0>(res).lookup_list.size()==0 && std::get<0>(res).obj!=nullptr) {
-                MYDBG(std::cout << "FINAL: RES, ";)
-                MYDBG(std::get<0>(res).obj->print(std::cout);)
-                MYDBG(std::cout <<"\n";)
-                return py::RRELResultData{std::get<0>(res).obj, std::get<0>(res).matched_path};
+                auto  obj = std::get<0>(res).obj;
+                if (obj_cls=="" || obj->is_instance(obj_cls)) {
+                    MYDBG(std::cout << "FINAL: RES, ";)
+                    MYDBG(obj->print(std::cout);)
+                    MYDBG(std::cout <<"\n";)
+                    return py::RRELResultData{obj, std::get<0>(res).matched_path};
+                }
             }
         }
         return py::RRELResultData{nullptr,{}};
