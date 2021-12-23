@@ -248,29 +248,29 @@ TEST_CASE("adapted_from_python_test_rrel_basic_lookup", "[textx/rrel]")
                 "(~packages,~classes,attributes,classes)*", "Package");
     CHECK( rec2 == nullptr );
 
+    rec2 = textx::rrel::find(m->val().obj(), "rec",
+                "(~packages,classes,attributes,~classes)*", "Class");
+    CHECK((*rec2)["name"].str() == "rec");
+    CHECK( rec2 != rec );
+
+    rec2 = textx::rrel::find(m->val().obj(), "rec",
+                "(~packages,~classes,attributes,classes)*", "Class");
+    CHECK((*rec2)["name"].str() == "rec");
+    CHECK( rec2 != rec );
+
+    auto t = textx::rrel::find(m->val().obj(), "", ".");
+    CHECK( t == m->val().obj() );
+
+    t = textx::rrel::find(m->val().obj(), "", "(.)");
+    CHECK( t == m->val().obj() );
+
+    t = textx::rrel::find(m->val().obj(), "", "(.)*");
+    CHECK( t == m->val().obj() );
+
+    t = textx::rrel::find(m->val().obj(), "", "(.)*.no_existent"); // inifite recursion stopper
+    CHECK( t == nullptr );
+
 /*
-    rec2 = textx::rrel::find(m->val().obj(), "rec",
-                "(~packages,classes,attributes,~classes)*", my_metamodel["Class"])
-    CHECK((*rec2)["name"].str() == "rec"
-    CHECK((*rec2 is not rec  # it is the class...
-
-    rec2 = textx::rrel::find(m->val().obj(), "rec",
-                "(~packages,~classes,attributes,classes)*", my_metamodel["Class"])
-    CHECK((*rec2)["name"].str() == "rec"
-    CHECK((*rec2 is not rec  # it is the class...
-
-    t = textx::rrel::find(m->val().obj(), "", ".")
-    CHECK((*t is my_model
-
-    t = textx::rrel::find(m->val().obj(), "", "(.)")
-    CHECK((*t is my_model
-
-    t = textx::rrel::find(m->val().obj(), "", "(.)*")
-    CHECK((*t is my_model
-
-    t = textx::rrel::find(m->val().obj(), "", "(.)*.no_existent")  # inifite recursion stopper
-    CHECK((*t is None
-
     rec2 = textx::rrel::find(m->val().obj(), "rec",
                 "(.)*.(~packages,~classes,attributes,classes)*", my_metamodel["Class"])
     CHECK((*rec2)["name"].str() == "rec"
