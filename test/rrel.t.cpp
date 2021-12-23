@@ -270,20 +270,18 @@ TEST_CASE("adapted_from_python_test_rrel_basic_lookup", "[textx/rrel]")
     t = textx::rrel::find(m->val().obj(), "", "(.)*.no_existent"); // inifite recursion stopper
     CHECK( t == nullptr );
 
-/*
     rec2 = textx::rrel::find(m->val().obj(), "rec",
-                "(.)*.(~packages,~classes,attributes,classes)*", my_metamodel["Class"])
-    CHECK((*rec2)["name"].str() == "rec"
-    CHECK((*rec2 is not rec  # it is the class...
+                "(.)*.(~packages,~classes,attributes,classes)*", "Class");
+    CHECK((*rec2)["name"].str() == "rec");
+    CHECK( rec2 != rec ); // it is the class...
 
-    # Here, we test the start_from_root/start_locally logic:
-    P2t = textx::rrel::find(rec, "P2", "(.)*.packages")
-    CHECK((*P2t is None
-    P2t = textx::rrel::find(rec, "P2", "(.,not_existent_but_root)*.packages")
-    CHECK((*P2t is P2
-    rect = textx::rrel::find(rec, "rec", "(~packages)*.(..).attributes")
-    CHECK((*rect is None
-    rect = textx::rrel::find(rec, "rec", "(.,~packages)*.(..).attributes")
-    CHECK((*rect is rec
-    */
+    // Here, we test the start_from_root/start_locally logic:
+    auto P2t = textx::rrel::find(rec, "P2", "(.)*.packages");
+    CHECK( P2t == nullptr );
+    P2t = textx::rrel::find(rec, "P2", "(.,not_existent_but_root)*.packages");
+    CHECK( P2t == P2 );
+    auto rect = textx::rrel::find(rec, "rec", "(~packages)*.(..).attributes");
+    CHECK( rect == nullptr );
+    rect = textx::rrel::find(rec, "rec", "(.,~packages)*.(..).attributes");
+    CHECK( rect == rec );
 }
