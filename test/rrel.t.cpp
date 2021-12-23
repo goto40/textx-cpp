@@ -151,140 +151,139 @@ TEST_CASE("adapted_from_python_test_rrel_basic_lookup", "[textx/rrel]")
     auto Part2 = textx::rrel::find(m->val().obj(), "P2.Part2", "packages.classes");
     CHECK((*Part2)["name"].str() == "Part2");
 
-    /*
-    rec = find(my_model, "P2.Part2.rec", "packages.classes.attributes")
-    assert rec.name == "rec"
-    assert rec.parent == Part2
+    auto rec = textx::rrel::find(m->val().obj(), "P2.Part2.rec", "packages.classes.attributes");
+    CHECK((*rec)["name"].str() == "rec");
+    CHECK((*rec).parent() == Part2);
 
-    P2 = find(my_model, "P2", "(packages)")
-    assert P2.name == "P2"
+    auto other_P2 = textx::rrel::find(m->val().obj(), "P2", "(packages)");
+    CHECK( other_P2 == P2 );
 
-    from textx import get_model
-    assert get_model(my_model) is my_model
+    CHECK( m->val().obj()->tx_model() == m );
 
-    P2 = find(my_model, "P2", "packages*")
-    assert P2.name == "P2"
-    Part2 = find(my_model, "P2.Part2", "packages*.classes")
-    assert Part2.name == "Part2"
-    rec = find(my_model, "P2.Part2.rec", "packages*.classes.attributes")
-    assert rec.name == "rec"
-    assert rec.parent == Part2
+/*
+    P2 = textx::rrel::find(m->val().obj(), "P2", "packages*")
+    CHECK((*P2)["name"].str() == "P2"
+    Part2 = textx::rrel::find(m->val().obj(), "P2.Part2", "packages*.classes")
+    CHECK((*Part2)["name"].str() == "Part2"
+    rec = textx::rrel::find(m->val().obj(), "P2.Part2.rec", "packages*.classes.attributes")
+    CHECK((*rec)["name"].str() == "rec"
+    CHECK((*rec.parent == Part2
 
-    Part2_tst = find(rec, "", "..")
-    assert Part2_tst is Part2
+    Part2_tst = textx::rrel::find(rec, "", "..")
+    CHECK((*Part2_tst is Part2
 
-    P2_from_inner_node = find(rec, "P2", "(packages)")
-    assert P2_from_inner_node is P2
+    P2_from_inner_node = textx::rrel::find(rec, "P2", "(packages)")
+    CHECK((*P2_from_inner_node is P2
 
-    P2_tst = find(rec, "", "parent(Package)")
-    assert P2_tst is P2
+    P2_tst = textx::rrel::find(rec, "", "parent(Package)")
+    CHECK((*P2_tst is P2
 
-    P2_tst = find(rec, "", "...")
-    assert P2_tst is P2
+    P2_tst = textx::rrel::find(rec, "", "...")
+    CHECK((*P2_tst is P2
 
-    P2_tst = find(rec, "", ".(..).(..)")
-    assert P2_tst is P2
+    P2_tst = textx::rrel::find(rec, "", ".(..).(..)")
+    CHECK((*P2_tst is P2
 
-    P2_tst = find(rec, "", "(..).(..)")
-    assert P2_tst is P2
+    P2_tst = textx::rrel::find(rec, "", "(..).(..)")
+    CHECK((*P2_tst is P2
 
-    P2_tst = find(rec, "", "...(.).(.)")
-    assert P2_tst is P2
+    P2_tst = textx::rrel::find(rec, "", "...(.).(.)")
+    CHECK((*P2_tst is P2
 
-    P2_tst = find(rec, "", "..(.).(..)")
-    assert P2_tst is P2
+    P2_tst = textx::rrel::find(rec, "", "..(.).(..)")
+    CHECK((*P2_tst is P2
 
-    P2_tst = find(rec, "", "..((.)*)*.(..)")
-    assert P2_tst is P2
+    P2_tst = textx::rrel::find(rec, "", "..((.)*)*.(..)")
+    CHECK((*P2_tst is P2
 
-    none = find(my_model, "", "..")
-    assert none is None
+    none = textx::rrel::find(m->val().obj(), "", "..")
+    CHECK((*none is None
 
-    m = find(my_model, "", ".")  # '.' references the current element
-    assert m is my_model
+    m = textx::rrel::find(m->val().obj(), "", ".")  # '.' references the current element
+    CHECK((*m is my_model
 
-    inner = find(my_model, "inner", "~packages.~packages.~classes.attributes")
-    assert inner.name == "inner"
+    inner = textx::rrel::find(m->val().obj(), "inner", "~packages.~packages.~classes.attributes")
+    CHECK((*inner)["name"].str() == "inner"
 
-    package_Inner = find(inner, "Inner", "parent(OBJECT)*.packages")
-    assert textx_isinstance(package_Inner, my_metamodel["Package"])
-    assert not textx_isinstance(package_Inner, my_metamodel["Class"])
+    package_Inner = textx::rrel::find(inner, "Inner", "parent(OBJECT)*.packages")
+    CHECK((*textx_isinstance(package_Inner, my_metamodel["Package"])
+    CHECK((*not textx_isinstance(package_Inner, my_metamodel["Class"])
 
-    assert None is find(inner, "P2", "parent(Class)*.packages")
+    CHECK((*None is find(inner, "P2", "parent(Class)*.packages")
 
     # expensive version of a "Plain Name" scope provider:
-    inner = find(my_model, "inner", "~packages*.~classes.attributes")
-    assert inner.name == "inner"
+    inner = textx::rrel::find(m->val().obj(), "inner", "~packages*.~classes.attributes")
+    CHECK((*inner)["name"].str() == "inner"
 
-    rec2 = find(my_model, "P2.Part2.rec", "other1,other2,packages*.classes.attributes")
-    assert rec2 is rec
+    rec2 = textx::rrel::find(m->val().obj(), "P2.Part2.rec", "other1,other2,packages*.classes.attributes")
+    CHECK((*rec2 is rec
 
-    rec2 = find(my_model, "P2.Part2.rec", "other1,packages*.classes.attributes,other2")
-    assert rec2 is rec
+    rec2 = textx::rrel::find(m->val().obj(), "P2.Part2.rec", "other1,packages*.classes.attributes,other2")
+    CHECK((*rec2 is rec
 
-    rec2 = find(my_model, "P2::Part2::rec", "other1,packages*.classes.attributes,other2",
+    rec2 = textx::rrel::find(m->val().obj(), "P2::Part2::rec", "other1,packages*.classes.attributes,other2",
                 split_string="::")
-    assert rec2 is rec
+    CHECK((*rec2 is rec
 
-    rec2 = find(my_model, "P2.Part2.rec", "other1,other2,other3")
-    assert rec2 is None
+    rec2 = textx::rrel::find(m->val().obj(), "P2.Part2.rec", "other1,other2,other3")
+    CHECK((*rec2 is None
 
-    rec2 = find(my_model, "P2.Part2.rec", "(packages,classes,attributes)*")
-    assert rec2 is rec
+    rec2 = textx::rrel::find(m->val().obj(), "P2.Part2.rec", "(packages,classes,attributes)*")
+    CHECK((*rec2 is rec
 
-    rec2 = find(my_model, "P2.Part2.rec", "(packages,(classes,attributes)*)*.attributes")
-    assert rec2 is rec
+    rec2 = textx::rrel::find(m->val().obj(), "P2.Part2.rec", "(packages,(classes,attributes)*)*.attributes")
+    CHECK((*rec2 is rec
 
-    rec2 = find(my_model, "rec", "(~packages,~classes,attributes,classes)*")
-    assert rec2.name == "rec"
+    rec2 = textx::rrel::find(m->val().obj(), "rec", "(~packages,~classes,attributes,classes)*")
+    CHECK((*rec2)["name"].str() == "rec"
 
-    rec2 = find(my_model, "rec",
+    rec2 = textx::rrel::find(m->val().obj(), "rec",
                 "(~packages,~classes,attributes,classes)*", my_metamodel["OBJECT"])
-    assert rec2.name == "rec"
+    CHECK((*rec2)["name"].str() == "rec"
 
-    rec2 = find(my_model, "rec",
+    rec2 = textx::rrel::find(m->val().obj(), "rec",
                 "(~packages,~classes,attributes,classes)*", my_metamodel["Attribute"])
-    assert rec2 is rec
+    CHECK((*rec2 is rec
 
-    rec2 = find(my_model, "rec",
+    rec2 = textx::rrel::find(m->val().obj(), "rec",
                 "(~packages,~classes,attributes,classes)*", my_metamodel["Package"])
-    assert rec2 is None
+    CHECK((*rec2 is None
 
-    rec2 = find(my_model, "rec",
+    rec2 = textx::rrel::find(m->val().obj(), "rec",
                 "(~packages,classes,attributes,~classes)*", my_metamodel["Class"])
-    assert rec2.name == "rec"
-    assert rec2 is not rec  # it is the class...
+    CHECK((*rec2)["name"].str() == "rec"
+    CHECK((*rec2 is not rec  # it is the class...
 
-    rec2 = find(my_model, "rec",
+    rec2 = textx::rrel::find(m->val().obj(), "rec",
                 "(~packages,~classes,attributes,classes)*", my_metamodel["Class"])
-    assert rec2.name == "rec"
-    assert rec2 is not rec  # it is the class...
+    CHECK((*rec2)["name"].str() == "rec"
+    CHECK((*rec2 is not rec  # it is the class...
 
-    t = find(my_model, "", ".")
-    assert t is my_model
+    t = textx::rrel::find(m->val().obj(), "", ".")
+    CHECK((*t is my_model
 
-    t = find(my_model, "", "(.)")
-    assert t is my_model
+    t = textx::rrel::find(m->val().obj(), "", "(.)")
+    CHECK((*t is my_model
 
-    t = find(my_model, "", "(.)*")
-    assert t is my_model
+    t = textx::rrel::find(m->val().obj(), "", "(.)*")
+    CHECK((*t is my_model
 
-    t = find(my_model, "", "(.)*.no_existent")  # inifite recursion stopper
-    assert t is None
+    t = textx::rrel::find(m->val().obj(), "", "(.)*.no_existent")  # inifite recursion stopper
+    CHECK((*t is None
 
-    rec2 = find(my_model, "rec",
+    rec2 = textx::rrel::find(m->val().obj(), "rec",
                 "(.)*.(~packages,~classes,attributes,classes)*", my_metamodel["Class"])
-    assert rec2.name == "rec"
-    assert rec2 is not rec  # it is the class...
+    CHECK((*rec2)["name"].str() == "rec"
+    CHECK((*rec2 is not rec  # it is the class...
 
     # Here, we test the start_from_root/start_locally logic:
-    P2t = find(rec, "P2", "(.)*.packages")
-    assert P2t is None
-    P2t = find(rec, "P2", "(.,not_existent_but_root)*.packages")
-    assert P2t is P2
-    rect = find(rec, "rec", "(~packages)*.(..).attributes")
-    assert rect is None
-    rect = find(rec, "rec", "(.,~packages)*.(..).attributes")
-    assert rect is rec
+    P2t = textx::rrel::find(rec, "P2", "(.)*.packages")
+    CHECK((*P2t is None
+    P2t = textx::rrel::find(rec, "P2", "(.,not_existent_but_root)*.packages")
+    CHECK((*P2t is P2
+    rect = textx::rrel::find(rec, "rec", "(~packages)*.(..).attributes")
+    CHECK((*rect is None
+    rect = textx::rrel::find(rec, "rec", "(.,~packages)*.(..).attributes")
+    CHECK((*rect is rec
     */
 }
