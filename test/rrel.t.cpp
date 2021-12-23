@@ -227,28 +227,28 @@ TEST_CASE("adapted_from_python_test_rrel_basic_lookup", "[textx/rrel]")
     rec2 = textx::rrel::find(m->val().obj(), "P2.Part2.rec", "other1,other2,other3");
     CHECK( rec2 == nullptr );
 
+    rec2 = textx::rrel::find(m->val().obj(), "P2.Part2.rec", "(packages,classes,attributes)*");
+    CHECK( rec2 == rec );
+
+    rec2 = textx::rrel::find(m->val().obj(), "P2.Part2.rec", "(packages,(classes,attributes)*)*.attributes");
+    CHECK( rec2 == rec );
+
+    rec2 = textx::rrel::find(m->val().obj(), "rec", "(~packages,~classes,attributes,classes)*");
+    CHECK( rec2 == rec );
+
+    rec2 = textx::rrel::find(m->val().obj(), "rec",
+                "(~packages,~classes,attributes,classes)*", "OBJECT");
+    CHECK( rec2 == rec );
+
+    rec2 = textx::rrel::find(m->val().obj(), "rec",
+                "(~packages,~classes,attributes,classes)*", "Attribute");
+    CHECK( rec2 == rec );
+
+    rec2 = textx::rrel::find(m->val().obj(), "rec",
+                "(~packages,~classes,attributes,classes)*", "Package");
+    CHECK( rec2 == nullptr );
+
 /*
-    rec2 = textx::rrel::find(m->val().obj(), "P2.Part2.rec", "(packages,classes,attributes)*")
-    CHECK((*rec2 is rec
-
-    rec2 = textx::rrel::find(m->val().obj(), "P2.Part2.rec", "(packages,(classes,attributes)*)*.attributes")
-    CHECK((*rec2 is rec
-
-    rec2 = textx::rrel::find(m->val().obj(), "rec", "(~packages,~classes,attributes,classes)*")
-    CHECK((*rec2)["name"].str() == "rec"
-
-    rec2 = textx::rrel::find(m->val().obj(), "rec",
-                "(~packages,~classes,attributes,classes)*", my_metamodel["OBJECT"])
-    CHECK((*rec2)["name"].str() == "rec"
-
-    rec2 = textx::rrel::find(m->val().obj(), "rec",
-                "(~packages,~classes,attributes,classes)*", my_metamodel["Attribute"])
-    CHECK((*rec2 is rec
-
-    rec2 = textx::rrel::find(m->val().obj(), "rec",
-                "(~packages,~classes,attributes,classes)*", my_metamodel["Package"])
-    CHECK((*rec2 is None
-
     rec2 = textx::rrel::find(m->val().obj(), "rec",
                 "(~packages,classes,attributes,~classes)*", my_metamodel["Class"])
     CHECK((*rec2)["name"].str() == "rec"
