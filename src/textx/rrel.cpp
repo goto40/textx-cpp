@@ -367,7 +367,7 @@ namespace textx::rrel {
             counter--;
         }
         if (counter==1) {
-            co_yield py::RRELInternalResult{py::RRELInternalResultData{obj,data.lookup_list,data.matched_path}};
+            MYYIELD((py::RRELInternalResult{py::RRELInternalResultData{obj,data.lookup_list,data.matched_path}}));
         }
         co_return;
     }
