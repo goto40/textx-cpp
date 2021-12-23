@@ -6,7 +6,7 @@
 #include <unordered_map>
 
 #define MYDBG(x)
-#define MYYIELD(x) {auto res = x; co_yield res;}
+#define MYYIELD(x) {auto _internal_copy_res = x; co_yield _internal_copy_res;}
 //In some cases this seems problematic (see valgrid memory violations...) UNCLEAR!
 //#define MYYIELD(x) co_yield x;
 
@@ -248,7 +248,7 @@ namespace textx::rrel {
             obj = obj->parent();
         }
         if (obj!=nullptr) {
-            co_yield py::RRELInternalResult{py::RRELInternalResultData{obj,data.lookup_list,data.matched_path}};
+            MYYIELD((py::RRELInternalResult{py::RRELInternalResultData{obj,data.lookup_list,data.matched_path}}));
         }
         co_return;
     }
@@ -260,7 +260,7 @@ namespace textx::rrel {
     ) const {
         if (allowed(data.obj, data.lookup_list, this)) {
             for (const auto& res: seq->get_next_matches(data, allowed, first_element)) {
-                co_yield res;
+                MYYIELD(res);
             }
         }
     }
@@ -273,7 +273,7 @@ namespace textx::rrel {
         if (allowed(data.obj, data.lookup_list, this)) {
             for (const auto& p: paths) {
                 for (const auto& res: p->get_next_matches(data, allowed, first_element)) {
-                    co_yield res;
+                    MYYIELD(res);
                 }
             }
         }
@@ -382,19 +382,19 @@ namespace textx::rrel {
             if (first_element) {
                 //TODO: if (start_locally()) + as root...
                 data.obj = data.obj->tx_model()->val().obj();
-                co_yield data; // TODO 2x in some cases
+                MYYIELD(data); // TODO 2x in some cases
             }
             else {
-                co_yield data;
+                MYYIELD(data);
             }
             //TODO? TEXTX_ASSERT( textx::utils::is_instance<RRELSequence>(*path_element) );
             for (const auto& res: path_element->get_next_matches(data, allowed, first_element)) {
                 if( std::holds_alternative<textx::scoping::Postponed>(res)) {
-                    co_yield textx::scoping::Postponed{};
+                    MYYIELD((textx::scoping::Postponed{}));
                     co_return;
                 }
                 for (const auto& ires: intern_get_next_matches(std::get<0>(res), allowed, false, prevent_doubles)) {
-                    co_yield ires;
+                    MYYIELD(ires);
                 }
             }
         }
@@ -409,14 +409,14 @@ namespace textx::rrel {
         std::unordered_set<std::pair<const textx::object::Object*,size_t>,textx::utils::pair_hash> prevent_doubles{};
         for (const auto& res: intern_get_next_matches(data, allowed, first_element, prevent_doubles)) {
             if( std::holds_alternative<textx::scoping::Postponed>(res)) {
-                co_yield textx::scoping::Postponed{};
+                MYYIELD((textx::scoping::Postponed{}));
                 co_return;
             }
             auto &d = std::get<0>(res);
             auto key = std::make_pair(d.obj.get(),d.lookup_list.size());
             if (prevent_doubles.count(key)==0) {
                 prevent_doubles.insert(key);
-                co_yield res;
+                MYYIELD(res);
             }
         }
         co_return;
@@ -432,18 +432,18 @@ namespace textx::rrel {
         auto &e = path_elements[idx];
         for (const auto& res: e->get_next_matches(data, allowed, first_element)) {
             if( std::holds_alternative<textx::scoping::Postponed>(res)) {
-                co_yield textx::scoping::Postponed{};
+                MYYIELD((textx::scoping::Postponed{}));
                 co_return;
             }
             if (path_elements.size() - 1 == idx) {
-                co_yield res;
+                MYYIELD(res);
             }
             else {
                 if (std::get<0>(res).obj == nullptr) {
                     co_return;
                 }
                 for (const auto& ires: intern_get_next_matches(std::get<0>(res), allowed, false,idx+1)) {
-                    co_yield ires;
+                    MYYIELD(ires);
                 }
             }
         }
@@ -455,7 +455,7 @@ namespace textx::rrel {
         bool first_element
     ) const {
         for (const auto& res: intern_get_next_matches(data, allowed, first_element)) {
-            co_yield res;
+            MYYIELD(res);
         }
     }
 
@@ -466,7 +466,7 @@ namespace textx::rrel {
     ) const {
         TEXTX_ASSERT(allowed(data.obj, data.lookup_list, this));
         for (const auto& res: seq->get_next_matches(data, allowed, first_element)) {
-            co_yield res;
+            MYYIELD(res);
         }
     }
 
