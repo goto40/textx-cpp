@@ -175,22 +175,22 @@ namespace textx::rrel {
     }
 
     // misc:
-    bool RRELSequence::start_locally() { 
+    bool RRELSequence::start_locally() const { 
         bool res = false;
         for(auto &p: paths) {
             res = res || p->start_locally();
         }
         return res;
     }
-    bool RRELSequence::start_at_root() {
+    bool RRELSequence::start_at_root() const {
         bool res = false;
         for(auto &p: paths) {
             res = res || p->start_at_root();
         }
         return res;
     }
-    bool RRELBrackets::start_locally() { return seq->start_locally(); }
-    bool RRELBrackets::start_at_root() { return seq->start_at_root(); }
+    bool RRELBrackets::start_locally() const { return seq->start_locally(); }
+    bool RRELBrackets::start_at_root() const { return seq->start_at_root(); }
 
     // print:
 
@@ -288,7 +288,6 @@ namespace textx::rrel {
     ) const {
         if (allowed(data.obj, data.lookup_list, this)) {
             if (first_element) {
-                //TODO: if (start_locally()) + as root...
                 data.obj = data.obj->tx_model()->val().obj();
             }
             MYDBG(std::cout << "---- NAVIGATION ----\n";)
@@ -380,11 +379,16 @@ namespace textx::rrel {
         bool first_element,
         std::unordered_set<std::pair<const textx::object::Object*,size_t>,textx::utils::pair_hash> prevent_doubles
     ) const {
+        TEXTX_ASSERT(start_locally() || start_at_root()); 
         if (allowed(data.obj, data.lookup_list, this)) {
             if (first_element) {
-                //TODO: if (start_locally()) + as root...
-                data.obj = data.obj->tx_model()->val().obj();
-                MYYIELD(data); // TODO 2x in some cases
+                if (start_locally()) {
+                    MYYIELD(data);
+                }
+                if (start_at_root()) {
+                    auto root = data.obj->tx_model()->val().obj();
+                    MYYIELD((py::RRELInternalResult{py::RRELInternalResultData{root,data.lookup_list,data.matched_path}}));
+                }
             }
             else {
                 MYYIELD(data);
