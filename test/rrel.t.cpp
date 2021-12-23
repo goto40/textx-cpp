@@ -300,5 +300,39 @@ TEST_CASE("adapted_from_python_test_rrel_repetitions", "[textx/rrel]")
         c
         b: a
     )#");
+/*
+    auto a = textx::rrel::find(my_model->val().obj(), "a", "entries.ref*");
+    REQUIRE(a!=nullptr);
+    CHECK( (*a)["name"].str() == "a" );
+    auto b = textx::rrel::find(my_model->val().obj(), "b", "entries.ref*");
+    REQUIRE(b!=nullptr);
+    CHECK( (*b)["name"].str() == "b" );
+    auto c = textx::rrel::find(my_model->val().obj(), "c", "entries.ref*");
+    REQUIRE(c!=nullptr);
+    CHECK( (*c)["name"].str() == "c" );
 
+    auto a2 = textx::rrel::find(my_model->val().obj(), "a.b.a", "entries.ref*")
+    CHECK( a2 == a );
+
+    auto b2 = textx::rrel::find(my_model->val().obj(), "b.a.b", "entries.ref*")
+    CHECK( b2 == b );
+
+    auto [res, objpath] = std::get<0>(textx::rrel::find_object_with_path(my_model->val().obj(), "b.a.b", "entries.ref*"));
+    CHECK( res == b );
+    CHECK( len(objpath) == 3 );
+    CHECK( objpath[-1] == res );
+    CHECK( ".".join(map(lambda x: (*x)["name"], objpath)) == 'b.a.b' );
+
+    a2 = textx::rrel::find(my_model->val().obj(), "b.a.b.a", "entries.ref*")
+    CHECK( a2 == a );
+
+    res, objpath = textx::rrel::find_object_with_path(my_model->val().obj(), "b.a.b.a", "entries.ref*")
+    CHECK( res == a );
+    CHECK( len(objpath) == 4 );
+    CHECK( objpath[-1] == res );
+    CHECK( ".".join(map(lambda x: (*x)["name"], objpath)) == 'b.a.b.a' );
+
+    a2 = textx::rrel::find(my_model->val().obj(), "b.a.b.a.b.a.b.a.b.a", "entries.ref*")
+    CHECK( a2 == a );
+*/
 }
