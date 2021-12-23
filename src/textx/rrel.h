@@ -197,14 +197,12 @@ namespace textx::rrel {
     {
         std::vector<std::string> new_lookup {};
         if (std::holds_alternative<std::string>(lookup)) {
-            TEXTX_ASSERT(split_string.size()==1);
             std::string& str = std::get<std::string>(lookup);
-            char delim = split_string[0];
             size_t start;
             size_t end = 0;
-        	while ((start = str.find_first_not_of(delim, end)) != std::string::npos)
+        	while ((start = str.find_first_not_of(split_string, end)) != std::string::npos)
             {
-                end = str.find(delim, start);
+                end = str.find(split_string, start);
                 new_lookup.push_back(str.substr(start, end - start));
             }
         }
