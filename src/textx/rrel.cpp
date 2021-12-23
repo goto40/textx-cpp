@@ -240,12 +240,12 @@ namespace textx::rrel {
         AllowedFunc allowed,
         bool first_element
     ) const {
-        std::cout << "Parent(" << type << ")\n";
+        //std::cout << "Parent(" << type << ")\n";
         auto obj = data.obj;
         auto mm = obj->tx_model()->tx_metamodel();
         obj = obj->parent();
         while(obj!=nullptr) {
-            std::cout << "...Parent(" << obj->type << ")\n";
+            //std::cout << "...Parent(" << obj->type << ")\n";
             if (mm->is_instance(obj->type, type)) break;
             obj = obj->parent();
         }
