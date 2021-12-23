@@ -15,11 +15,12 @@ namespace textx::rrel {
     //template<class T> using rrel_generator = textx::utils::Generator<T>;
     template<class T> using rrel_generator = cppcoro::generator<T>;
 
+    using MatchedPath = std::vector<std::shared_ptr<textx::object::Object>>;
     namespace py {
         struct RRELInternalResultData {
             std::shared_ptr<textx::object::Object> obj;
             std::vector<std::string> lookup_list;
-            std::vector<std::shared_ptr<textx::object::Object>> matched_path;
+            MatchedPath matched_path;
         };
         using RRELInternalResult = std::variant<
             RRELInternalResultData,
@@ -27,7 +28,7 @@ namespace textx::rrel {
         >;
         struct RRELResultData {
             std::shared_ptr<textx::object::Object> obj;
-            std::vector<std::shared_ptr<textx::object::Object>> matched_path;
+            MatchedPath matched_path;
         };
         using RRELResult = std::variant<
             RRELResultData,
@@ -237,6 +238,15 @@ namespace textx::rrel {
         else {
             return std::get<0>(res).obj;
         }
+    }
+
+    inline std::string build_fqn(const MatchedPath& objpath, std::string separator=".") {
+        std::string n="";
+        for (size_t i=0;i<objpath.size();i++) {
+            if (i>0) { n = n + separator; }
+            n = n+(*objpath[i])["name"].str();
+        }
+        return n;
     }
 
 }

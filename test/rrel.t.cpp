@@ -323,12 +323,7 @@ TEST_CASE("adapted_from_python_test_rrel_repetitions", "[textx/rrel]")
         CHECK( res == b );
         CHECK( objpath.size() == 3 );
         CHECK( objpath[objpath.size()-1] == res );
-        std::string n="";
-        for (size_t i=0;i<objpath.size();i++) {
-            if (i>0) { n = n+"."; }
-            n = n+(*objpath[i])["name"].str();
-        }
-        CHECK( n == "b.a.b" );
+        CHECK( textx::rrel::build_fqn(objpath) == "b.a.b" );
 
         a2 = textx::rrel::find(my_model->val().obj(), "b.a.b.a", "entries.ref*");
         CHECK( a2 == a );
@@ -338,12 +333,8 @@ TEST_CASE("adapted_from_python_test_rrel_repetitions", "[textx/rrel]")
         CHECK( res == a );
         CHECK( objpath.size() == 4 );
         CHECK( objpath[objpath.size()-1] == res );
-        std::string n="";
-        for (size_t i=0;i<objpath.size();i++) {
-            if (i>0) { n = n+"."; }
-            n = n+(*objpath[i])["name"].str();
-        }
-        CHECK( n == "b.a.b.a" );
+        CHECK( textx::rrel::build_fqn(objpath,".") == "b.a.b.a" );
+        CHECK( textx::rrel::build_fqn(objpath,"::") == "b::a::b::a" );
 
         a2 = textx::rrel::find(my_model->val().obj(), "b.a.b.a.b.a.b.a.b.a", "entries.ref*");
         CHECK( a2 == a );
