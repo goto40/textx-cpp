@@ -127,7 +127,7 @@ Example:
 
 ## <a name="openpoints"></a> Open Points
 Prio 0 (most important):
- * TODO RREL (wip)
+ * TODO RREL rule parameters (separator)
 
 Prio 1:
  * TODO importURI from other metamodels
