@@ -21,7 +21,6 @@ namespace textx {
         AttributeCardinality cardinality = AttributeCardinality::scalar;
         std::optional<std::string> type = std::nullopt;
         bool is_text() const { return !type.has_value(); }
-        std::shared_ptr<textx::scoping::RefResolver> local_resolver = nullptr; // for refs!
     };
 
     inline std::ostream& operator<<(std::ostream &o, const AttributeInfo& ai) {
@@ -66,6 +65,7 @@ namespace textx {
 
         const auto& tx_bases() const { return m_tx_bases; }
         const auto& tx_inh_by() const { return m_tx_inh_by; }
+        const std::string& tx_name() const { return name; }
 
         std::optional<textx::arpeggio::Match> operator()(const textx::arpeggio::Config &config, textx::arpeggio::ParserState &text, textx::arpeggio::TextPosition pos) const {
             return pattern(config, text, pos);

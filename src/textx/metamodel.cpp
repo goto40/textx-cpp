@@ -53,7 +53,6 @@ namespace textx {
                     for(auto& [name, info]: r.attribute_info) {
                         rule.attribute_info[name].type = info.type;
                         rule.attribute_info[name].cardinality = r.get_attribute_cardinality(name);
-                        rule.attribute_info[name].local_resolver = info.local_resolver;
                     }
                 }
             }

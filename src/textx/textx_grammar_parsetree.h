@@ -43,7 +43,6 @@ namespace textx::parsetree {
     struct AttributeInfo {
         std::vector<std::string> types={};
         std::optional<std::string> type = std::nullopt;
-        std::shared_ptr<textx::scoping::RefResolver> local_resolver = nullptr; // for refs!
     };
 
     class TextxGrammarParsetree;
@@ -74,6 +73,8 @@ namespace textx::parsetree {
                 attribute_info[name] = {};
             }
         }
+
+        const std::string& tx_name() const { return name; }
 
         textx::AttributeCardinality get_attribute_cardinality(std::string name);
         textx::RuleType determine_rule_type(std::unordered_set<std::string> &recursion_stopper, const TextxGrammarParsetree& p) const;

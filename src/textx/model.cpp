@@ -154,11 +154,7 @@ namespace textx {
         textx::object::traverse(root,[&](textx::object::Value& v) -> void {
             if (v.is_ref()) {
                 if (v.ref().obj.lock() == nullptr) {
-                    auto local_resolver = (*mm)[v.ref().rule][v.ref().attr].local_resolver;
-                    // if (local_resolver!=nullptr) {
-                    //     std::cout << "use: " << v.ref().rule << "." << v.ref().attr << "\n";
-                    // }
-                    auto [obj, objpath] = mm->get_resolver(v.ref().rule, v.ref().attr, local_resolver)
+                    auto [obj, objpath] = mm->get_resolver(v.ref().rule, v.ref().attr)
                         .resolve(v.ref().parent.lock(),v.ref().name, v.ref().target_type);
                     v.ref().obj = obj;
                     v.ref().objpath = std::move(objpath);
