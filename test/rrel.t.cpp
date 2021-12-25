@@ -385,3 +385,19 @@ TEST_CASE("from_python_tests_components1", "[textx/rrel]")
     auto m = mm->model_from_file(std::filesystem::path(__FILE__).parent_path().append("rrel/example.components"));
     CHECK(m!=nullptr);
 }
+
+TEST_CASE("test_rrel_multifile", "[textx/rrel]")
+{
+    auto p_grammar = std::filesystem::path(__FILE__).parent_path().append("rrel/example0/Grammar.tx");
+    auto mm = textx::metamodel_from_file(p_grammar);
+    auto m = mm->model_from_file(std::filesystem::path(__FILE__).parent_path().append("rrel/example0/main.model"));
+    CHECK(m!=nullptr);
+}
+
+// TEST_CASE("from_python_tests_test_split_str_multifile", "[textx/rrel]")
+// {
+//     auto p_grammar = std::filesystem::path(__FILE__).parent_path().append("rrel/example1/Grammar.tx");
+//     auto mm = textx::metamodel_from_file(p_grammar);
+//     auto m = mm->model_from_file(std::filesystem::path(__FILE__).parent_path().append("rrel/example1/main.model"));
+//     CHECK(m!=nullptr);
+// }
