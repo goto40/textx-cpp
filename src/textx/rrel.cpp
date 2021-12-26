@@ -316,7 +316,7 @@ namespace textx::rrel {
                     MYDBG(std::cout << "name found...\n";)
                     auto &target = (*idata.obj)[this->name];
                     if (target.is_list()) {
-                        MYDBG(std::cout << "is list...\n";)
+                        MYDBG(std::cout << "is list... #"<< target.size() << "\n";)
                         for (auto& itarget: target) {
                             if (itarget.is_ref() && !itarget.is_resolved()) {
                                 MYDBG(std::cout << "postponed...\n";)

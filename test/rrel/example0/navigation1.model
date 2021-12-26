@@ -1,3 +1,4 @@
+#include "navigation1_included.model"
 A a1 {
     A aa1 {
         A aaa1 {}
@@ -8,9 +9,6 @@ A a1 {
         P1 a2
     }
     A ab1 {}
-}
-A a2 {
-    A aa2 {}
 }
 A R {
     A r2 {}

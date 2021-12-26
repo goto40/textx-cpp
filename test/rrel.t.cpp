@@ -398,8 +398,13 @@ TEST_CASE("test_rrel_multifile_nav_special_case", "[textx/rrel]")
 {
     auto p_grammar = std::filesystem::path(__FILE__).parent_path().append("rrel/example0/Grammar.tx");
     auto mm = textx::metamodel_from_file(p_grammar);
-    auto m = mm->model_from_file(std::filesystem::path(__FILE__).parent_path().append("rrel/example0/navigation0.model"));
-    CHECK(m!=nullptr);
+    auto m0 = mm->model_from_file(std::filesystem::path(__FILE__).parent_path().append("rrel/example0/navigation0.model"));
+    CHECK(m0!=nullptr);
+    auto m1 = mm->model_from_file(std::filesystem::path(__FILE__).parent_path().append("rrel/example0/navigation1.model"));
+    CHECK(m1!=nullptr);
+    REQUIRE_THROWS_WITH( (void)mm->model_from_file(std::filesystem::path(__FILE__).parent_path().append("rrel/example0/navigation1_err.model")),
+        Catch::Matchers::Contains( "'a2' not found" )
+    );
 }
 
 // TEST_CASE("from_python_tests_test_split_str_multifile", "[textx/rrel]")
