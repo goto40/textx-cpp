@@ -321,7 +321,7 @@ TEST_CASE("adapted_from_python_test_rrel_repetitions", "[textx/rrel]")
     {
         auto [res, objpath] = std::get<0>(textx::rrel::find_object_with_path(my_model->val().obj(), "b.a.b", "entries.ref*"));
         CHECK( res == b );
-        CHECK( objpath.size() == 3 );
+        REQUIRE( objpath.size() == 3 );
         CHECK( objpath[objpath.size()-1].lock() == res );
         CHECK( textx::rrel::build_fqn(objpath) == "b.a.b" );
 
@@ -391,6 +391,14 @@ TEST_CASE("test_rrel_multifile", "[textx/rrel]")
     auto p_grammar = std::filesystem::path(__FILE__).parent_path().append("rrel/example0/Grammar.tx");
     auto mm = textx::metamodel_from_file(p_grammar);
     auto m = mm->model_from_file(std::filesystem::path(__FILE__).parent_path().append("rrel/example0/main.model"));
+    CHECK(m!=nullptr);
+}
+
+TEST_CASE("test_rrel_multifile_nav_special_case", "[textx/rrel]")
+{
+    auto p_grammar = std::filesystem::path(__FILE__).parent_path().append("rrel/example0/Grammar.tx");
+    auto mm = textx::metamodel_from_file(p_grammar);
+    auto m = mm->model_from_file(std::filesystem::path(__FILE__).parent_path().append("rrel/example0/navigation0.model"));
     CHECK(m!=nullptr);
 }
 

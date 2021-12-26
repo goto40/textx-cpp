@@ -290,13 +290,15 @@ namespace textx::rrel {
             if (first_element) { // always start_at_root
                 data.obj = data.obj->tx_model()->val().obj();
             }
+            std::vector<std::shared_ptr<textx::object::Object>> start;
+            start.push_back(data.obj);
             if (data.obj->parent()==nullptr) {
                 // not implemented thsi way in python:
                 for (auto wm: data.obj->tx_model()->tx_imported_models()) {
                     auto m = wm.lock();
                     if (m->val().is_obj()) {
                         auto root = m->val().obj();
-                        MYYIELD((py::RRELInternalResult{py::RRELInternalResultData{root,data.lookup_list,data.matched_path}}));
+                        start.push_back(root);
                     }
                 }
             }
@@ -305,60 +307,59 @@ namespace textx::rrel {
             if (data.lookup_list.size()==0 and this->consume_name) {
                 co_return;
             }
-            MYDBG(std::cout << "lookup:" << data.lookup_list[0] << "\n";)
+            MYDBG(if (data.lookup_list.size()>0) std::cout << "lookup:" << data.lookup_list[0] << "\n";)
             
-            if (data.obj == nullptr) {
-                co_return;
-            }
-            else if (data.obj->has_attr(this->name)) {
-                MYDBG(std::cout << "name found...\n";)
-                auto &target = (*data.obj)[this->name];
-                if (target.is_list()) {
-                    MYDBG(std::cout << "is list...\n";)
-                    for (auto& itarget: target) {
+            for (auto obj: start) {
+                py::RRELInternalResultData idata = data;
+                idata.obj = obj;
+                if (idata.obj != nullptr && idata.obj->has_attr(this->name)) {
+                    MYDBG(std::cout << "name found...\n";)
+                    auto &target = (*idata.obj)[this->name];
+                    if (target.is_list()) {
+                        MYDBG(std::cout << "is list...\n";)
+                        for (auto& itarget: target) {
+                            if (itarget.is_ref() && !itarget.is_resolved()) {
+                                MYDBG(std::cout << "postponed...\n";)
+                                MYYIELD((textx::scoping::Postponed{}));
+                                co_return;
+                            }
+                            else if (!consume_name) {
+                                MYDBG(std::cout << "no consume...\n";)
+                                MYYIELD((py::RRELInternalResultData{ itarget.obj(), data.lookup_list, data.matched_path }));
+                            }
+                            else if (!itarget.is_null() && itarget.obj()->has_attr("name") && itarget["name"].str() == data.lookup_list[0]) {
+                                MYDBG(std::cout << "consume...\n";)
+                                TEXTX_ASSERT(data.lookup_list.size()>0);
+                                std::vector<std::string> lookup_copy{
+                                    data.lookup_list.begin()+1,
+                                    data.lookup_list.end()
+                                };
+                                auto matched_path_copy = data.matched_path;
+                                matched_path_copy.push_back( itarget.obj() );
+                                MYDBG(std::cout << "yield..."<<itarget.obj().get()<<"\n";)
+                                MYYIELD((py::RRELInternalResultData{itarget.obj(), lookup_copy, matched_path_copy}));
+                            }
+                        }
+                    }
+                    else { // scalar
+                        //std::cout << "is scalar...\n";
+                        auto &itarget = target;
                         if (itarget.is_ref() && !itarget.is_resolved()) {
-                            MYDBG(std::cout << "postponed...\n";)
                             MYYIELD((textx::scoping::Postponed{}));
                             co_return;
                         }
                         else if (!consume_name) {
-                            MYDBG(std::cout << "no consume...\n";)
                             MYYIELD((py::RRELInternalResultData{ itarget.obj(), data.lookup_list, data.matched_path }));
                         }
-                        else if (itarget.obj()->has_attr("name") && itarget["name"].str() == data.lookup_list[0]) {
-                            MYDBG(std::cout << "consume...\n";)
-                            TEXTX_ASSERT(data.lookup_list.size()>0);
+                        else if (!itarget.is_null() && itarget.obj()->has_attr("name") && itarget["name"].str() == data.lookup_list[0]) {
                             std::vector<std::string> lookup_copy{
                                 data.lookup_list.begin()+1,
                                 data.lookup_list.end()
                             };
                             auto matched_path_copy = data.matched_path;
                             matched_path_copy.push_back( itarget.obj() );
-                            MYDBG(std::cout << "yield..."<<itarget.obj().get()<<"\n";)
                             MYYIELD((py::RRELInternalResultData{itarget.obj(), lookup_copy, matched_path_copy}));
-                            //std::cout << "end of consume...\n";
-                            co_return;
                         }
-                    }
-                }
-                else { // scalar
-                    //std::cout << "is scalar...\n";
-                    auto &itarget = target;
-                    if (itarget.is_ref() && !itarget.is_resolved()) {
-                        MYYIELD((textx::scoping::Postponed{}));
-                        co_return;
-                    }
-                    else if (!consume_name) {
-                        MYYIELD((py::RRELInternalResultData{ itarget.obj(), data.lookup_list, data.matched_path }));
-                    }
-                    else if (itarget.obj()->has_attr("name") && itarget["name"].str() == data.lookup_list[0]) {
-                        std::vector<std::string> lookup_copy{
-                            data.lookup_list.begin()+1,
-                            data.lookup_list.end()
-                        };
-                        auto matched_path_copy = data.matched_path;
-                        matched_path_copy.push_back( itarget.obj() );
-                        MYYIELD((py::RRELInternalResultData{itarget.obj(), lookup_copy, matched_path_copy}));
                     }
                 }
             }
@@ -510,7 +511,7 @@ namespace textx::rrel {
                 return textx::scoping::Postponed{};
             }
             else if (std::get<0>(res).lookup_list.size()==0 && std::get<0>(res).obj!=nullptr) {
-                auto  obj = std::get<0>(res).obj;
+                auto obj = std::get<0>(res).obj;
                 if (obj_cls=="" || obj->is_instance(obj_cls)) {
                     MYDBG(std::cout << "FINAL: RES, ";)
                     MYDBG(obj->print(std::cout);)

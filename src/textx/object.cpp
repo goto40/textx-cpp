@@ -73,7 +73,10 @@ namespace textx::object {
     }
 
     void Value::print(std::ostream& o, size_t indent) const {
-        if (is_pure_obj()) {
+        if (is_null()) {
+            o << std::string(indent,' ') << "nullptr" << "\n";
+        }
+        else if (is_pure_obj()) {
             obj()->print(o, indent);
         }
         else if (is_str()) {
