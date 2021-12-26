@@ -396,6 +396,7 @@ TEST_CASE("test_rrel_multifile", "[textx/rrel]")
 
 TEST_CASE("test_rrel_multifile_nav_special_case", "[textx/rrel]")
 {
+    //TODO check this in real/python textx version
     auto p_grammar = std::filesystem::path(__FILE__).parent_path().append("rrel/example0/Grammar.tx");
     auto mm = textx::metamodel_from_file(p_grammar);
     auto m0 = mm->model_from_file(std::filesystem::path(__FILE__).parent_path().append("rrel/example0/navigation0.model"));
