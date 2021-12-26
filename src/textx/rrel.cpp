@@ -291,6 +291,7 @@ namespace textx::rrel {
                 data.obj = data.obj->tx_model()->val().obj();
             }
             if (data.obj->parent()==nullptr) {
+                // not implemented thsi way in python:
                 for (auto wm: data.obj->tx_model()->tx_imported_models()) {
                     auto m = wm.lock();
                     if (m->val().is_obj()) {
