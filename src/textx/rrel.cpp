@@ -287,8 +287,17 @@ namespace textx::rrel {
         bool first_element
     ) const {
         if (allowed(data.obj, data.lookup_list, this)) {
-            if (first_element) {
+            if (first_element) { // always start_at_root
                 data.obj = data.obj->tx_model()->val().obj();
+            }
+            if (data.obj->parent()==nullptr) {
+                for (auto wm: data.obj->tx_model()->tx_imported_models()) {
+                    auto m = wm.lock();
+                    if (m->val().is_obj()) {
+                        auto root = m->val().obj();
+                        MYYIELD((py::RRELInternalResult{py::RRELInternalResultData{root,data.lookup_list,data.matched_path}}));
+                    }
+                }
             }
             MYDBG(std::cout << "---- NAVIGATION ----\n";)
 
@@ -386,8 +395,10 @@ namespace textx::rrel {
                     MYYIELD(data);
                 }
                 if (start_at_root()) {
-                    auto root = data.obj->tx_model()->val().obj();
-                    MYYIELD((py::RRELInternalResult{py::RRELInternalResultData{root,data.lookup_list,data.matched_path}}));
+                    if (data.obj->tx_model()->val().is_obj()) {
+                        auto root = data.obj->tx_model()->val().obj();
+                        MYYIELD((py::RRELInternalResult{py::RRELInternalResultData{root,data.lookup_list,data.matched_path}}));
+                    }
                 }
             }
             else {
