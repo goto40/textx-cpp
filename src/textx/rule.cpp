@@ -252,6 +252,17 @@ namespace {
                     auto rrel_match = match.search("rule://rrel_expression");
                     if (rrel_match!=nullptr) {
                         std::string split_string = ".";
+                        auto obj_ref = match.search("rule://obj_ref");
+                        if (obj_ref!=nullptr) {
+                            auto obj_ref_rule = obj_ref->search("rule://obj_ref_rule");
+                            if (obj_ref_rule!=nullptr) {
+                                auto &mm_rule = mm[obj_ref_rule->captured.value()];
+                                if (mm_rule.tx_params().count("split")>0) {
+                                    split_string = mm_rule.tx_params("split");
+                                    TEXTX_ASSERT(split_string.size()>0);
+                                }
+                            }
+                        }
                         mm.set_resolver(rule.tx_name()+"."+attribute_name, std::make_unique<textx::rrel::RRELScopeProvider>(*rrel_match,split_string));
                         //std::cout << "found: " << rule.name << "." << attribute_name << "\n";
                     }

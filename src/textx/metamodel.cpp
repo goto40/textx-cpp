@@ -129,7 +129,12 @@ namespace textx {
             return grammar[name];
         }
         else {
-            return get_basic_metamodel()[name];
+            if (&get_basic_metamodel()!=this) {
+                return get_basic_metamodel()[name];
+            }
+            else {
+                throw std::runtime_error(std::string("cannot find rule \"")+name+"\";");
+            }
         }
     }
 
@@ -139,7 +144,12 @@ namespace textx {
             return grammar[name];
         }
         else {
-            return get_basic_metamodel()[name];
+            if (&get_basic_metamodel()!=this) {
+                return get_basic_metamodel()[name];
+            }
+            else {
+                throw std::runtime_error(std::string("cannot find rule \"")+name+"\";");
+            }
         }
     }
 
