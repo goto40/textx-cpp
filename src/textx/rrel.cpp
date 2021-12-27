@@ -533,7 +533,8 @@ namespace textx::rrel {
             origin,
             obj_name,
             *rrel_expression,
-            type);
+            type,
+            split_string);
         if (std::holds_alternative<textx::scoping::Postponed>(res)) {
             return {nullptr, {}};
         }

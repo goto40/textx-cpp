@@ -253,9 +253,10 @@ namespace textx::rrel {
 
     class RRELScopeProvider : public textx::scoping::RefResolver {
         std::unique_ptr<RRELExpression> rrel_expression;
+        std::string split_string;
     public:
-        RRELScopeProvider(const textx::arpeggio::Match& m) : rrel_expression{create_RREL_expression(m)} {}
-        RRELScopeProvider(std::string rrel_string) : rrel_expression{create_RREL_expression(rrel_string)} {}
+        RRELScopeProvider(const textx::arpeggio::Match& m,std::string split_string=".") : rrel_expression{create_RREL_expression(m)}, split_string{split_string} {}
+        RRELScopeProvider(std::string rrel_string,std::string split_string=".") : rrel_expression{create_RREL_expression(rrel_string)}, split_string{split_string} {}
         std::tuple<std::shared_ptr<textx::object::Object>, MatchedPath> resolve(std::shared_ptr<textx::object::Object> origin, std::string obj_name, std::optional<std::string> target_type) const override;
     };
 }

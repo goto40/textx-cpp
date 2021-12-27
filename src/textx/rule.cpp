@@ -251,7 +251,8 @@ namespace {
                 {
                     auto rrel_match = match.search("rule://rrel_expression");
                     if (rrel_match!=nullptr) {
-                        mm.set_resolver(rule.tx_name()+"."+attribute_name, std::make_unique<textx::rrel::RRELScopeProvider>(*rrel_match));
+                        std::string split_string = ".";
+                        mm.set_resolver(rule.tx_name()+"."+attribute_name, std::make_unique<textx::rrel::RRELScopeProvider>(*rrel_match,split_string));
                         //std::cout << "found: " << rule.name << "." << attribute_name << "\n";
                     }
                 }
