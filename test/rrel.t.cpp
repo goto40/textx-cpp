@@ -412,7 +412,9 @@ TEST_CASE("from_python_tests_test_split_str_multifile", "[textx/rrel]")
 {
     auto p_grammar = std::filesystem::path(__FILE__).parent_path().append("rrel/example1/Grammar.tx");
     auto mm = textx::metamodel_from_file(p_grammar);
-    CHECK((*mm)["FQN"].tx_raw_params().size()==1);
-    //auto m = mm->model_from_file(std::filesystem::path(__FILE__).parent_path().append("rrel/example1/main.model"));
-    //CHECK(m!=nullptr);
+    CHECK((*mm)["FQN"].tx_params().size()==1);
+    REQUIRE((*mm)["FQN"].tx_params().count("split")==1);
+    CHECK((*mm)["FQN"].tx_params("split") == "::");
+    auto m = mm->model_from_file(std::filesystem::path(__FILE__).parent_path().append("rrel/example1/main.model"));
+    CHECK(m!=nullptr);
 }

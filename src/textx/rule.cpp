@@ -370,8 +370,12 @@ namespace textx {
                 std::string val = "";
                 if (p.children[1].children.size()>0) {
                     val = p.children[1].children[0].children[1].captured.value();
+                    TEXTX_ASSERT(val.size()>=2);
+                    TEXTX_ASSERT(val[0] == val[val.size()-1]);
+                    TEXTX_ASSERT(val[0] == '\'' || val[0] == '"');
+                    val = val.substr(1,val.size()-2);
                 }
-                rule.m_tx_raw_params[name]=val;
+                rule.m_tx_params[name]=val;
             };
             add_param(all_params.children[1]);
             for (const auto& c: all_params.children[2].children) {

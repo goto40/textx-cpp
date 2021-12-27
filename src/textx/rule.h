@@ -58,13 +58,20 @@ namespace textx {
         std::unordered_set<std::string> m_tx_inh_by = {}; // for abstract rules 
         std::unordered_set<std::string> m_tx_bases = {};
         RuleType m_type = RuleType::illegal;
-        std::unordered_map<std::string,std::string> m_tx_raw_params = {};
+        std::unordered_map<std::string,std::string> m_tx_params = {};
     public:
         RuleType type() const { return m_type; }
 
         const auto& tx_bases() const { return m_tx_bases; }
         const auto& tx_inh_by() const { return m_tx_inh_by; }
-        const auto& tx_raw_params() const { return m_tx_raw_params; }
+        const auto& tx_params() const { return m_tx_params; }
+        const std::string& tx_params(std::string name) const { 
+            auto p = m_tx_params.find(name);
+            if (p==m_tx_params.end()) {
+                throw std::runtime_error(std::string("cannot find param \"")+std::string(name)+"\"");
+            }
+            return p->second;
+        }
         const std::string& tx_name() const { return name; }
 
         std::optional<textx::arpeggio::Match> operator()(const textx::arpeggio::Config &config, textx::arpeggio::ParserState &text, textx::arpeggio::TextPosition pos) const {
