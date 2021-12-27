@@ -362,6 +362,22 @@ namespace textx {
         }
         rule.pattern = textx::arpeggio::rule(textx::arpeggio::named(rname,rule.pattern));
         rule.m_type = RuleType::illegal;
+        if (rule_params.children.size()>0) {
+            auto &all_params = rule_params.children[0];
+            auto add_param=[&](const ta::Match& p) {
+                TEXTX_ASSERT(p.name_is("rule://rule_param"));
+                std::string name = p.children[0].captured.value();
+                std::string val = "";
+                if (p.children[1].children.size()>0) {
+                    val = p.children[1].children[0].children[1].captured.value();
+                }
+                rule.m_tx_raw_params[name]=val;
+            };
+            add_param(all_params.children[1]);
+            for (const auto& c: all_params.children[2].children) {
+                add_param(c.children[1]);
+            }
+        }
         return rule;
     }
 }

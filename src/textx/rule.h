@@ -58,13 +58,13 @@ namespace textx {
         std::unordered_set<std::string> m_tx_inh_by = {}; // for abstract rules 
         std::unordered_set<std::string> m_tx_bases = {};
         RuleType m_type = RuleType::illegal;
+        std::unordered_map<std::string,std::string> m_tx_raw_params = {};
     public:
-        friend Metamodel;
-
         RuleType type() const { return m_type; }
 
         const auto& tx_bases() const { return m_tx_bases; }
         const auto& tx_inh_by() const { return m_tx_inh_by; }
+        const auto& tx_raw_params() const { return m_tx_raw_params; }
         const std::string& tx_name() const { return name; }
 
         std::optional<textx::arpeggio::Match> operator()(const textx::arpeggio::Config &config, textx::arpeggio::ParserState &text, textx::arpeggio::TextPosition pos) const {
@@ -101,6 +101,7 @@ namespace textx {
             return p->second;
         }
 
+        friend Metamodel;
         friend Rule createRuleFromTextxPattern(textx::Metamodel& mm, std::string_view name, textx::arpeggio::Match rule_params, const textx::arpeggio::Match& rule_body, textx::parsetree::RuleInfo& rule_info, bool add_eof);
     };
 
