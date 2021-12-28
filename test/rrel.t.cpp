@@ -380,9 +380,9 @@ TEST_CASE("rrel_scope_provider", "[textx/rrel]")
 
 TEST_CASE("from_python_tests_components1", "[textx/rrel]")
 {
-    auto p_grammar = std::filesystem::path(__FILE__).parent_path().append("rrel/ComponentsRrel.tx");
+    auto p_grammar = std::filesystem::path(__FILE__).parent_path().append("rrel/components/ComponentsRrel.tx");
     auto mm = textx::metamodel_from_file(p_grammar);
-    auto m = mm->model_from_file(std::filesystem::path(__FILE__).parent_path().append("rrel/example.components"));
+    auto m = mm->model_from_file(std::filesystem::path(__FILE__).parent_path().append("rrel/components/example.components"));
     CHECK(m!=nullptr);
 }
 
