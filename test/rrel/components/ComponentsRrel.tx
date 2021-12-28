@@ -1,6 +1,8 @@
 Model:
+        imports*=Import
         packages*=Package
 ;
+Import: 'import' importURI=STRING;
 
 Package:
         'package' name=ID '{'
@@ -55,4 +57,4 @@ Connection:
 ;
 
 FQN: ID+['.'];
-Comment: /\/\/.*$/;
+Comment: /\/\/.*?$/;

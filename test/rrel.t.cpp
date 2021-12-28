@@ -382,8 +382,23 @@ TEST_CASE("from_python_tests_components1", "[textx/rrel]")
 {
     auto p_grammar = std::filesystem::path(__FILE__).parent_path().append("rrel/components/ComponentsRrel.tx");
     auto mm = textx::metamodel_from_file(p_grammar);
-    auto m = mm->model_from_file(std::filesystem::path(__FILE__).parent_path().append("rrel/components/example.components"));
-    CHECK(m!=nullptr);
+    for(auto fn : {
+        "example.components",
+        "example_A.components",
+        "example_B.components",
+        "example_inherit1.components",
+        "example_inherit2.components",
+        "example_inherit3.components"
+    }) {
+        auto m = mm->model_from_file(std::filesystem::path(__FILE__).parent_path().append("rrel/components").append(fn));
+        CHECK(m!=nullptr);
+    }
+    for(auto fn : {
+        "example_err1.components",
+        "example_err2.components"
+    }) {
+        CHECK_THROWS( (void)mm->model_from_file(std::filesystem::path(__FILE__).parent_path().append("rrel/components").append(fn)) );
+    }
 }
 
 TEST_CASE("test_rrel_multifile", "[textx/rrel]")
