@@ -59,7 +59,13 @@ namespace textx {
         std::unordered_set<std::string> m_tx_bases = {};
         RuleType m_type = RuleType::illegal;
         std::unordered_map<std::string,std::string> m_tx_params = {};
+
+        Rule(textx::Metamodel& mm, std::string_view name, textx::arpeggio::Match rule_params, const textx::arpeggio::Match& rule_body, textx::parsetree::RuleInfo& rule_info);
+        void post_process_created_rule(textx::Metamodel& mm, std::string_view name, textx::arpeggio::Match rule_params, const textx::arpeggio::Match& rule_body, textx::parsetree::RuleInfo& rule_info, bool add_eof);
+
+        friend Metamodel;
     public:
+        Rule() = default;
         RuleType type() const { return m_type; }
 
         const auto& tx_bases() const { return m_tx_bases; }
@@ -107,10 +113,6 @@ namespace textx {
             }
             return p->second;
         }
-
-        friend Metamodel;
-        friend Rule createRuleFromTextxPattern(textx::Metamodel& mm, std::string_view name, textx::arpeggio::Match rule_params, const textx::arpeggio::Match& rule_body, textx::parsetree::RuleInfo& rule_info, bool add_eof);
     };
 
-    Rule createRuleFromTextxPattern(textx::Metamodel& mm, std::string_view name, textx::arpeggio::Match rule_params, const textx::arpeggio::Match& rule_body, textx::parsetree::RuleInfo& rule_info, bool add_eof);
 }

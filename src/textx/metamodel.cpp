@@ -21,25 +21,35 @@ namespace textx {
             auto &rules = root.children[1];
             //std::cout << "children: " << rules.children.size() << "\n";
 
-            bool first = true;
             for (auto&r : rules.children) {
                 auto &rule_name = r.children[0].captured.value();
                 //std::cout << "r: " << rule_name << "\n";
                 auto &rule_params = r.children[1];
                 auto &rule_body = r.children[3];
                 auto rule_info = textx::parsetree::RuleInfo{r,rule_name};
-                bool add_eof = first && is_main_grammar;
-                auto new_rule = textx::createRuleFromTextxPattern(*this, rule_name, rule_params, rule_body, rule_info, add_eof);
-                if (first) {
-                    grammar.set_main_rule(rule_name);
-                    first = false;
-                }
+                auto new_rule = Rule(*this, rule_name, rule_params, rule_body, rule_info);
                 grammar.add_rule(rule_name, new_rule);
                 textx_grammar_parsetree.rule_info.emplace(rule_name, rule_info);
             }
 
             if(include_basic_metamodel) {
                 textx_grammar_parsetree.copy_rule_infos_from("", get_basic_metamodel().textx_grammar_parsetree);
+            }
+
+            // two phase creation: we need rules defined late for RREL scope providers:
+            bool first = true;
+            for (auto&r : rules.children) {
+                auto &rule_name = r.children[0].captured.value();
+                auto &rule_params = r.children[1];
+                auto &rule_body = r.children[3];
+                auto &rule_info = textx_grammar_parsetree[rule_name];
+                bool add_eof = first && is_main_grammar;
+                auto &new_rule = grammar[rule_name];
+                if (first) {
+                    grammar.set_main_rule(rule_name);
+                    first = false;
+                }
+                new_rule.post_process_created_rule(*this, rule_name, rule_params, rule_body, rule_info, add_eof);
             }
 
             textx_grammar_parsetree.finalize_rule_info();

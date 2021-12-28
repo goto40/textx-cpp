@@ -363,16 +363,10 @@ namespace {
 
 namespace textx {
 
-    Rule createRuleFromTextxPattern(textx::Metamodel& mm, std::string_view name, ta::Match rule_params, const ta::Match& rule_body, textx::parsetree::RuleInfo& rule_info, bool add_eof) {
+    Rule::Rule(textx::Metamodel& mm, std::string_view name, ta::Match rule_params, const ta::Match& rule_body, textx::parsetree::RuleInfo& rule_info) {
         // << rule_body << "\n";
-        Rule rule;
+        auto& rule = *this;
         rule.name = name;
-        std::string rname = std::string("rule://")+std::string(name);
-        rule.pattern = transform_match2pattern(ParseState{}, mm, rule_info, rule_body);
-        if (add_eof) {
-            rule.pattern = ta::sequence({rule.pattern, ta::end_of_file()});
-        }
-        rule.pattern = textx::arpeggio::rule(textx::arpeggio::named(rname,rule.pattern));
         rule.m_type = RuleType::illegal;
         if (rule_params.children.size()>0) {
             auto &all_params = rule_params.children[0];
@@ -394,6 +388,15 @@ namespace textx {
                 add_param(c.children[1]);
             }
         }
-        return rule;
+    }
+
+    void Rule::post_process_created_rule(textx::Metamodel& mm, std::string_view name, ta::Match rule_params, const ta::Match& rule_body, textx::parsetree::RuleInfo& rule_info, bool add_eof) {
+        auto& rule = *this;
+        rule.pattern = transform_match2pattern(ParseState{}, mm, rule_info, rule_body);
+        if (add_eof) {
+            rule.pattern = ta::sequence({rule.pattern, ta::end_of_file()});
+        }
+        std::string rname = std::string("rule://")+std::string(name);
+        rule.pattern = textx::arpeggio::rule(textx::arpeggio::named(rname,rule.pattern));
     }
 }
