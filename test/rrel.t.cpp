@@ -393,6 +393,15 @@ TEST_CASE("from_python_tests_components1", "[textx/rrel]")
         auto m = mm->model_from_file(std::filesystem::path(__FILE__).parent_path().append("rrel/components").append(fn));
         CHECK(m!=nullptr);
     }
+
+    {
+        auto m = mm->model_from_file(std::filesystem::path(__FILE__).parent_path().append("rrel/components").append("example_inherit1.components"));
+        CHECK(m!=nullptr);
+        auto usage = m->fqn("usage");
+        auto connect3 = (*usage)["connections"][2].obj();
+        CHECK( (*connect3)["from_port"].obj() == m->fqn("base.Start.output1"));
+    }
+
     for(auto fn : {
         "example_err1.components",
         "example_err2.components"
