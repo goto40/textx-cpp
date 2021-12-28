@@ -126,9 +126,6 @@ Example:
  * Coroutine tutorial [https://www.scs.stanford.edu/~dm/blog/c++-coroutines.html](https://www.scs.stanford.edu/~dm/blog/c++-coroutines.html) (useful for the RREL implementation)
 
 ## <a name="openpoints"></a> Open Points
-Prio 0 (most important):
- * TODO RREL rule parameters (separator)
-
 Prio 1:
  * TODO importURI from other metamodels
  * TODO handle referenced/included metamodels, in Metamodel::ref
