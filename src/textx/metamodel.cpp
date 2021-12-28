@@ -6,10 +6,14 @@
 
 namespace textx {
 
-    Metamodel::Metamodel(std::string_view grammar_text, bool is_main_grammar, bool include_basic_metamodel, std::string filename)
-        : default_workspace{textx::WorkspaceImpl<std::weak_ptr>::create()} // ownership! The default workspace uses *this --> weak_pointer, else we get a memory hole
+    Metamodel::Metamodel(std::string_view grammar_text, bool is_main_grammar, bool include_basic_metamodel, std::string filename, std::shared_ptr<textx::Workspace> workspace)
+        : default_workspace{textx::WorkspaceImpl<std::weak_ptr>::create()}, // ownership! The default workspace uses *this --> weak_pointer, else we get a memory hole
+          include_basic_metamodel{include_basic_metamodel}
     {
-        try {            
+        try {
+            if (workspace==nullptr) {
+                workspace = default_workspace;
+            }
             textx_grammar_parsetree.root = textx_grammar.parse_or_throw(grammar_text);
             auto &root = textx_grammar_parsetree.root.value();
 
@@ -31,6 +35,19 @@ namespace textx {
                 grammar.add_rule(rule_name, new_rule);
                 textx_grammar_parsetree.rule_info.emplace(rule_name, rule_info);
             }
+
+            auto &imports_or_refs = root.children[0];
+            for(auto &i: imports_or_refs.children) {
+                auto import = i.search("rule://import_stm");
+                if (import) {
+                    std::string name = import->children[1].captured.value();
+                    std::string fname = name+".tx";
+                    auto imported_mm = workspace->metamodel_from_file(fname);
+                    imported_models.push_back(imported_mm);
+                    imported_models_by_name[name]=imported_mm;
+                    textx_grammar_parsetree.copy_rule_infos_from(name, imported_mm->textx_grammar_parsetree);
+                }
+            } 
 
             if(include_basic_metamodel) {
                 textx_grammar_parsetree.copy_rule_infos_from("", get_basic_metamodel().textx_grammar_parsetree);
@@ -88,7 +105,33 @@ namespace textx {
     }
 
     bool Metamodel::has_rule(std::string name) const {
-        return grammar.get_rules().count(name)>0;
+        size_t n = name.find(".");
+        if (n!=name.npos) {
+            auto res = imported_models_by_name.find(name.substr(0,n));
+            auto sp = res->second.lock();
+            TEXTX_ASSERT(sp!=nullptr);
+            if (sp->has_rule(name.substr(n+1))) {
+                return true;
+            }
+        }
+        else {
+            if (grammar.get_rules().count(name)>0) {
+                return true;
+            }
+            for(auto p:imported_models) {
+                auto sp = p.lock();
+                TEXTX_ASSERT(sp!=nullptr);
+                if (sp->has_rule(name)) {
+                    return true;
+                }
+            }
+        }
+        if (include_basic_metamodel) {
+            return get_basic_metamodel().has_rule(name);
+        }
+        else {
+            return false;
+        }
     }
 
     Metamodel& Metamodel::get_basic_metamodel() {
@@ -108,58 +151,64 @@ namespace textx {
     textx::arpeggio::Pattern Metamodel::ref(std::string name) {
         return [this,name](const textx::arpeggio::Config &config, textx::arpeggio::ParserState &text, textx::arpeggio::TextPosition pos) -> std::optional<textx::arpeggio::Match>
         {
-            auto r = grammar.get_rules().find(name);
-            if (r==grammar.get_rules().end()) {
-                if (this != &get_basic_metamodel()) {
-                    return get_basic_metamodel().ref(name)(config, text, pos);
-                }
-                else {
-                    throw std::runtime_error(std::string("cannot find mm.ref(\"")+name+"\");");
-                }
-            }
-            else {
-                return r->second(config, text, pos);
-            }
+            return operator[](name)(config, text, pos);
         };
-
-        //TODO handle referenced/included metamodels
-        if (grammar.get_rules().find(name)==grammar.get_rules().end()) {
-            std::cout << "?????? " << name << "\n";
-            // if (this != &get_basic_metamodel()) {
-            //     return get_basic_metamodel().ref(name);
-            // }
-        }
-        return grammar.ref(name);
     }
 
     Rule& Metamodel::operator[](std::string name) {
-        // TOOD handle dot separated grammar names (grammar.rule)
-        if (grammar.get_rules().count(name)>0) {
-            return grammar[name];
+        size_t n = name.find(".");
+        if (n!=name.npos) {
+            auto res = imported_models_by_name.find(name.substr(0,n));
+            auto sp = res->second.lock();
+            TEXTX_ASSERT(sp!=nullptr);
+            if (sp->has_rule(name.substr(n+1))) {
+                return sp->operator[](name.substr(n+1));
+            }
         }
         else {
-            if (&get_basic_metamodel()!=this) {
-                return get_basic_metamodel()[name];
+            if (grammar.get_rules().count(name)>0) {
+                return grammar[name];
             }
-            else {
-                throw std::runtime_error(std::string("cannot find rule \"")+name+"\";");
+            for(auto p:imported_models) {
+                auto sp = p.lock();
+                TEXTX_ASSERT(sp!=nullptr);
+                if (sp->has_rule(name)) {
+                   return sp->operator[](name);
+                }
             }
         }
+        if (include_basic_metamodel) {
+            return get_basic_metamodel()[name];
+        }
+        throw std::runtime_error(std::string("cannot find rule \"")+name+"\";");
     }
 
     const Rule& Metamodel::operator[](std::string name) const {
-        // TOOD handle dot separated grammar names (grammar.rule)
-        if (grammar.get_rules().count(name)>0) {
-            return grammar[name];
+        size_t n = name.find(".");
+        if (n!=name.npos) {
+            auto res = imported_models_by_name.find(name.substr(0,n));
+            auto sp = res->second.lock();
+            TEXTX_ASSERT(sp!=nullptr);
+            if (sp->has_rule(name.substr(n+1))) {
+                return sp->operator[](name.substr(n+1));
+            }
         }
         else {
-            if (&get_basic_metamodel()!=this) {
-                return get_basic_metamodel()[name];
+            if (grammar.get_rules().count(name)>0) {
+                return grammar[name];
             }
-            else {
-                throw std::runtime_error(std::string("cannot find rule \"")+name+"\";");
+            for(auto p:imported_models) {
+                auto sp = p.lock();
+                TEXTX_ASSERT(sp!=nullptr);
+                if (sp->has_rule(name)) {
+                    return sp->operator[](name);
+                }
             }
         }
+        if (include_basic_metamodel) {
+            return get_basic_metamodel()[name];
+        }
+        throw std::runtime_error(std::string("cannot find rule \"")+name+"\";");
     }
 
     namespace {

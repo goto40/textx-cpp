@@ -23,9 +23,12 @@ namespace textx {
         std::unordered_map<std::string, std::unique_ptr<textx::scoping::RefResolver>> resolver = {};
         std::vector<std::shared_ptr<textx::Model>> builtin_models={};
         std::shared_ptr<textx::Workspace> default_workspace;
+        std::vector<std::weak_ptr<textx::Metamodel>> imported_models={};
+        std::unordered_map<std::string, std::weak_ptr<textx::Metamodel>> imported_models_by_name={};
+        bool include_basic_metamodel;
 
         public:
-        Metamodel(std::string_view grammar, bool is_main_grammar=true, bool include_basic_metamodel=true, std::string filename="");
+        Metamodel(std::string_view grammar, bool is_main_grammar=true, bool include_basic_metamodel=true, std::string filename="", std::shared_ptr<textx::Workspace> workspace=nullptr);
         std::shared_ptr<textx::Workspace> tx_default_workspace();
         bool is_base_of(std::string base, std::string special) const;
         bool is_instance(std::string special, std::string base) const { return is_base_of(base,special); };
