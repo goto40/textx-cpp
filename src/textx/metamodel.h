@@ -68,11 +68,11 @@ namespace textx {
         }
     };
 
-    inline auto metamodel_from_str(std::string_view grammar) {
+    inline auto metamodel_from_str(std::string_view grammar, std::shared_ptr<textx::Workspace> workspace=nullptr) {
         return std::make_shared<textx::Metamodel>(grammar);
     }
 
-    inline auto metamodel_from_file(std::filesystem::path p) {
+    inline auto metamodel_from_file(std::filesystem::path p, std::shared_ptr<textx::Workspace> workspace=nullptr) {
         std::ifstream file(p);
         std::stringstream grammartext;
         grammartext << file.rdbuf();

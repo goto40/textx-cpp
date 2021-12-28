@@ -14,11 +14,18 @@ namespace textx {
         static std::shared_ptr<Workspace> create();
         virtual ~Workspace() = default;
         virtual void set_default_metamodel(std::shared_ptr<textx::Metamodel> m) = 0;
-        virtual void add_metamodel(std::string n, std::shared_ptr<textx::Metamodel> m) = 0;
-        virtual void add_model(std::string path, std::shared_ptr<textx::Model> m) = 0; 
+        virtual void add_metamodel_for_shortcut(std::string n, std::shared_ptr<textx::Metamodel> m) = 0;
+        virtual void add_metamodel_for_shortcut(std::string n, std::filesystem::path filename) = 0;
+        virtual void add_known_model(std::string path, std::shared_ptr<textx::Model> m) = 0; 
+        virtual void add_known_metamodel(std::string path, std::shared_ptr<textx::Metamodel> m) = 0; 
         virtual bool has_model(std::string filename) = 0;
+        virtual bool has_metamodelmodel(std::string filename) = 0;
+        virtual bool has_metamodelmodel_by_shortcut(std::string name) = 0;
         virtual std::shared_ptr<textx::Model> get_model(std::string filename) = 0;
+        virtual std::shared_ptr<textx::Metamodel> get_metamodel(std::string filename) = 0;
+        virtual std::shared_ptr<textx::Metamodel> get_metamodel_by_shortcut(std::string name) = 0;
         virtual std::shared_ptr<textx::Model> model_from_file(std::filesystem::path filename, bool is_main_model=true) = 0;
+        virtual std::shared_ptr<textx::Metamodel> metamodel_from_file(std::filesystem::path filename) = 0;
     };
     template< template<class> class Ptr4DefaultMM=std::shared_ptr>
         // requires 
@@ -34,19 +41,51 @@ namespace textx {
         Ptr4DefaultMM<textx::Metamodel> default_metamodel = {};
         std::unordered_map<std::string, std::shared_ptr<textx::Metamodel>> extension_to_metamodel = {};
         std::unordered_map<std::string, std::shared_ptr<textx::Model>> known_models;
+        std::unordered_map<std::string, std::shared_ptr<textx::Metamodel>> known_metamodels;
+        std::unordered_map<std::string, std::shared_ptr<textx::Metamodel>> known_metamodels_by_shortcut;
         WorkspaceImpl() = default;
     public:
         static std::shared_ptr<WorkspaceImpl> create() { return std::shared_ptr<textx::WorkspaceImpl<Ptr4DefaultMM>>{new textx::WorkspaceImpl<Ptr4DefaultMM>{}}; }
         void set_default_metamodel(std::shared_ptr<textx::Metamodel> m) override { default_metamodel=m; }
-        void add_metamodel(std::string n, std::shared_ptr<textx::Metamodel> m) override { extension_to_metamodel[n]=m; }
-        void add_model(std::string path, std::shared_ptr<textx::Model> m) override { 
+        void add_metamodel_for_shortcut(std::string n, std::shared_ptr<textx::Metamodel> m) override { extension_to_metamodel[n]=m; }
+        void add_metamodel_for_shortcut(std::string n, std::filesystem::path filename) override {
+            add_metamodel_for_shortcut(n, metamodel_from_file(filename));
+        }
+        void add_known_model(std::string path, std::shared_ptr<textx::Model> m) override { 
             //std::cout << "adding " << path << "\n";
             known_models[path]=m;
+        }
+        void add_known_metamodel(std::string path, std::shared_ptr<textx::Metamodel> m) override { 
+            known_metamodels[path]=m;
+            std::string shortcut = std::filesystem::path(path).stem();
+            known_metamodels_by_shortcut[shortcut]=m;
         }
         bool has_model(std::string filename) override {
             return known_models.count(filename)>0;
         }
+        bool has_metamodelmodel(std::string filename) override {
+            return known_metamodels.count(filename)>0;
+        }
+        bool has_metamodelmodel_by_shortcut(std::string name) override {
+            return known_metamodels_by_shortcut.count(name)>0;
+        }
 
+        std::shared_ptr<textx::Metamodel> get_metamodel(std::string filename) override {
+            if (known_metamodels.count(filename)) {
+                return known_metamodels[filename]; // cached model
+            }
+            else {
+                return nullptr;
+            }
+        }
+        std::shared_ptr<textx::Metamodel> get_metamodel_by_shortcut(std::string name) override {
+            if (known_metamodels_by_shortcut.count(name)) {
+                return known_metamodels_by_shortcut[name]; // cached model
+            }
+            else {
+                return nullptr;
+            }
+        }
         std::shared_ptr<textx::Model> get_model(std::string filename) override {
             if (known_models.count(filename)) {
                 return known_models[filename]; // cached model
@@ -77,5 +116,20 @@ namespace textx {
                 throw std::runtime_error(std::string{"no metamodel available for "}+std::string{filename});
             }
         }
-    };
+        std::shared_ptr<textx::Metamodel> metamodel_from_file(std::filesystem::path filename) override {
+            filename = std::filesystem::canonical(filename);
+            std::string shortcut = filename.stem();
+            if (has_metamodelmodel(filename)) {
+                TEXTX_ASSERT(has_metamodelmodel_by_shortcut(shortcut));
+                return get_metamodel(filename);
+            }
+            else {
+                TEXTX_ASSERT(!has_metamodelmodel_by_shortcut(shortcut), "names must be unique");
+            }
+
+            auto mm = textx::metamodel_from_file(filename, shared_from_this());
+            add_known_metamodel(filename, mm);
+            return mm;
+        }
+   };
 }

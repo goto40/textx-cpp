@@ -194,7 +194,7 @@ namespace textx {
             ret->init(filename, text, *parsetree, shared_from_this());
 
             if (filename.size()>0) {
-                workspace->add_model(filename, ret); // owning...
+                workspace->add_known_model(filename, ret); // owning...
             }
 
             auto basedir = std::filesystem::path(filename).parent_path();
