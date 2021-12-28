@@ -77,7 +77,8 @@ TEST_CASE("model_abstract_rule1", "[textx/metamodel]")
         {
             auto mm = textx::metamodel_from_str(grammar1);
 
-            CHECK(mm->operator[]("Shape").tx_inh_by().size()==3);
+            CHECK(mm->operator[]("Point").tx_bases().size()==1);
+            CHECK(*(mm->operator[]("Point").tx_bases().begin())=="Shape");
 
             CHECK(mm->is_base_of("Shape","Point"));
             CHECK(mm->is_base_of("Point","Point"));

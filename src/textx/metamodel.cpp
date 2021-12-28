@@ -58,7 +58,6 @@ namespace textx {
                 if (!r.external_rule) {
                     auto &rule = grammar[name];
                     rule.m_type = r.rule_type;
-                    rule.m_tx_inh_by = r.tx_inh_by;
                     rule.m_tx_bases = r.tx_bases;
                     for(auto& [name, info]: r.attribute_info) {
                         rule.attribute_info[name].type = info.type;

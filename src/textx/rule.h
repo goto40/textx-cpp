@@ -55,7 +55,6 @@ namespace textx {
         textx::arpeggio::Pattern pattern;
         std::string name = "unnamed";
         std::unordered_map<std::string, AttributeInfo> attribute_info = {}; 
-        std::unordered_set<std::string> m_tx_inh_by = {}; // for abstract rules 
         std::unordered_set<std::string> m_tx_bases = {};
         RuleType m_type = RuleType::illegal;
         std::unordered_map<std::string,std::string> m_tx_params = {};
@@ -69,7 +68,6 @@ namespace textx {
         RuleType type() const { return m_type; }
 
         const auto& tx_bases() const { return m_tx_bases; }
-        const auto& tx_inh_by() const { return m_tx_inh_by; }
         const auto& tx_params() const { return m_tx_params; }
         const std::string& tx_params(std::string name) const { 
             auto p = m_tx_params.find(name);
