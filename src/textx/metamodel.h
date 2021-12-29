@@ -18,14 +18,14 @@ namespace textx {
         textx::lang::TextxGrammar textx_grammar={};
         textx::Grammar<textx::Rule> grammar={};
         textx::parsetree::TextxGrammarParsetree textx_grammar_parsetree;
-        static Metamodel& get_basic_metamodel();
+        static std::shared_ptr<Metamodel> get_basic_metamodel();
         std::unique_ptr<textx::scoping::RefResolver> default_resolver = std::make_unique<textx::scoping::PlainNameRefResolver>();
         std::unordered_map<std::string, std::unique_ptr<textx::scoping::RefResolver>> resolver = {};
         std::vector<std::shared_ptr<textx::Model>> builtin_models={};
         std::shared_ptr<textx::Workspace> default_workspace;
         std::vector<std::weak_ptr<textx::Metamodel>> imported_models={};
         std::unordered_map<std::string, std::weak_ptr<textx::Metamodel>> imported_models_by_name={};
-        bool include_basic_metamodel;
+        std::string grammar_name="";
 
         public:
         Metamodel(std::string_view grammar, bool is_main_grammar=true, bool include_basic_metamodel=true, std::string filename="", std::shared_ptr<textx::Workspace> workspace=nullptr);
@@ -35,6 +35,7 @@ namespace textx {
         Rule& operator[](std::string name);
         const Rule& operator[](std::string name) const;
         bool has_rule(std::string name) const;
+        std::string get_fqn_for_rule(std::string name) const;
         textx::arpeggio::Pattern ref(std::string name);
 
         std::shared_ptr<textx::Model> model_from_str(std::string_view text, std::string filename="", bool is_main_model=true, std::shared_ptr<textx::Workspace> workspace=nullptr);
