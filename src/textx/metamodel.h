@@ -47,6 +47,32 @@ namespace textx {
         const auto& tx_all_types() const { return all_types; }
         void add_builtin_model(std::shared_ptr<textx::Model> m) { builtin_models.push_back(std::move(m)); }
 
+        bool has_non_default_resolver(std::string l) const {
+            auto res = resolver.find(l);
+            if (res!=resolver.end()) return true;
+            for(auto weak_other_mm: imported_models) {
+                auto other_mm = weak_other_mm.lock();
+                TEXTX_ASSERT(other_mm != nullptr);
+                if (other_mm->has_non_default_resolver(l)) {
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        const textx::scoping::RefResolver& get_resolver(std::string l) const {
+            auto res = resolver.find(l);
+            if (res!=resolver.end()) return *res->second;
+            for(auto weak_other_mm: imported_models) {
+                auto other_mm = weak_other_mm.lock();
+                TEXTX_ASSERT(other_mm != nullptr);
+                if (other_mm->has_non_default_resolver(l)) {
+                    return other_mm->get_resolver(l);
+                }
+            }
+            throw std::runtime_error(std::string("unexpected error during lookup of resolver ")+l);
+        }
+
         const textx::scoping::RefResolver& get_resolver(std::string rule_name, std::string attr_name) const {
             std::string lookup[] = {
                 rule_name+"."+attr_name,
@@ -55,8 +81,9 @@ namespace textx {
                 "*.*"
             };
             for (auto l: lookup) {
-                auto res = resolver.find(l);
-                if (res!=resolver.end()) return *res->second;
+                if (has_non_default_resolver(l)) {
+                    return get_resolver(l);
+                }
             }
             return *default_resolver;
         }

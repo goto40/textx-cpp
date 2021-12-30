@@ -442,3 +442,44 @@ TEST_CASE("from_python_tests_test_split_str_multifile", "[textx/rrel]")
     auto m = mm->model_from_file(std::filesystem::path(__FILE__).parent_path().append("rrel/example1/main.model"));
     CHECK(m!=nullptr);
 }
+
+TEST_CASE("rrel_regression1", "[textx/rrel]")
+{
+    auto mm = textx::metamodel_from_str(R"#(
+        Model:
+            cls*=Cls
+            obj*=Obj
+            call*=Call
+        ;
+        Cls: "class" name=ID (
+            ( "extends" extends+=[Cls][','])?
+            "{"
+                methods*=Method
+            "}"
+            )?;
+
+        Method: "method" name=ID;
+        Obj: "obj" name=ID ":" ref=[Cls];
+        Call: "call" name=ID ":" obj=[Obj] "." method=[Method|ID|.~obj.~ref.~extends*.methods];
+
+        Comment: /\/\/.*?$/;
+    )#");
+    auto m = mm->model_from_str(R"#(
+        class A extends B,C {
+        }
+        class B extends D {
+            method b
+        }
+        class C extends D {
+            method c
+        }
+        class D {
+            method d
+        }
+        obj a:A
+        call callb: a.b
+        call callc: a.c
+        call calld: a.d
+    )#");
+    CHECK(m!=nullptr);
+}
