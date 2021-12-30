@@ -68,7 +68,8 @@ TEST_CASE("model_abstract_rule1", "[textx/metamodel]")
     {
         auto grammar1 = R"#(
             Model: shapes+=Shape[','];
-            Shape: Point|Circle|Line;
+            Shape: Point|ComplexShape;
+            ComplexShape: Circle|Line;
             Point: 'Point' '(' x=NUMBER ',' y=NUMBER ')';
             Circle: 'Circle' '(' center=Point ',' r=NUMBER ')';
             Line: 'Line' '(' p1=Point ',' p2=Point ')';
@@ -77,9 +78,12 @@ TEST_CASE("model_abstract_rule1", "[textx/metamodel]")
         {
             auto mm = textx::metamodel_from_str(grammar1);
 
-            CHECK(mm->operator[]("Point").tx_bases().size()==1);
-            CHECK(*(mm->operator[]("Point").tx_bases().begin())=="Shape");
+            CHECK(mm->operator[]("ComplexShape").tx_inh_by().size()==2);
+            CHECK(mm->operator[]("Shape").tx_inh_by().size()==4);
+            CHECK(mm->operator[]("Point").tx_inh_by().size()==0);
 
+            CHECK(mm->is_instance("Point", "Shape"));
+            CHECK(mm->is_instance("Point", "Point"));
             CHECK(mm->is_base_of("Shape","Point"));
             CHECK(mm->is_base_of("Point","Point"));
             CHECK(!mm->is_base_of("Point","Shape"));
@@ -93,6 +97,7 @@ TEST_CASE("model_abstract_rule1", "[textx/metamodel]")
             )");
             
             CHECK( (*mm)["Model"]["shapes"].cardinality == textx::AttributeCardinality::list );
+            CHECK( (*mm)["Model"]["shapes"].types.size() == 1 );
             CHECK( (*mm)["Model"]["shapes"].type.value() == "Shape" );
             CHECK( (*m)["shapes"].size() == 3 );
             CHECK( (*m)["shapes"][0].obj()->type == "Point" );

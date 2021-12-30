@@ -59,7 +59,6 @@ namespace textx::parsetree {
         RuleInfo(const RuleInfo&) = default;
 
         void add_tx_inh_by(std::string name) {
-            //std::cout << this->name << " is inherited by " << name << "\n";
             tx_inh_by.insert(name);
         }
         void fix_tx_inh_by(TextxGrammarParsetree& p);

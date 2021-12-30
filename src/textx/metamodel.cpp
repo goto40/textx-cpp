@@ -16,14 +16,12 @@ namespace textx {
             if (filename!="") {
                 grammar_name = std::filesystem::path(filename).stem();
             }
-            textx_grammar_parsetree.root = textx_grammar.parse_or_throw(grammar_text);
-            auto &root = textx_grammar_parsetree.root.value();
+            grammar_root = textx_grammar.parse_or_throw(grammar_text);
+            auto& root = grammar_root.value();
 
             assert(root.name && "unexpected: no textx model loaded!!");
             assert(root.name.value()=="rule://textx_model" && "unexpected: no textx model loaded!!");
 
-            //TODO import and refs
-                    
             auto &rules = root.children[1];
             //std::cout << "children: " << rules.children.size() << "\n";
 
@@ -32,18 +30,17 @@ namespace textx {
                 //std::cout << "r: " << rule_name << "\n";
                 auto &rule_params = r.children[1];
                 auto &rule_body = r.children[3];
-                auto rule_info = textx::parsetree::RuleInfo{r,rule_name};
-                auto new_rule = Rule(*this, rule_name, rule_params, rule_body, rule_info);
+                auto new_rule = Rule(*this, rule_name, rule_params, rule_body);
                 grammar.add_rule(rule_name, new_rule);
-                textx_grammar_parsetree.rule_info.emplace(rule_name, rule_info);
             }
 
             if(include_basic_metamodel) {
                 imported_models.push_back(get_basic_metamodel());
                 imported_models_by_name["BUILTIN"]=get_basic_metamodel();
-                textx_grammar_parsetree.copy_rule_infos_from("", get_basic_metamodel()->textx_grammar_parsetree);
+                //textx_grammar_parsetree.copy_rule_infos_from("", get_basic_metamodel()->textx_grammar_parsetree);
             }
             auto &imports_or_refs = root.children[0];
+            //TODO refs
             for(auto &i: imports_or_refs.children) {
                 auto import = i.search("rule://import_stm");
                 if (import) {
@@ -64,7 +61,7 @@ namespace textx {
                     auto imported_mm = workspace->metamodel_from_file(p);
                     imported_models.push_back(imported_mm);
                     imported_models_by_name[name]=imported_mm;
-                    textx_grammar_parsetree.copy_rule_infos_from(name, imported_mm->textx_grammar_parsetree);
+                    //textx_grammar_parsetree.copy_rule_infos_from(name, imported_mm->textx_grammar_parsetree);
                 }
             } 
 
@@ -74,28 +71,28 @@ namespace textx {
                 auto &rule_name = r.children[0].captured.value();
                 auto &rule_params = r.children[1];
                 auto &rule_body = r.children[3];
-                auto &rule_info = textx_grammar_parsetree[rule_name];
                 bool add_eof = first && is_main_grammar;
                 auto &new_rule = grammar[rule_name];
                 if (first) {
                     grammar.set_main_rule(rule_name);
                     first = false;
                 }
-                new_rule.post_process_created_rule(*this, rule_name, rule_params, rule_body, rule_info, add_eof);
+                new_rule.post_process_created_rule(*this, rule_name, rule_params, rule_body, add_eof);
             }
 
-            textx_grammar_parsetree.finalize_rule_info();
+            // fill-in inh_by infos
+            adjust_tx_inh_by();
 
-            for (auto&[name,r] : textx_grammar_parsetree.rule_info) {
-                if (!r.external_rule) {
-                    auto &rule = grammar[name];
-                    rule.m_type = r.rule_type;
-                    rule.m_tx_bases = r.tx_bases;
-                    for(auto& [name, info]: r.attribute_info) {
-                        rule.attribute_info[name].type = info.type;
-                        rule.attribute_info[name].cardinality = r.get_attribute_cardinality(name);
-                    }
-                }
+            // fill "all types"
+            get_all_types(all_types);
+
+            for (auto&[name,r] : grammar) {
+                std::unordered_set<std::string> recursion_stopper{};
+                r.m_type = r.determine_rule_type(recursion_stopper, *this);
+            }
+
+            for (auto&[name,r] : grammar) {
+                r.adjust_attr_types(*this);
             }
 
             // comments
@@ -120,6 +117,9 @@ namespace textx {
     }
 
     std::string Metamodel::get_fqn_for_rule(std::string name) const {
+        if (name=="OBJECT") {
+            return name;
+        }
         size_t n = name.find(".");
         if (n!=name.npos && name.substr(0,n)==grammar_name) {
             name = name.substr(n+1);
@@ -277,6 +277,18 @@ namespace textx {
         return default_workspace;
     }
 
+    bool Metamodel::is_instance(std::string special, std::string base) const {
+        auto fqn_special = get_fqn_for_rule(special);
+        auto fqn_base = get_fqn_for_rule(base);
+        if (fqn_special == fqn_base) {
+            return true;
+        }
+        else if (fqn_base=="OBJECT") {
+            return true;
+        }
+        return (operator[](base).tx_inh_by().count(special)>0);
+    }
+
     std::shared_ptr<textx::Model> Metamodel::model_from_str(std::string_view text, std::string filename, bool is_main_model, std::shared_ptr<textx::Workspace> workspace) {
         try {
             if (workspace==nullptr) {
@@ -370,22 +382,23 @@ namespace textx {
         return m;
     }
 
-    bool Metamodel::is_base_of(std::string base, std::string special) const {
-        //std::cout << "is_base_of " << base << " " << special << "?\n";
-        
-        // special case:
-        if (base=="OBJECT") {
-            return true;
-        }
-        TEXTX_ASSERT(has_rule(base));
-        TEXTX_ASSERT(has_rule(special));
-        if ( base==special) return true;
-        else if (operator[](special).tx_bases().size()>0) {
-            for (auto b: operator[](special).tx_bases()) {
-                auto res = is_base_of(base,b);
-                if (res) return res;
+    void Metamodel::adjust_tx_inh_by() {
+        bool cont=true;
+        while(cont) {
+            for (auto &[k,v]: grammar) {
+                cont = v.adjust_tx_inh_by(*this) && cont;
             }
         }
-        return false;
+    }
+
+    void Metamodel::get_all_types(std::unordered_set<std::string> &res) {
+        for (auto &[name, rule]: grammar) {
+            res.insert(name);
+        }
+        for (auto weak_other_mm: imported_models) {
+            auto other_mm = weak_other_mm.lock();
+            TEXTX_ASSERT(other_mm != nullptr);
+            other_mm->get_all_types(res);
+        }
     }
 }

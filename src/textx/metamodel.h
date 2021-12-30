@@ -2,7 +2,6 @@
 #include "textx/lang.h"
 #include "textx/grammar.h"
 #include "textx/rule.h"
-#include "textx/textx_grammar_parsetree.h"
 #include "textx/model.h"
 #include "textx/scoping.h"
 #include <string>
@@ -17,7 +16,8 @@ namespace textx {
     class Metamodel : public std::enable_shared_from_this<Metamodel> {
         textx::lang::TextxGrammar textx_grammar={};
         textx::Grammar<textx::Rule> grammar={};
-        textx::parsetree::TextxGrammarParsetree textx_grammar_parsetree;
+        std::optional<textx::arpeggio::Match> grammar_root = {};
+        //textx::parsetree::TextxGrammarParsetree textx_grammar_parsetree;
         static std::shared_ptr<Metamodel> get_basic_metamodel();
         std::unique_ptr<textx::scoping::RefResolver> default_resolver = std::make_unique<textx::scoping::PlainNameRefResolver>();
         std::unordered_map<std::string, std::unique_ptr<textx::scoping::RefResolver>> resolver = {};
@@ -26,12 +26,15 @@ namespace textx {
         std::vector<std::weak_ptr<textx::Metamodel>> imported_models={};
         std::unordered_map<std::string, std::weak_ptr<textx::Metamodel>> imported_models_by_name={};
         std::string grammar_name="";
+        std::unordered_set<std::string> all_types={};
+        void adjust_tx_inh_by();
+        void get_all_types(std::unordered_set<std::string> &res);
 
         public:
         Metamodel(std::string_view grammar, bool is_main_grammar=true, bool include_basic_metamodel=true, std::string filename="", std::shared_ptr<textx::Workspace> workspace=nullptr);
         std::shared_ptr<textx::Workspace> tx_default_workspace();
-        bool is_base_of(std::string base, std::string special) const;
-        bool is_instance(std::string special, std::string base) const { return is_base_of(base,special); };
+        bool is_instance(std::string special, std::string base) const;
+        bool is_base_of(std::string base, std::string special) const { return is_instance(special, base); }
         Rule& operator[](std::string name);
         const Rule& operator[](std::string name) const;
         bool has_rule(std::string name) const;
@@ -41,7 +44,7 @@ namespace textx {
         std::shared_ptr<textx::Model> model_from_str(std::string_view text, std::string filename="", bool is_main_model=true, std::shared_ptr<textx::Workspace> workspace=nullptr);
         std::shared_ptr<textx::Model> model_from_file(std::filesystem::path p, bool is_main_model=true, std::shared_ptr<textx::Workspace> workspace=nullptr);
 
-        //const auto& tx_builtin_models() const { return builtin_models; }
+        const auto& tx_all_types() const { return all_types; }
         void add_builtin_model(std::shared_ptr<textx::Model> m) { builtin_models.push_back(std::move(m)); }
 
         const textx::scoping::RefResolver& get_resolver(std::string rule_name, std::string attr_name) const {

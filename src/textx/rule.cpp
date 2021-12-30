@@ -1,12 +1,15 @@
 #include "textx/rule.h"
-#include <unordered_map>
 #include "textx/assert.h"
 #include "textx/metamodel.h"
 #include "textx/rrel.h"
+#include "textx/tools.h"
+#include <unordered_map>
+#include <unordered_set>
+#include <algorithm>
 
 namespace {
 
-    using RULE = textx::parsetree::RuleInfo;
+    using RULE = textx::Rule;
     using METAMODEL = textx::Metamodel;
     namespace ta = textx::arpeggio;
 
@@ -92,6 +95,47 @@ namespace {
                 return part_of_expression;
             }
         }
+    }
+
+    textx::AttributeCardinality get_multiplicity(const textx::arpeggio::Match &match) {
+        if (match.name.has_value()) {
+            if (match.name.value() == "rule://assignment") {
+                auto assignment_op = match.children[1].captured.value();
+                if (assignment_op=="*=" || assignment_op=="+=") {
+                    return textx::AttributeCardinality::list;
+                }
+                else if (assignment_op=="?=") {
+                    return textx::AttributeCardinality::boolean;
+                }
+            }
+            if (match.name.value() == "rule://repeatable_expr") {
+                if (match.children[1].children.size()>0) {
+                    std::string op = match.children[1].children[0].children[0].captured.value(); // operator *+#?
+                    if (op=="*" || op=="+") {
+                        return textx::AttributeCardinality::list;
+                    }
+                }
+            }
+        }
+        return textx::AttributeCardinality::scalar;
+    }
+
+    bool is_assignment_to_attribute(const textx::arpeggio::Match &match, std::string name) {
+        if (match.name.has_value()) {
+            if (match.name.value() == "rule://assignment") {
+                auto attribute_name = match.children[0].captured.value();
+                //std::cout << "CHECK " << attribute_name << "==" << name << "\n"; 
+                return attribute_name == name;
+            }
+        }
+        return false;
+    }
+
+    bool is_rule(const textx::arpeggio::Match &match, std::string name) {
+        if (match.name.has_value()) {
+            return (match.name.value() == name);
+        }
+        return false;
     }
 
     /** normal node "visitors" */
@@ -363,7 +407,7 @@ namespace {
 
 namespace textx {
 
-    Rule::Rule(textx::Metamodel& mm, std::string_view name, ta::Match rule_params, const ta::Match& rule_body, textx::parsetree::RuleInfo& rule_info) {
+    Rule::Rule(textx::Metamodel& mm, std::string_view name, ta::Match rule_params, const ta::Match& rule_body) {
         // << rule_body << "\n";
         auto& rule = *this;
         rule.name = name;
@@ -390,13 +434,131 @@ namespace textx {
         }
     }
 
-    void Rule::post_process_created_rule(textx::Metamodel& mm, std::string_view name, ta::Match rule_params, const ta::Match& rule_body, textx::parsetree::RuleInfo& rule_info, bool add_eof) {
+    void Rule::post_process_created_rule(textx::Metamodel& mm, std::string_view name, ta::Match rule_params, const ta::Match& rule_body, bool add_eof) {
         auto& rule = *this;
-        rule.pattern = transform_match2pattern(ParseState{}, mm, rule_info, rule_body);
+        rule.pattern = transform_match2pattern(ParseState{}, mm, rule, rule_body);
         if (add_eof) {
             rule.pattern = ta::sequence({rule.pattern, ta::end_of_file()});
         }
         std::string rname = std::string("rule://")+std::string(name);
+        for(auto& [k,v]: attribute_info) {
+            v.cardinality = get_attribute_cardinality(rule_body, k);
+        }
         rule.pattern = textx::arpeggio::rule(textx::arpeggio::named(rname,rule.pattern));
     }
+
+    textx::AttributeCardinality Rule::get_attribute_cardinality(const textx::arpeggio::Match& match, std::string name) {
+        TEXTX_ASSERT(attribute_info.count(name)>0);
+        bool is_boolean_involved = false;
+        std::function<size_t(const textx::arpeggio::Match&,size_t)> traverse;
+        traverse = [&](const textx::arpeggio::Match& m,size_t c) -> size_t {
+            if (get_multiplicity(m)==AttributeCardinality::boolean) {
+                is_boolean_involved = true;
+            }
+            if (get_multiplicity(m)==AttributeCardinality::list) {
+                c = 2; // more than 1 --> list
+            }
+            if (is_assignment_to_attribute(m,name)) {
+                //std::cout << "found assignment " << name << " with " << c << "\n";
+                return c;
+            }
+            else {
+                size_t ret = 0; // no assignment
+                if (is_rule(m,"rule://choice")) {
+                    for (auto &child: m.children) {
+                        ret = std::max(ret, traverse(child,c));
+                    }
+                }
+                else {
+                    for (auto &child: m.children) {
+                        ret += traverse(child,c);
+                    }
+                }
+                return ret;
+            }
+        };
+        size_t ret = traverse(match, 1);
+        //std::cout << match << "\n=="<< ret << " for " << name << "\n\n";
+        if (ret>1) {
+            TEXTX_ASSERT(!is_boolean_involved, "only one boolean assignment is allowed (no list of booleans)");
+            return AttributeCardinality::list;
+        }
+        else {
+            if (is_boolean_involved)  {
+                return AttributeCardinality::boolean;
+            }
+            else {
+                return AttributeCardinality::scalar;
+            }
+        }
+    }
+
+    bool Rule::adjust_tx_inh_by(textx::Metamodel& mm) {
+        auto me = mm.get_fqn_for_rule(name);
+        auto copy = tx_inh_by();
+        bool ret = false;
+        for(auto &c: copy) {
+            auto &other_rule = mm[c];
+            for(auto &t: other_rule.tx_inh_by()) {
+                if (tx_inh_by().count(t)==0) {
+                    ret = true;
+                    add_tx_inh_by(t);
+                }
+            }
+        }
+        return ret;
+    }
+
+    void Rule::adjust_attr_types(textx::Metamodel& mm) {
+        for (auto &[name,info]: attribute_info) {
+            info.adjust_type(mm);
+        }
+    }
+
+    void AttributeInfo::adjust_type(textx::Metamodel& mm) {
+        if (types.size()>0) {
+            std::unordered_set<std::string> type_set = {};
+            for (auto& base: mm.tx_all_types()) {
+                if (std::all_of(
+                    types.begin(),
+                    types.end(),
+                    [&](auto &t){ return mm.is_base_of(base,t);}
+                )) {
+                    type_set.insert(base);
+                }
+            }
+            if (type_set.size()==0) {
+                type = "OBJECT";
+            }
+            else {
+                type = *type_set.begin(); // TODO select one not the base of another; then smallest
+            }
+        }
+    }
+
+    textx::RuleType Rule::determine_rule_type(std::unordered_set<std::string> &recursion_stopper, const Metamodel& mm) const {
+        if (recursion_stopper.count(name)>0) {
+            throw std::runtime_error("detected circular abstract rule reference");
+        }
+        recursion_stopper.insert(name);
+        textx::OnExit onexit{ [&](){ recursion_stopper.erase(name); } };
+
+        // TODO determine_rule_type, see http://textx.github.io/textX/stable/grammar/#rule-types
+        if (attribute_info.size()>0) {
+            return textx::RuleType::common;
+        }
+        else if (std::count_if(
+            tx_inh_by().begin(),
+            tx_inh_by().end(),
+            [&](auto &n){
+                return mm[n].determine_rule_type(recursion_stopper, mm) != RuleType::match;
+            })>0) 
+        {
+            return textx::RuleType::abstract;
+        }
+        else {
+            return textx::RuleType::match;
+        }
+    }
+
 }
