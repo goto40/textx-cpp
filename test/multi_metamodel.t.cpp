@@ -26,7 +26,12 @@ TEST_CASE("metamodel_importing_other_metamodels2", "[textx/metamodel]")
     workspace->add_metamodel_for_extension(".c",mm_fn_C);
 
     {
-        auto fn = std::filesystem::path(__FILE__).parent_path().append("multi_metamodel/metamodel_provider3/circular/model_a.a");
-        auto m = workspace->model_from_file(fn);
+        auto fnA = std::filesystem::path(__FILE__).parent_path().append("multi_metamodel/metamodel_provider3/circular/model_a.a");
+        auto mA = workspace->model_from_file(fnA);
+        auto fnB = std::filesystem::path(__FILE__).parent_path().append("multi_metamodel/metamodel_provider3/circular/model_b.b");
+        auto mB = workspace->model_from_file(fnB);
+
+        auto a_b = mA->fqn("a_b");
+        CHECK( (*a_b)["ref"].obj() == mB->fqn("B") );
     }
 }
