@@ -107,14 +107,15 @@ namespace textx {
     };
 
     inline auto metamodel_from_str(std::string_view grammar, std::shared_ptr<textx::Workspace> workspace=nullptr) {
-        return std::make_shared<textx::Metamodel>(grammar);
+        return std::make_shared<textx::Metamodel>(grammar, true,true,"",workspace);
     }
 
     inline auto metamodel_from_file(std::filesystem::path p, std::shared_ptr<textx::Workspace> workspace=nullptr) {
+        //std::cout << "load " << p << " to " << workspace << "\n";
         std::ifstream file(p);
         std::stringstream grammartext;
         grammartext << file.rdbuf();
-        return std::make_shared<textx::Metamodel>(grammartext.str(),true,true,p);
+        return std::make_shared<textx::Metamodel>(grammartext.str(),true,true,p, workspace);
     }
 
 }

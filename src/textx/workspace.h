@@ -52,7 +52,7 @@ namespace textx {
         void set_default_metamodel(std::shared_ptr<textx::Metamodel> m) override { default_metamodel=m; }
         void add_metamodel_for_extension(std::string n, std::shared_ptr<textx::Metamodel> m) override { extension_to_metamodel[n]=m; }
         void add_metamodel_for_extension(std::string n, std::filesystem::path filename) override {
-            add_metamodel_for_extension(n, metamodel_from_file(filename));
+            add_metamodel_for_extension(n, this->metamodel_from_file(filename));
         }
         void add_known_model(std::string path, std::shared_ptr<textx::Model> m) override { 
             //std::cout << "adding " << path << "\n";
@@ -61,7 +61,9 @@ namespace textx {
         void add_known_metamodel(std::string path, std::shared_ptr<textx::Metamodel> m) override { 
             known_metamodels[path]=m;
             std::string shortcut = std::filesystem::path(path).stem();
+            //std::cout << "adding " << shortcut << "\n";
             known_metamodels_by_shortcut[shortcut]=m;
+            //std::cout << shared_from_this() << "--> known_metamodels_by_shortcut.size()==" << known_metamodels_by_shortcut.size() << "\n";
         }
         bool has_model(std::string filename) override {
             return known_models.count(filename)>0;
@@ -86,6 +88,10 @@ namespace textx {
                 return known_metamodels_by_shortcut[name]; // cached model
             }
             else {
+                //std::cout << shared_from_this() << " => known_metamodels_by_shortcut.size()==" << known_metamodels_by_shortcut.size() << "\n";
+                for (auto &[k,v]: known_metamodels_by_shortcut) {
+                    std::cout << "known: " << k << "\n";
+                }
                 return nullptr;
             }
         }

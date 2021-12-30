@@ -66,6 +66,8 @@ namespace textx {
                 if (ref) {
                     std::string name = ref->children[1].captured.value();
                     auto referenced_mm = workspace->get_metamodel_by_shortcut(name);
+                    TEXTX_ASSERT(referenced_mm!=nullptr, "unexpected, language not found: ", name);
+                    //std::cout << "ref. " << name << " " << referenced_mm << "\n";
                     referenced_models.push_back(referenced_mm);
                     referenced_models_by_name[name]=referenced_mm;
                     TEXTX_ASSERT(ref->children[2].children.size()==0, "no alias allowed for referenced languages (not implemented)");
@@ -465,6 +467,11 @@ namespace textx {
             res.insert(name);
         }
         for (auto weak_other_mm: imported_models) {
+            auto other_mm = weak_other_mm.lock();
+            TEXTX_ASSERT(other_mm != nullptr);
+            other_mm->get_all_types(res);
+        }
+        for (auto weak_other_mm: referenced_models) {
             auto other_mm = weak_other_mm.lock();
             TEXTX_ASSERT(other_mm != nullptr);
             other_mm->get_all_types(res);

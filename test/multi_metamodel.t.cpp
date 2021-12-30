@@ -2,7 +2,7 @@
 #include "textx/metamodel.h"
 #include "textx/workspace.h"
 
-TEST_CASE("metamodel_importing_other_metamodels1", "[textx/metamodel]")
+TEST_CASE("metamodel_importing_other_metamodels1", "[textx/multi_metamodel]")
 {
     auto workspace = textx::Workspace::create();
     auto mm_fn = std::filesystem::path(__FILE__).parent_path().append("multi_metamodel/metamodel_provider3/Simple.tx");
@@ -15,7 +15,7 @@ TEST_CASE("metamodel_importing_other_metamodels1", "[textx/metamodel]")
     CHECK(mm->get_fqn_for_rule("Simple.A") == "SimpleBaseBase.A");
 }
 
-TEST_CASE("metamodel_importing_other_metamodels_circular", "[textx/metamodel]")
+TEST_CASE("metamodel_importing_other_metamodels_circular", "[textx/multi_metamodel]")
 {
     auto workspace = textx::Workspace::create();
     auto mm_fn_A = std::filesystem::path(__FILE__).parent_path().append("multi_metamodel/metamodel_provider3/A.tx");
@@ -36,7 +36,7 @@ TEST_CASE("metamodel_importing_other_metamodels_circular", "[textx/metamodel]")
     }
 }
 
-TEST_CASE("metamodel_importing_other_metamodels_inheritance", "[textx/metamodel]")
+TEST_CASE("metamodel_importing_other_metamodels_inheritance", "[textx/multi_metamodel]")
 {
     auto workspace = textx::Workspace::create();
     auto mm_fn_A = std::filesystem::path(__FILE__).parent_path().append("multi_metamodel/metamodel_provider3/A.tx");
@@ -56,7 +56,7 @@ TEST_CASE("metamodel_importing_other_metamodels_inheritance", "[textx/metamodel]
     }
 }
 
-TEST_CASE("metamodel_importing_other_metamodels_diamond", "[textx/metamodel]")
+TEST_CASE("metamodel_importing_other_metamodels_diamond", "[textx/multi_metamodel]")
 {
     auto workspace = textx::Workspace::create();
     auto mm_fn_A = std::filesystem::path(__FILE__).parent_path().append("multi_metamodel/metamodel_provider3/A.tx");
@@ -69,5 +69,23 @@ TEST_CASE("metamodel_importing_other_metamodels_diamond", "[textx/metamodel]")
     {
         auto fnA = std::filesystem::path(__FILE__).parent_path().append("multi_metamodel/metamodel_provider3/diamond/A_includes_B_C.a");
         auto mA = workspace->model_from_file(fnA);
+    }
+}
+
+TEST_CASE("metamodel_referencing_other_metamodels", "[textx/multi_metamodel]")
+{
+    auto workspace = textx::Workspace::create();
+    auto mm_fn_T = std::filesystem::path(__FILE__).parent_path().append("multi_metamodel/referenced_metamodel/Types.tx");
+    auto mm_fn_D = std::filesystem::path(__FILE__).parent_path().append("multi_metamodel/referenced_metamodel/Data.tx");
+    auto mm_fn_F = std::filesystem::path(__FILE__).parent_path().append("multi_metamodel/referenced_metamodel/Flow.tx");
+    workspace->add_metamodel_for_extension(".etype",mm_fn_T);
+    workspace->add_metamodel_for_extension(".edata",mm_fn_D);
+    workspace->add_metamodel_for_extension(".eflow",mm_fn_F);
+
+    {
+        auto fn = std::filesystem::path(__FILE__).parent_path().append("multi_metamodel/referenced_metamodel/model/data_flow.eflow");
+        auto m = workspace->model_from_file(fn);
+
+        //TODO: test other files.
     }
 }
