@@ -78,6 +78,60 @@ Example:
    CHECK((*m1)["points"][1]["y"].str() == "4.5");
 ```
 
+## Workspaces
+
+Use workspaces to manage metamodels and models:
+
+Grammars:
+
+**Type.tx**
+```
+Model: types+=Type;
+Type: 'type' name=ID;
+Comment: /\/\/.*?$/;
+```
+
+**Data.tx**
+```
+reference Types
+
+Model: includes*=Include data+=Data;
+Data: 'data' name=ID '{'
+    attributes+=Attribute
+'}';
+Attribute: name=ID ':' type=[Types.Type|ID|+m:types];
+Include: '#include' importURI=STRING;
+Comment: /\/\/.*?$/;
+```
+
+**Flow.tx**
+```
+reference Data
+
+Model: includes*=Include algos+=Algo flows+=Flow;
+Algo: 'algo' name=ID ':' inp=[Data.Data|ID|+m:data] '->' outp=[Data.Data|ID|+m:data];
+Flow: 'connect' algo1=[Algo|ID|+m:algos] '->' algo2=[Algo|ID|+m:algos] ;
+Include: '#include' importURI=STRING;
+Comment: /\/\/.*?$/;
+```
+
+Register all grammars in a workspace:
+```
+   auto workspace = textx::Workspace::create();
+   auto mm_fn_T = std::filesystem::path(__FILE__).parent_path().append("multi_metamodel/referenced_metamodel/Types.tx");
+   auto mm_fn_D = std::filesystem::path(__FILE__).parent_path().append("multi_metamodel/referenced_metamodel/Data.tx");
+   auto mm_fn_F = std::filesystem::path(__FILE__).parent_path().append("multi_metamodel/referenced_metamodel/Flow.tx");
+   workspace->add_metamodel_for_extension(".etype",mm_fn_T);
+   workspace->add_metamodel_for_extension(".edata",mm_fn_D);
+   workspace->add_metamodel_for_extension(".eflow",mm_fn_F);
+```
+
+Then load a model:
+```
+auto fn = std::filesystem::path(__FILE__).parent_path().append("multi_metamodel/referenced_metamodel/model/data_flow.eflow");
+auto m = workspace->model_from_file(fn);
+```
+
 ## Implementation Details
 
  * arpeggio.h
