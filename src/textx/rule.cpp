@@ -434,12 +434,9 @@ namespace textx {
         }
     }
 
-    void Rule::post_process_created_rule(textx::Metamodel& mm, std::string_view name, ta::Match rule_params, const ta::Match& rule_body, bool add_eof) {
+    void Rule::post_process_created_rule(textx::Metamodel& mm, std::string_view name, ta::Match rule_params, const ta::Match& rule_body) {
         auto& rule = *this;
         rule.pattern = transform_match2pattern(ParseState{}, mm, rule, rule_body);
-        if (add_eof) {
-            rule.pattern = ta::sequence({rule.pattern, ta::end_of_file()});
-        }
         std::string rname = std::string("rule://")+std::string(name);
         for(auto& [k,v]: attribute_info) {
             v.cardinality = get_attribute_cardinality(rule_body, k);

@@ -84,7 +84,7 @@ namespace textx {
         std::unordered_map<std::string,std::string> m_tx_params = {};
 
         Rule(textx::Metamodel& mm, std::string_view name, textx::arpeggio::Match rule_params, const textx::arpeggio::Match& rule_body);
-        void post_process_created_rule(textx::Metamodel& mm, std::string_view name, textx::arpeggio::Match rule_params, const textx::arpeggio::Match& rule_body, bool add_eof);
+        void post_process_created_rule(textx::Metamodel& mm, std::string_view name, textx::arpeggio::Match rule_params, const textx::arpeggio::Match& rule_body);
         textx::AttributeCardinality get_attribute_cardinality(const textx::arpeggio::Match& match, std::string name);
         bool adjust_tx_inh_by(textx::Metamodel& mm);
         void adjust_attr_types(textx::Metamodel& mm);

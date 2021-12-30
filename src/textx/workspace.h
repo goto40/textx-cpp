@@ -13,9 +13,13 @@ namespace textx {
         public:
         static std::shared_ptr<Workspace> create();
         virtual ~Workspace() = default;
-        virtual void set_default_metamodel(std::shared_ptr<textx::Metamodel> m) = 0;
-        virtual void add_metamodel_for_extension(std::string n, std::shared_ptr<textx::Metamodel> m) = 0;
         virtual void add_metamodel_for_extension(std::string n, std::filesystem::path filename) = 0;
+        virtual std::shared_ptr<textx::Model> model_from_file(std::filesystem::path filename, bool is_main_model=true) = 0;
+        virtual void set_default_metamodel(std::shared_ptr<textx::Metamodel> m) = 0;
+
+        protected:
+        friend Metamodel;
+        virtual void add_metamodel_for_extension(std::string n, std::shared_ptr<textx::Metamodel> m) = 0;
         virtual void add_known_model(std::string path, std::shared_ptr<textx::Model> m) = 0; 
         virtual void add_known_metamodel(std::string path, std::shared_ptr<textx::Metamodel> m) = 0; 
         virtual bool has_model(std::string filename) = 0;
@@ -24,7 +28,6 @@ namespace textx {
         virtual std::shared_ptr<textx::Model> get_model(std::string filename) = 0;
         virtual std::shared_ptr<textx::Metamodel> get_metamodel(std::string filename) = 0;
         virtual std::shared_ptr<textx::Metamodel> get_metamodel_by_shortcut(std::string name) = 0;
-        virtual std::shared_ptr<textx::Model> model_from_file(std::filesystem::path filename, bool is_main_model=true) = 0;
         virtual std::shared_ptr<textx::Metamodel> metamodel_from_file(std::filesystem::path filename) = 0;
     };
     template< template<class> class Ptr4DefaultMM=std::shared_ptr>

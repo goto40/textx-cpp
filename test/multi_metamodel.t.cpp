@@ -20,7 +20,7 @@ TEST_CASE("metamodel_importing_other_metamodels2", "[textx/metamodel]")
     auto workspace = textx::Workspace::create();
     auto mm_fn_A = std::filesystem::path(__FILE__).parent_path().append("multi_metamodel/metamodel_provider3/A.tx");
     auto mm_fn_B = std::filesystem::path(__FILE__).parent_path().append("multi_metamodel/metamodel_provider3/B.tx");
-    auto mm_fn_C = std::filesystem::path(__FILE__).parent_path().append("multi_metamodel/metamodel_provider3/B.tx");
+    auto mm_fn_C = std::filesystem::path(__FILE__).parent_path().append("multi_metamodel/metamodel_provider3/C.tx");
     workspace->add_metamodel_for_extension(".a",mm_fn_A);
     workspace->add_metamodel_for_extension(".b",mm_fn_B);
     workspace->add_metamodel_for_extension(".c",mm_fn_C);

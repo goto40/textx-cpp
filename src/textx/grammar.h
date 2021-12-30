@@ -99,11 +99,19 @@ namespace textx
                 }
                 throw std::runtime_error(std::string("unexpected: no main rule found in grammar; name=")+main_rule_name);
             }
-            auto &main = rules[main_rule_name];
+            auto main = textx::arpeggio::sequence({
+                rules[main_rule_name],
+                textx::arpeggio::end_of_file()
+            });
             state = textx::arpeggio::ParserState{text};
             auto res = main(config, state, {});
             ok = res.has_value();
-            return res;
+            if (ok) {
+                return res.value().children[0];
+            }
+            else {
+                return std::nullopt;
+            }
         }
 
         std::optional<textx::arpeggio::Match> parse_or_throw(std::string_view text)

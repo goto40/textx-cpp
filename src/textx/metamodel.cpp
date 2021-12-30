@@ -71,13 +71,12 @@ namespace textx {
                 auto &rule_name = r.children[0].captured.value();
                 auto &rule_params = r.children[1];
                 auto &rule_body = r.children[3];
-                bool add_eof = first && is_main_grammar;
                 auto &new_rule = grammar[rule_name];
                 if (first) {
                     grammar.set_main_rule(rule_name);
                     first = false;
                 }
-                new_rule.post_process_created_rule(*this, rule_name, rule_params, rule_body, add_eof);
+                new_rule.post_process_created_rule(*this, rule_name, rule_params, rule_body);
             }
 
             // fill-in inh_by infos
