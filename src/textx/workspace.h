@@ -14,8 +14,8 @@ namespace textx {
         static std::shared_ptr<Workspace> create();
         virtual ~Workspace() = default;
         virtual void set_default_metamodel(std::shared_ptr<textx::Metamodel> m) = 0;
-        virtual void add_metamodel_for_shortcut(std::string n, std::shared_ptr<textx::Metamodel> m) = 0;
-        virtual void add_metamodel_for_shortcut(std::string n, std::filesystem::path filename) = 0;
+        virtual void add_metamodel_for_extension(std::string n, std::shared_ptr<textx::Metamodel> m) = 0;
+        virtual void add_metamodel_for_extension(std::string n, std::filesystem::path filename) = 0;
         virtual void add_known_model(std::string path, std::shared_ptr<textx::Model> m) = 0; 
         virtual void add_known_metamodel(std::string path, std::shared_ptr<textx::Metamodel> m) = 0; 
         virtual bool has_model(std::string filename) = 0;
@@ -47,9 +47,9 @@ namespace textx {
     public:
         static std::shared_ptr<WorkspaceImpl> create() { return std::shared_ptr<textx::WorkspaceImpl<Ptr4DefaultMM>>{new textx::WorkspaceImpl<Ptr4DefaultMM>{}}; }
         void set_default_metamodel(std::shared_ptr<textx::Metamodel> m) override { default_metamodel=m; }
-        void add_metamodel_for_shortcut(std::string n, std::shared_ptr<textx::Metamodel> m) override { extension_to_metamodel[n]=m; }
-        void add_metamodel_for_shortcut(std::string n, std::filesystem::path filename) override {
-            add_metamodel_for_shortcut(n, metamodel_from_file(filename));
+        void add_metamodel_for_extension(std::string n, std::shared_ptr<textx::Metamodel> m) override { extension_to_metamodel[n]=m; }
+        void add_metamodel_for_extension(std::string n, std::filesystem::path filename) override {
+            add_metamodel_for_extension(n, metamodel_from_file(filename));
         }
         void add_known_model(std::string path, std::shared_ptr<textx::Model> m) override { 
             //std::cout << "adding " << path << "\n";
@@ -113,7 +113,7 @@ namespace textx {
                 return default_metamodel_ptr->model_from_file(filename,is_main_model,shared_from_this());
             }
             else {
-                throw std::runtime_error(std::string{"no metamodel available for "}+std::string{filename});
+                throw std::runtime_error(std::string{"no metamodel available for "}+ending+", "+std::string{filename});
             }
         }
         std::shared_ptr<textx::Metamodel> metamodel_from_file(std::filesystem::path filename) override {

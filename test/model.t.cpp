@@ -82,6 +82,8 @@ TEST_CASE("model_abstract_rule1", "[textx/metamodel]")
             CHECK(mm->operator[]("Shape").tx_inh_by().size()==4);
             CHECK(mm->operator[]("Point").tx_inh_by().size()==0);
 
+            CHECK(mm->get_fqn_for_rule("Point") == "Point");
+
             CHECK(mm->is_instance("Point", "Shape"));
             CHECK(mm->is_instance("Point", "Point"));
             CHECK(mm->is_base_of("Shape","Point"));

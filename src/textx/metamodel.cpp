@@ -99,7 +99,7 @@ namespace textx {
             if (has_rule("Comment")) {
                 grammar.get_config().skip_text = textx::arpeggio::skip_text_functions::combine({
                     textx::arpeggio::skip_text_functions::skipws(),
-                    textx::arpeggio::skip_text_functions::skip_pattern(grammar["Comment"])
+                    textx::arpeggio::skip_text_functions::skip_pattern(operator[]("Comment"))
                 });
             }
         }
@@ -136,7 +136,12 @@ namespace textx {
         }
         else {
             if (grammar.get_rules().count(name)>0) {
-                return std::string(grammar_name)+"."+name;
+                if (grammar_name.size()==0) {
+                    return name;
+                }
+                else {
+                    return std::string(grammar_name)+"."+name;
+                }
             }
             for(auto p:imported_models) {
                 auto sp = p.lock();
