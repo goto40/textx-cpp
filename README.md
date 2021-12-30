@@ -93,8 +93,15 @@ Example:
  * lang.h
     * Responsibility: migration of [lang.py](https://github.com/textX/textX/blob/master/textx/lang.py)
       (the textx grammar language).
+
+ * workspace.h
+    * Responsibility: manages (owns) all metamodels and models.
+    * Allows to load metamodels (from *.tx files) and to associate them to file endings.
+    * Allows to load models (from registered file endings) using the appropriate
+    meta model.
+
  * metamodel.h
-    * Responsibility: extended user-grammar representation. Allows to load a model (inspired by metamodel.py).
+    * Responsibility: extended user-grammar representation. Allows to load a model (inspired by metamodel.py). Prefer using the workspace for model loading.
 
  * model.h
     * Responsibility: 
