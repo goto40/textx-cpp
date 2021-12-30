@@ -115,7 +115,7 @@ Include: '#include' importURI=STRING;
 Comment: /\/\/.*?$/;
 ```
 
-Register all grammars in a workspace:
+Register all grammars in a workspace (see [`multi_metamodel.t.cpp`](test/multi_metamodel.t.cpp)):
 ```
 auto workspace = textx::Workspace::create();
 auto mm_fn_T = std::filesystem::path(__FILE__).parent_path().append("multi_metamodel/referenced_metamodel/Types.tx");
