@@ -13,7 +13,7 @@ namespace textx {
         public:
         static std::shared_ptr<Workspace> create();
         virtual ~Workspace() = default;
-        virtual void add_metamodel_for_extension(std::string n, std::filesystem::path filename) = 0;
+        virtual void add_metamodel_from_file_for_extension(std::string n, std::filesystem::path filename) = 0;
         virtual std::shared_ptr<textx::Model> model_from_file(std::filesystem::path filename, bool is_main_model=true) = 0;
         virtual void set_default_metamodel(std::shared_ptr<textx::Metamodel> m) = 0;
 
@@ -51,7 +51,7 @@ namespace textx {
         static std::shared_ptr<WorkspaceImpl> create() { return std::shared_ptr<textx::WorkspaceImpl<Ptr4DefaultMM>>{new textx::WorkspaceImpl<Ptr4DefaultMM>{}}; }
         void set_default_metamodel(std::shared_ptr<textx::Metamodel> m) override { default_metamodel=m; }
         void add_metamodel_for_extension(std::string n, std::shared_ptr<textx::Metamodel> m) override { extension_to_metamodel[n]=m; }
-        void add_metamodel_for_extension(std::string n, std::filesystem::path filename) override {
+        void add_metamodel_from_file_for_extension(std::string n, std::filesystem::path filename) override {
             add_metamodel_for_extension(n, this->metamodel_from_file(filename));
         }
         void add_known_model(std::string path, std::shared_ptr<textx::Model> m) override { 

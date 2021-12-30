@@ -121,9 +121,9 @@ auto workspace = textx::Workspace::create();
 auto mm_fn_T = std::filesystem::path(__FILE__).parent_path().append("multi_metamodel/referenced_metamodel/Types.tx");
 auto mm_fn_D = std::filesystem::path(__FILE__).parent_path().append("multi_metamodel/referenced_metamodel/Data.tx");
 auto mm_fn_F = std::filesystem::path(__FILE__).parent_path().append("multi_metamodel/referenced_metamodel/Flow.tx");
-workspace->add_metamodel_for_extension(".etype",mm_fn_T);
-workspace->add_metamodel_for_extension(".edata",mm_fn_D);
-workspace->add_metamodel_for_extension(".eflow",mm_fn_F);
+workspace->add_metamodel_from_file_for_extension(".etype",mm_fn_T);
+workspace->add_metamodel_from_file_for_extension(".edata",mm_fn_D);
+workspace->add_metamodel_from_file_for_extension(".eflow",mm_fn_F);
 ```
 
 Then load a model:

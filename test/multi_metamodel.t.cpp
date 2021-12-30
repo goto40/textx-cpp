@@ -21,9 +21,9 @@ TEST_CASE("metamodel_importing_other_metamodels_circular", "[textx/multi_metamod
     auto mm_fn_A = std::filesystem::path(__FILE__).parent_path().append("multi_metamodel/metamodel_provider3/A.tx");
     auto mm_fn_B = std::filesystem::path(__FILE__).parent_path().append("multi_metamodel/metamodel_provider3/B.tx");
     auto mm_fn_C = std::filesystem::path(__FILE__).parent_path().append("multi_metamodel/metamodel_provider3/C.tx");
-    workspace->add_metamodel_for_extension(".a",mm_fn_A);
-    workspace->add_metamodel_for_extension(".b",mm_fn_B);
-    workspace->add_metamodel_for_extension(".c",mm_fn_C);
+    workspace->add_metamodel_from_file_for_extension(".a",mm_fn_A);
+    workspace->add_metamodel_from_file_for_extension(".b",mm_fn_B);
+    workspace->add_metamodel_from_file_for_extension(".c",mm_fn_C);
 
     {
         auto fnA = std::filesystem::path(__FILE__).parent_path().append("multi_metamodel/metamodel_provider3/circular/model_a.a");
@@ -42,9 +42,9 @@ TEST_CASE("metamodel_importing_other_metamodels_inheritance", "[textx/multi_meta
     auto mm_fn_A = std::filesystem::path(__FILE__).parent_path().append("multi_metamodel/metamodel_provider3/A.tx");
     auto mm_fn_B = std::filesystem::path(__FILE__).parent_path().append("multi_metamodel/metamodel_provider3/B.tx");
     auto mm_fn_C = std::filesystem::path(__FILE__).parent_path().append("multi_metamodel/metamodel_provider3/C.tx");
-    workspace->add_metamodel_for_extension(".a",mm_fn_A);
-    workspace->add_metamodel_for_extension(".b",mm_fn_B);
-    workspace->add_metamodel_for_extension(".c",mm_fn_C);
+    workspace->add_metamodel_from_file_for_extension(".a",mm_fn_A);
+    workspace->add_metamodel_from_file_for_extension(".b",mm_fn_B);
+    workspace->add_metamodel_from_file_for_extension(".c",mm_fn_C);
 
     {
         auto fnA = std::filesystem::path(__FILE__).parent_path().append("multi_metamodel/metamodel_provider3/inheritance/model_a.a");
@@ -62,9 +62,9 @@ TEST_CASE("metamodel_importing_other_metamodels_diamond", "[textx/multi_metamode
     auto mm_fn_A = std::filesystem::path(__FILE__).parent_path().append("multi_metamodel/metamodel_provider3/A.tx");
     auto mm_fn_B = std::filesystem::path(__FILE__).parent_path().append("multi_metamodel/metamodel_provider3/B.tx");
     auto mm_fn_C = std::filesystem::path(__FILE__).parent_path().append("multi_metamodel/metamodel_provider3/C.tx");
-    workspace->add_metamodel_for_extension(".a",mm_fn_A);
-    workspace->add_metamodel_for_extension(".b",mm_fn_B);
-    workspace->add_metamodel_for_extension(".c",mm_fn_C);
+    workspace->add_metamodel_from_file_for_extension(".a",mm_fn_A);
+    workspace->add_metamodel_from_file_for_extension(".b",mm_fn_B);
+    workspace->add_metamodel_from_file_for_extension(".c",mm_fn_C);
 
     {
         auto fnA = std::filesystem::path(__FILE__).parent_path().append("multi_metamodel/metamodel_provider3/diamond/A_includes_B_C.a");
@@ -78,9 +78,9 @@ TEST_CASE("metamodel_referencing_other_metamodels", "[textx/multi_metamodel]")
     auto mm_fn_T = std::filesystem::path(__FILE__).parent_path().append("multi_metamodel/referenced_metamodel/Types.tx");
     auto mm_fn_D = std::filesystem::path(__FILE__).parent_path().append("multi_metamodel/referenced_metamodel/Data.tx");
     auto mm_fn_F = std::filesystem::path(__FILE__).parent_path().append("multi_metamodel/referenced_metamodel/Flow.tx");
-    workspace->add_metamodel_for_extension(".etype",mm_fn_T);
-    workspace->add_metamodel_for_extension(".edata",mm_fn_D);
-    workspace->add_metamodel_for_extension(".eflow",mm_fn_F);
+    workspace->add_metamodel_from_file_for_extension(".etype",mm_fn_T);
+    workspace->add_metamodel_from_file_for_extension(".edata",mm_fn_D);
+    workspace->add_metamodel_from_file_for_extension(".eflow",mm_fn_F);
 
     {
         auto fn = std::filesystem::path(__FILE__).parent_path().append("multi_metamodel/referenced_metamodel/model/data_flow.eflow");
