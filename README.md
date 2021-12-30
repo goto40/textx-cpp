@@ -134,3 +134,4 @@ Prio 2:
  * TODO minor: it must be possible for "eolterm" to be combined with a separator pattern
  * TODO: use has_match_suppression
  * TODO: rule parameters
+ * "reference abc as xyz" is not supported ("as"/"alias")

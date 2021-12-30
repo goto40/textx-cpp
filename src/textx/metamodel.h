@@ -25,6 +25,8 @@ namespace textx {
         std::shared_ptr<textx::Workspace> default_workspace;
         std::vector<std::weak_ptr<textx::Metamodel>> imported_models={};
         std::unordered_map<std::string, std::weak_ptr<textx::Metamodel>> imported_models_by_name={};
+        std::vector<std::weak_ptr<textx::Metamodel>> referenced_models={};
+        std::unordered_map<std::string, std::weak_ptr<textx::Metamodel>> referenced_models_by_name={};
         std::string grammar_name="";
         std::unordered_set<std::string> all_types={};
         void adjust_tx_inh_by();
@@ -37,7 +39,9 @@ namespace textx {
         bool is_base_of(std::string base, std::string special) const { return is_instance(special, base); }
         Rule& operator[](std::string name);
         const Rule& operator[](std::string name) const;
-        bool has_rule(std::string name) const;
+        Rule& find_rule(std::string name, bool allow_referenced_mm);
+        const Rule& find_rule(std::string name, bool allow_referenced_mm) const;
+        bool has_rule(std::string name, bool allow_referenced_mm) const;
         std::string get_fqn_for_rule(std::string name) const;
         textx::arpeggio::Pattern ref(std::string name);
 

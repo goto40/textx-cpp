@@ -40,7 +40,6 @@ namespace textx {
                 //textx_grammar_parsetree.copy_rule_infos_from("", get_basic_metamodel()->textx_grammar_parsetree);
             }
             auto &imports_or_refs = root.children[0];
-            //TODO refs
             for(auto &i: imports_or_refs.children) {
                 auto import = i.search("rule://import_stm");
                 if (import) {
@@ -62,6 +61,14 @@ namespace textx {
                     imported_models.push_back(imported_mm);
                     imported_models_by_name[name]=imported_mm;
                     //textx_grammar_parsetree.copy_rule_infos_from(name, imported_mm->textx_grammar_parsetree);
+                }
+                auto ref = i.search("rule://reference_stm");
+                if (ref) {
+                    std::string name = ref->children[1].captured.value();
+                    auto referenced_mm = workspace->get_metamodel_by_shortcut(name);
+                    referenced_models.push_back(referenced_mm);
+                    referenced_models_by_name[name]=referenced_mm;
+                    TEXTX_ASSERT(ref->children[2].children.size()==0, "no alias allowed for referenced languages (not implemented)");
                 }
             } 
 
@@ -95,7 +102,7 @@ namespace textx {
             }
 
             // comments
-            if (has_rule("Comment")) {
+            if (has_rule("Comment", false)) { // false: do not look for referenced languages, only included grammars
                 grammar.get_config().skip_text = textx::arpeggio::skip_text_functions::combine({
                     textx::arpeggio::skip_text_functions::skipws(),
                     textx::arpeggio::skip_text_functions::skip_pattern(operator[]("Comment"))
@@ -126,10 +133,16 @@ namespace textx {
         }
         if (n!=name.npos) {
             auto res = imported_models_by_name.find(name.substr(0,n));
-            TEXTX_ASSERT(res!=imported_models_by_name.end(), "grammar ", name.substr(0,n), " not found.");
+            if (res == imported_models_by_name.end()) {
+                res = referenced_models_by_name.find(name.substr(0,n));
+                TEXTX_ASSERT(res!=referenced_models_by_name.end(), "grammar ", name.substr(0,n), " not found.");
+            }
+            else {
+                TEXTX_ASSERT(res!=imported_models_by_name.end(), "grammar ", name.substr(0,n), " not found.");
+            }
             auto sp = res->second.lock();
             TEXTX_ASSERT(sp!=nullptr);
-            if (sp->has_rule(name.substr(n+1))) {
+            if (sp->has_rule(name.substr(n+1), true)) {
                 return sp->get_fqn_for_rule(name.substr(n+1));
             }
         }
@@ -145,7 +158,14 @@ namespace textx {
             for(auto p:imported_models) {
                 auto sp = p.lock();
                 TEXTX_ASSERT(sp!=nullptr);
-                if (sp->has_rule(name)) {
+                if (sp->has_rule(name, true)) {
+                    return sp->get_fqn_for_rule(name.substr(n+1));
+                }
+            }
+            for(auto p:referenced_models) {
+                auto sp = p.lock();
+                TEXTX_ASSERT(sp!=nullptr);
+                if (sp->has_rule(name, true)) {
                     return sp->get_fqn_for_rule(name.substr(n+1));
                 }
             }
@@ -153,7 +173,7 @@ namespace textx {
         throw std::runtime_error(std::string("rule ")+name+" not found.");
     }
 
-    bool Metamodel::has_rule(std::string name) const {
+    bool Metamodel::has_rule(std::string name, bool allow_referenced_mm) const {
         size_t n = name.find(".");
         if (n!=name.npos && name.substr(0,n)==grammar_name) {
             name = name.substr(n+1);
@@ -161,10 +181,16 @@ namespace textx {
         }
         if (n!=name.npos) {
             auto res = imported_models_by_name.find(name.substr(0,n));
-            TEXTX_ASSERT(res!=imported_models_by_name.end(), "grammar ", name.substr(0,n), " not found.");
+            if (res==imported_models_by_name.end() && allow_referenced_mm) {
+                res = referenced_models_by_name.find(name.substr(0,n));
+                TEXTX_ASSERT(res!=referenced_models_by_name.end(), "grammar ", name.substr(0,n), " not found.");
+            }
+            else {
+                TEXTX_ASSERT(res!=imported_models_by_name.end(), "grammar ", name.substr(0,n), " not found.");
+            }
             auto sp = res->second.lock();
             TEXTX_ASSERT(sp!=nullptr);
-            if (sp->has_rule(name.substr(n+1))) {
+            if (sp->has_rule(name.substr(n+1), allow_referenced_mm)) {
                 return true;
             }
         }
@@ -175,7 +201,14 @@ namespace textx {
             for(auto p:imported_models) {
                 auto sp = p.lock();
                 TEXTX_ASSERT(sp!=nullptr);
-                if (sp->has_rule(name)) {
+                if (sp->has_rule(name, allow_referenced_mm)) {
+                    return true;
+                }
+            }
+            if (allow_referenced_mm) for(auto p:referenced_models) {
+                auto sp = p.lock();
+                TEXTX_ASSERT(sp!=nullptr);
+                if (sp->has_rule(name, allow_referenced_mm)) {
                     return true;
                 }
             }
@@ -200,11 +233,14 @@ namespace textx {
     textx::arpeggio::Pattern Metamodel::ref(std::string name) {
         return [this,name](const textx::arpeggio::Config &config, textx::arpeggio::ParserState &text, textx::arpeggio::TextPosition pos) -> std::optional<textx::arpeggio::Match>
         {
-            return operator[](name)(config, text, pos);
+            return find_rule(name, false)(config, text, pos);
         };
     }
 
     Rule& Metamodel::operator[](std::string name) {
+        return find_rule(name, true);
+    }
+    Rule& Metamodel::find_rule(std::string name, bool allow_referenced_mm) {
         size_t n = name.find(".");
         if (n!=name.npos && name.substr(0,n)==grammar_name) {
             name = name.substr(n+1);
@@ -212,11 +248,17 @@ namespace textx {
         }
         if (n!=name.npos) {
             auto res = imported_models_by_name.find(name.substr(0,n));
-            TEXTX_ASSERT(res!=imported_models_by_name.end(), "grammar ", name.substr(0,n), " not found.");
+            if (res==imported_models_by_name.end() && allow_referenced_mm) {
+                res = referenced_models_by_name.find(name.substr(0,n));
+                TEXTX_ASSERT(res!=referenced_models_by_name.end(), "grammar ", name.substr(0,n), " not found.");
+            }
+            else {
+                TEXTX_ASSERT(res!=imported_models_by_name.end(), "grammar ", name.substr(0,n), " not found.");
+            }
             auto sp = res->second.lock();
             TEXTX_ASSERT(sp!=nullptr);
-            if (sp->has_rule(name.substr(n+1))) {
-                return sp->operator[](name.substr(n+1));
+            if (sp->has_rule(name.substr(n+1), allow_referenced_mm)) {
+                return sp->find_rule(name.substr(n+1), allow_referenced_mm);
             }
         }
         else {
@@ -226,8 +268,15 @@ namespace textx {
             for(auto p:imported_models) {
                 auto sp = p.lock();
                 TEXTX_ASSERT(sp!=nullptr);
-                if (sp->has_rule(name)) {
-                   return sp->operator[](name);
+                if (sp->has_rule(name, allow_referenced_mm)) {
+                   return sp->find_rule(name, allow_referenced_mm);
+                }
+            }
+            if (allow_referenced_mm) for(auto p:referenced_models) {
+                auto sp = p.lock();
+                TEXTX_ASSERT(sp!=nullptr);
+                if (sp->has_rule(name, allow_referenced_mm)) {
+                    return sp->find_rule(name, allow_referenced_mm);
                 }
             }
         }
@@ -235,29 +284,45 @@ namespace textx {
     }
 
     const Rule& Metamodel::operator[](std::string name) const {
+        return find_rule(name, true);
+    }
+    const Rule& Metamodel::find_rule(std::string name, bool allow_referenced_mm) const {
         size_t n = name.find(".");
         if (n!=name.npos && name.substr(0,n)==grammar_name) {
             name = name.substr(n+1);
             n=name.npos;
         }
-        if (n!=name.npos) {
+        if (n!=name.npos) { // found prefix in PREFIX.POSTFIX
             auto res = imported_models_by_name.find(name.substr(0,n));
-            TEXTX_ASSERT(res!=imported_models_by_name.end(), "grammar ", name.substr(0,n), " not found.");
+            if (res==imported_models_by_name.end() && allow_referenced_mm) {
+                res = referenced_models_by_name.find(name.substr(0,n));
+                TEXTX_ASSERT(res!=referenced_models_by_name.end(), "grammar ", name.substr(0,n), " not found.");
+            }
+            else {
+                TEXTX_ASSERT(res!=imported_models_by_name.end(), "grammar ", name.substr(0,n), " not found.");
+            }
             auto sp = res->second.lock();
             TEXTX_ASSERT(sp!=nullptr);
-            if (sp->has_rule(name.substr(n+1))) {
-                return sp->operator[](name.substr(n+1));
+            if (sp->has_rule(name.substr(n+1), allow_referenced_mm)) {
+                return sp->find_rule(name.substr(n+1), allow_referenced_mm);
             }
         }
-        else {
+        else { // no prefix
             if (grammar.get_rules().count(name)>0) {
                 return grammar[name];
             }
             for(auto p:imported_models) {
                 auto sp = p.lock();
                 TEXTX_ASSERT(sp!=nullptr);
-                if (sp->has_rule(name)) {
-                    return sp->operator[](name);
+                if (sp->has_rule(name, allow_referenced_mm)) {
+                    return sp->find_rule(name, allow_referenced_mm);
+                }
+            }
+            if (allow_referenced_mm) for(auto p:referenced_models) {
+                auto sp = p.lock();
+                TEXTX_ASSERT(sp!=nullptr);
+                if (sp->has_rule(name, allow_referenced_mm)) {
+                    return sp->find_rule(name, allow_referenced_mm);
                 }
             }
         }
