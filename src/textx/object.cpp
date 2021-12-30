@@ -83,7 +83,7 @@ namespace textx::object {
             o << std::string(indent,' ') << str() << "\n";
         }
         else if (is_ref()) {
-            o << std::string(indent,' ') << "-[ref]->" << ref().name << "\n";
+            o << std::string(indent,' ') << "-[ref]->" << ref().name << "(" << ref().obj.lock() << ")"<< "\n";
         }
         else {
             throw std::runtime_error("unexpected");

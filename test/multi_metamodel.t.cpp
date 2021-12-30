@@ -70,5 +70,6 @@ TEST_CASE("metamodel_importing_other_metamodels_diamond", "[textx/metamodel]")
         auto fnA = std::filesystem::path(__FILE__).parent_path().append("multi_metamodel/metamodel_provider3/diamond/A_includes_B_C.a");
         auto mA = workspace->model_from_file(fnA);
 
+        std::cout << mA->val() << "\n";
     }
 }
