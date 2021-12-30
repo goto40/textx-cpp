@@ -127,9 +127,8 @@ Example:
 
 ## <a name="openpoints"></a> Open Points
 Prio 1:
- * TODO importURI from other metamodels
- * TODO handle referenced/included metamodels, in Metamodel::ref
- * TODO include/reference other metamodels
+ * TODO handle referenced metamodels
+ * TODO reference other metamodels
 
 Prio 2:
  * TODO minor: it must be possible for "eolterm" to be combined with a separator pattern

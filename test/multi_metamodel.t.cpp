@@ -15,7 +15,7 @@ TEST_CASE("metamodel_importing_other_metamodels1", "[textx/metamodel]")
     CHECK(mm->get_fqn_for_rule("Simple.A") == "SimpleBaseBase.A");
 }
 
-TEST_CASE("metamodel_importing_other_metamodels2", "[textx/metamodel]")
+TEST_CASE("metamodel_importing_other_metamodels_circular", "[textx/metamodel]")
 {
     auto workspace = textx::Workspace::create();
     auto mm_fn_A = std::filesystem::path(__FILE__).parent_path().append("multi_metamodel/metamodel_provider3/A.tx");
@@ -33,5 +33,42 @@ TEST_CASE("metamodel_importing_other_metamodels2", "[textx/metamodel]")
 
         auto a_b = mA->fqn("a_b");
         CHECK( (*a_b)["ref"].obj() == mB->fqn("B") );
+    }
+}
+
+TEST_CASE("metamodel_importing_other_metamodels_inheritance", "[textx/metamodel]")
+{
+    auto workspace = textx::Workspace::create();
+    auto mm_fn_A = std::filesystem::path(__FILE__).parent_path().append("multi_metamodel/metamodel_provider3/A.tx");
+    auto mm_fn_B = std::filesystem::path(__FILE__).parent_path().append("multi_metamodel/metamodel_provider3/B.tx");
+    auto mm_fn_C = std::filesystem::path(__FILE__).parent_path().append("multi_metamodel/metamodel_provider3/C.tx");
+    workspace->add_metamodel_for_extension(".a",mm_fn_A);
+    workspace->add_metamodel_for_extension(".b",mm_fn_B);
+    workspace->add_metamodel_for_extension(".c",mm_fn_C);
+
+    {
+        auto fnA = std::filesystem::path(__FILE__).parent_path().append("multi_metamodel/metamodel_provider3/inheritance/model_a.a");
+        auto mA = workspace->model_from_file(fnA);
+
+        auto the_call_a1 = mA->fqn("the_call_a1");
+        auto a1 = mA->fqn("A1.a1");
+        CHECK( a1 == (*the_call_a1)["method"].obj() );
+    }
+}
+
+TEST_CASE("metamodel_importing_other_metamodels_diamond", "[textx/metamodel]")
+{
+    auto workspace = textx::Workspace::create();
+    auto mm_fn_A = std::filesystem::path(__FILE__).parent_path().append("multi_metamodel/metamodel_provider3/A.tx");
+    auto mm_fn_B = std::filesystem::path(__FILE__).parent_path().append("multi_metamodel/metamodel_provider3/B.tx");
+    auto mm_fn_C = std::filesystem::path(__FILE__).parent_path().append("multi_metamodel/metamodel_provider3/C.tx");
+    workspace->add_metamodel_for_extension(".a",mm_fn_A);
+    workspace->add_metamodel_for_extension(".b",mm_fn_B);
+    workspace->add_metamodel_for_extension(".c",mm_fn_C);
+
+    {
+        auto fnA = std::filesystem::path(__FILE__).parent_path().append("multi_metamodel/metamodel_provider3/diamond/A_includes_B_C.a");
+        auto mA = workspace->model_from_file(fnA);
+
     }
 }
