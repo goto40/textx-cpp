@@ -127,10 +127,11 @@ Example:
 
 ## <a name="openpoints"></a> Open Points
 Prio 1:
- * TODO handle referenced metamodels
- * TODO reference other metamodels
+ * add more unittests / migrate tests / find bugs
+ * include asan into cmake instead of using valgrind.
 
 Prio 2:
+ * analyze "coroutine effect" (see defines in rrel.cpp).
  * TODO minor: it must be possible for "eolterm" to be combined with a separator pattern
  * TODO: use has_match_suppression
  * TODO: rule parameters
