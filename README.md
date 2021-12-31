@@ -186,6 +186,19 @@ auto m = workspace->model_from_file(fn);
  * Motivation for basic Arpeggio re-impl: [https://blog.bruce-hill.com/](https://blog.bruce-hill.com/packrat-parsing-from-scratch)
  * Coroutine tutorial [https://www.scs.stanford.edu/~dm/blog/c++-coroutines.html](https://www.scs.stanford.edu/~dm/blog/c++-coroutines.html) (useful for the RREL implementation)
 
+## Limitation compared to original textx (python)
+
+Note: these limitation are not complete.
+
+ * No global registration of languages.
+ * Language references work slightly different:
+   * You must reference a grammar name (the name of the language is the name of the main grammar of that language).
+   * You cannot rename a referenced language (alias).
+ * Some minor language details (e.g. the regex implementation has some small differences).
+ * Some details are not yet implemented:
+   * noskipws/skipws is not yet supported.
+   * has_match_suppression is not yet supported.
+
 ## <a name="openpoints"></a> Open Points
 Prio 1:
  * add more unittests / migrate tests / find bugs
@@ -196,4 +209,4 @@ Prio 2:
  * TODO minor: it must be possible for "eolterm" to be combined with a separator pattern
  * TODO: use has_match_suppression
  * TODO: rule parameters
- * "reference abc as xyz" is not supported ("as"/"alias"). You can only reference other Grammars (similar to importing - but referenced grammars must be loaded in the workspace prior to be referenced.)
+ 
