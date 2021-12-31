@@ -33,7 +33,7 @@ namespace textx {
         void get_all_types(std::unordered_set<std::string> &res);
 
         public:
-        Metamodel(std::string_view grammar, bool is_main_grammar=true, bool include_basic_metamodel=true, std::string filename="", std::shared_ptr<textx::Workspace> workspace=nullptr);
+        Metamodel(std::string_view grammar, bool include_basic_metamodel=true, std::string filename="", std::shared_ptr<textx::Workspace> workspace=nullptr);
         std::shared_ptr<textx::Workspace> tx_default_workspace();
         bool is_instance(std::string special, std::string base) const;
         bool is_base_of(std::string base, std::string special) const { return is_instance(special, base); }
@@ -107,7 +107,7 @@ namespace textx {
     };
 
     inline auto metamodel_from_str(std::string_view grammar, std::shared_ptr<textx::Workspace> workspace=nullptr) {
-        return std::make_shared<textx::Metamodel>(grammar, true,true,"",workspace);
+        return std::make_shared<textx::Metamodel>(grammar, true, "", workspace);
     }
 
     inline auto metamodel_from_file(std::filesystem::path p, std::shared_ptr<textx::Workspace> workspace=nullptr) {
@@ -115,7 +115,7 @@ namespace textx {
         std::ifstream file(p);
         std::stringstream grammartext;
         grammartext << file.rdbuf();
-        return std::make_shared<textx::Metamodel>(grammartext.str(),true,true,p, workspace);
+        return std::make_shared<textx::Metamodel>(grammartext.str(),true ,p, workspace);
     }
 
 }

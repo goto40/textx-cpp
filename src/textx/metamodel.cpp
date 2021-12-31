@@ -6,7 +6,7 @@
 
 namespace textx {
 
-    Metamodel::Metamodel(std::string_view grammar_text, bool is_main_grammar, bool include_basic_metamodel, std::string filename, std::shared_ptr<textx::Workspace> workspace)
+    Metamodel::Metamodel(std::string_view grammar_text, bool include_basic_metamodel, std::string filename, std::shared_ptr<textx::Workspace> workspace)
         : default_workspace{textx::WorkspaceImpl<std::weak_ptr>::create()} // ownership! The default workspace uses *this --> weak_pointer, else we get a memory hole
     {
         try {
@@ -228,7 +228,7 @@ namespace textx {
             STRING: /("(\\"|[^"])*")|('(\\'|[^'])*')/;
             NUMBER: STRICTFLOAT|INT;
             BASETYPE: NUMBER|FLOAT|BOOL|ID|STRING;
-        )", false, false, "BUILTIN.tx"}};
+        )", false, "BUILTIN.tx"}};
         return mm;
     }
 
