@@ -1,7 +1,7 @@
 # textx-cpp
 
-This is an interpreter for [textx](https://github.com/textX/textX) grammars written in C++.
-It still has some limitations (see below, [open points](#openpoints)), but simple grammars can be parsed.
+This is an interpreter for [textx](https://github.com/textX/textX) grammars written in C++. Check the [textx-docu](http://textx.github.io/textX/stable/) for a description of the grammar definition.
+It still has some small limitations (see below, [open points](#openpoints) and [limitations](#limitations)), but many grammars can be parsed.
  * This is a just-for-fun project and a proof of concept...
  * Examples, see: 
    - [test/model.t.cpp](test/model.t.cpp)
@@ -186,7 +186,7 @@ auto m = workspace->model_from_file(fn);
  * Motivation for basic Arpeggio re-impl: [https://blog.bruce-hill.com/](https://blog.bruce-hill.com/packrat-parsing-from-scratch)
  * Coroutine tutorial [https://www.scs.stanford.edu/~dm/blog/c++-coroutines.html](https://www.scs.stanford.edu/~dm/blog/c++-coroutines.html) (useful for the RREL implementation)
 
-## Limitation compared to original textx (python)
+## <a name="limitations"></a>Limitations compared to original textx (python)
 
 Note: these limitation are not complete.
 
