@@ -60,7 +60,6 @@ namespace textx {
                     auto imported_mm = workspace->metamodel_from_file(p);
                     imported_models.push_back(imported_mm);
                     imported_models_by_name[name]=imported_mm;
-                    //textx_grammar_parsetree.copy_rule_infos_from(name, imported_mm->textx_grammar_parsetree);
                 }
                 auto ref = i.search("rule://reference_stm");
                 if (ref) {
@@ -83,6 +82,12 @@ namespace textx {
                 auto &new_rule = grammar[rule_name];
                 if (first) {
                     grammar.set_main_rule(rule_name);
+                    if (new_rule.tx_params().count("noskipws")) {
+                        grammar.set_default_skipws(false);
+                    }
+                    else {
+                        grammar.set_default_skipws(true);
+                    }
                     first = false;
                 }
                 new_rule.post_process_created_rule(*this, rule_name, rule_params, rule_body);

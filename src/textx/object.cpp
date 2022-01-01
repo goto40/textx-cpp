@@ -80,7 +80,7 @@ namespace textx::object {
             obj()->print(o, indent);
         }
         else if (is_str()) {
-            o << std::string(indent,' ') << str() << "\n";
+            o << std::string(indent,' ') << "'" << str() << "'\n";
         }
         else if (is_ref()) {
             o << std::string(indent,' ') << "-[ref]->" << ref().name << "(" << ref().obj.lock() << ")"<< "\n";

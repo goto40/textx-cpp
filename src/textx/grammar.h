@@ -14,10 +14,13 @@ namespace textx
         textx::arpeggio::ParserState state = {""};
         bool ok = true;
         std::unordered_map<std::string, R> rules = {};
+        bool default_skipws = true;
 
     public:
         Grammar() = default;
         Grammar(R r) { add_rule("main", r); }
+
+        void set_default_skipws(bool s) { default_skipws=s; }
 
         auto ref(std::string name)
         {
@@ -103,6 +106,12 @@ namespace textx
                 rules[main_rule_name],
                 textx::arpeggio::end_of_file()
             });
+            if (default_skipws==false) {
+                main = textx::arpeggio::noskipws(main);
+            }
+            else {
+                main = textx::arpeggio::skipws(main);
+            }
             state = textx::arpeggio::ParserState{text};
             auto res = main(config, state, {});
             ok = res.has_value();

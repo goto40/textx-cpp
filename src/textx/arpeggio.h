@@ -179,6 +179,7 @@ namespace textx
 
         public:
             bool eolterm = false;
+            bool skipws = true;
             size_t cache_hits = {0};
             size_t cache_misses = {0};
             AnnotatedTextPosition farthest_position = {};
@@ -207,13 +208,15 @@ namespace textx
             {
                 return [=](ParserState &text, TextPosition pos) -> TextPosition
                 {
-                    auto isspace = [&](char c) -> bool {
-                        if (!text.eolterm) return std::isspace(c);
-                        else return std::isspace(text[pos]) && c!='\n' && c!='\r';
-                    };
-                    while (pos < text.length() && isspace(text[pos]))
-                    {
-                        pos.inc(text);
+                    if (text.skipws) {
+                        auto isspace = [&](char c) -> bool {
+                            if (!text.eolterm) return std::isspace(c);
+                            else return std::isspace(text[pos]) && c!='\n' && c!='\r';
+                        };
+                        while (pos < text.length() && isspace(text[pos]))
+                        {
+                            pos.inc(text);
+                        }
                     }
                     return pos;
                 };
@@ -272,7 +275,10 @@ namespace textx
         // decorator
         /**
          * This function is a rule wrapper requried for each rule.
-         * It manages memoization and basic checks.
+         * It 
+         *  - manages memoization 
+         *  - does basic checks
+         *  - skip whitespaces if enabled (skipws/noskipws)
          *
          * If you omit the rule-call in your high-level grammar you loose some efficiency.
          */
@@ -362,6 +368,8 @@ namespace textx
                 auto copy = text;
                 modifier(text);
                 auto match = pattern(config, text, pos);
+                // preserve error infos:
+                copy.farthest_position = text.farthest_position;
                 text = copy;
                 return match;
                         }, pattern.type()};
@@ -371,6 +379,20 @@ namespace textx
         {
             return modify_parser_state([](ParserState &s){
                 s.eolterm = true;
+            }, pattern);
+        }
+
+        inline auto skipws(Pattern pattern)
+        {
+            return modify_parser_state([](ParserState &s){
+                s.skipws = true;
+            }, pattern);
+        }
+
+        inline auto noskipws(Pattern pattern)
+        {
+            return modify_parser_state([](ParserState &s){
+                s.skipws = false;
             }, pattern);
         }
 

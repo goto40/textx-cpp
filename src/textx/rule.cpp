@@ -424,6 +424,10 @@ namespace textx {
                     TEXTX_ASSERT(val[0] == val[val.size()-1]);
                     TEXTX_ASSERT(val[0] == '\'' || val[0] == '"');
                     val = val.substr(1,val.size()-2);
+                    TEXTX_ASSERT(name=="split", "unexpected param with value ", name);
+                }
+                else {
+                    TEXTX_ASSERT(name=="skipws" || name=="noskipws", "unexpected param ", name);
                 }
                 rule.m_tx_params[name]=val;
             };
@@ -442,6 +446,13 @@ namespace textx {
             v.cardinality = get_attribute_cardinality(rule_body, k);
         }
         rule.pattern = textx::arpeggio::rule(textx::arpeggio::named(rname,rule.pattern));
+        if (rule.tx_params().count("noskipws")>0) {
+            TEXTX_ASSERT(rule.tx_params().count("skipws")==0);
+            rule.pattern = textx::arpeggio::noskipws(rule.pattern);
+        }
+        else if (rule.tx_params().count("skipws")>0) {
+            rule.pattern = textx::arpeggio::skipws(rule.pattern);
+        }
     }
 
     textx::AttributeCardinality Rule::get_attribute_cardinality(const textx::arpeggio::Match& match, std::string name) {
