@@ -23,7 +23,12 @@ TEST_CASE("fstrings_metamodel1", "[textx/fstrings]")
         Hello World {% model.x %}
         123
     )";
-    auto m = textx::fstrings::get_fstrings_metamodel()->model_from_str(model_text);
+    auto mm = textx::fstrings::get_fstrings_metamodel();
+    mm->get_metamodel_by_shortcut("FSTRINGS")->clear_builtin_models();
+    mm->get_metamodel_by_shortcut("FSTRINGS")->add_builtin_model(
+        mm->model_from_str("EXTERNAL_LINKAGE","object model")
+    );
+    auto m = mm->model_from_str(model_text);
     std::ostringstream s;
     for (auto &p: (*m)["parts"]) {
         for (auto &t: p["text"]) {

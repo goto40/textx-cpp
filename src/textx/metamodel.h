@@ -50,6 +50,7 @@ namespace textx {
 
         const auto& tx_all_types() const { return all_types; }
         void add_builtin_model(std::shared_ptr<textx::Model> m) { builtin_models.push_back(std::move(m)); }
+        void clear_builtin_models() { builtin_models.clear(); }
 
         bool has_non_default_resolver(std::string l) const {
             auto res = resolver.find(l);
