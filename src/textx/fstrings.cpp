@@ -1,8 +1,9 @@
 #include "textx/fstrings.h"
 
 namespace textx::fstrings {
-    std::shared_ptr<textx::Metamodel> get_fstrings_metamodel() {
-        return textx::metamodel_from_str(R"#(
+    std::shared_ptr<textx::Workspace> get_fstrings_metamodel() {
+        auto workspace = textx::Workspace::create();
+        auto fstrings_mm = textx::metamodel_from_str(R"#(
             Model[noskipws]: parts*=Part text*=Text;
             Part: text*=Text command=Command;
             Text: SpaceText|NormalText|NewlineText;
@@ -13,6 +14,9 @@ namespace textx::fstrings {
             CommandObjAttributeAsString: CMD_START todo=ID '.' attrName=ID CMD_END;
             CMD_START: '{%';
             CMD_END: '%}';
-        )#");
+        )#", workspace);
+        workspace->
+        workspace->set_default_metamodel(fstrings_mm);
+        return workspace;
     }
 }

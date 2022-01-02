@@ -1,5 +1,5 @@
-#include "textx/metamodel.h"
+#include "textx/workspace.h"
 
 namespace textx::fstrings {
-    std::shared_ptr<textx::Metamodel> get_fstrings_metamodel();
+    std::shared_ptr<textx::Workspace> get_fstrings_metamodel();
 }
