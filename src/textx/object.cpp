@@ -76,6 +76,16 @@ namespace textx::object {
         }
     }
 
+    AttributeValue& Object::fqn(std::string name) {
+        size_t idx = name.find('.');
+        if (idx==name.npos) {
+            return this->operator[](name);
+        }
+        else {
+            return this->operator[](name.substr(0,idx)).obj()->fqn(name.substr(idx+1));
+        }
+    }
+
     void Object::create_attribute_if_not_present(std::string name) {
         if (attributes.count(name)==0) {
             attributes[name]={};

@@ -23,9 +23,9 @@ namespace {
             NormalText: text = /([^{\s\n]|{[^%\s\n])([^{\n]|{[^%\n])*/;
             Command[skipws]: CommandObjAttributeAsString | CommandForLoop;
             Data: Object | CommandForLoop; 
-            CommandObjAttributeAsString: CMD_START obj=[Object] '.' fqn=FQN CMD_END;
+            CommandObjAttributeAsString: CMD_START obj=[Data] '.' fqn=FQN CMD_END;
             CommandForLoop:
-                CMD_START 'FOR' name=ID ':' obj=[Object] '.' fqn=FQN CMD_END
+                CMD_START 'FOR' name=ID ':' obj=[Data] '.' fqn=FQN CMD_END
                 body=Model
                 CMD_START 'ENDFOR' CMD_END
             ;
@@ -44,13 +44,23 @@ namespace {
     struct Formatter {
         std::ostringstream &s;
         std::unordered_map<std::string,textx::istrings::ExternalLink> &external_links;
+        std::unordered_map<std::string,std::shared_ptr<textx::object::Object>> loop_obj;
 
         std::shared_ptr<textx::object::Object> get_obj(std::shared_ptr<textx::object::Object> ref_obj) {
             if (ref_obj->type == "Object") {
                 return std::get<std::shared_ptr<textx::object::Object>>(external_links[(*ref_obj)["name"].str()]);
             }
+            if (ref_obj->type == "CommandForLoop") {
+                auto name = (*ref_obj)["name"].str();
+                if (loop_obj.count(name)>0) {
+                    return loop_obj[name];
+                }
+                else {
+                    throw std::runtime_error(std::string("expired loop ")+name);
+                }
+            }
             else {
-                throw std::runtime_error("todo");
+                throw std::runtime_error(std::string("unknown obj link of type ")+ref_obj->type);
             }
         }
 
@@ -59,6 +69,14 @@ namespace {
             s << obj->fqn( (*cmd)["fqn"].str() ).str();
         }
         void format_CommandForLoop(std::shared_ptr<textx::object::Object> cmd) {
+            auto name = (*cmd)["name"].str();
+            auto obj = get_obj( (*cmd)["obj"].obj() );
+            auto fqn_query = (*cmd)["fqn"].str();
+            for(auto &e: obj->fqn(fqn_query)) {
+                loop_obj[name] = e.obj();
+                format_obj( (*cmd)["body"].obj() );
+            }
+            loop_obj.erase(name);
         }
         void format_cmd(std::shared_ptr<textx::object::Object> cmd) {
             if (cmd->type=="CommandObjAttributeAsString") format_CommandObjAttributeAsString(cmd);
@@ -80,6 +98,7 @@ namespace {
             for(auto &p: (*obj)["parts"]) {
                 format_part(p.obj());
             }
+            format_text(obj);
         }
     };
 }
@@ -109,7 +128,6 @@ namespace textx::istrings {
         Formatter f{s, external_links};
         
         f.format_obj(m->val().obj());
-        f.format_text(m->val().obj());
 
         return s.str();
     }

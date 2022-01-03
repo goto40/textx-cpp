@@ -74,3 +74,23 @@ TEST_CASE("istrings_metamodel2", "[textx/istrings]")
     CHECK( res.size()>0 );
     CHECK( res == "info='My Shapes'");
 }
+
+TEST_CASE("istrings_metamodel3_forloop", "[textx/istrings]")
+{
+    auto model = get_example_model();
+    auto res = textx::istrings::i(
+        R"(
+            info='{% model.info %}
+            -------
+                {% FOR o: model.shapes %}
+                    inner_type: {% o.type_name %}
+                {% ENDFOR %}
+            -------
+        ')",
+        { {"model", model->val().obj()} }
+    );
+
+    CHECK( res.size()>0 );
+    std::cout << res << "\n";
+    CHECK( res == "info='My Shapes'");
+}
