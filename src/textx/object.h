@@ -294,6 +294,7 @@ namespace textx::object {
         bool is_instance(std::string base);
 
         void print(std::ostream& o, size_t indent=0) const;
+        const AttributeValue& fqn(std::string name) const;
     };
 
     inline void traverse(textx::object::Value& v, std::function<void(textx::object::Value&)> f) {

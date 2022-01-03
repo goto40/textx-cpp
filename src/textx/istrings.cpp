@@ -22,7 +22,7 @@ namespace {
             SpaceText: text = /[\t ]+/; // no newline
             NormalText: text = /([^{\s\n]|{[^%\s\n])([^{\n]|{[^%\n])*/;
             Command[skipws]: CommandObjAttributeAsString;
-            CommandObjAttributeAsString: CMD_START obj=[EXTERNAL_LINKAGE.Object] '.' attrName=FQN CMD_END;
+            CommandObjAttributeAsString: CMD_START obj=[EXTERNAL_LINKAGE.Object] '.' fqn=FQN CMD_END;
             CMD_START: '{%';
             CMD_END: '%}';
             FQN: ID ('.' ID)*;
@@ -36,10 +36,11 @@ namespace {
 namespace {
     struct Formatter {
         std::ostringstream &s;
-        const std::unordered_map<std::string,textx::istrings::ExternalLink> &external_links;
+        std::unordered_map<std::string,textx::istrings::ExternalLink> &external_links;
 
         void format_CommandObjAttributeAsString(std::shared_ptr<textx::object::Object> cmd) {
-            
+            auto obj = std::get<std::shared_ptr<textx::object::Object>>(external_links[(*cmd)["obj"]["name"].str()]);
+            s << obj->fqn( (*cmd)["fqn"].str() ).str();
         }
         void format_cmd(std::shared_ptr<textx::object::Object> cmd) {
             if (cmd->type=="CommandObjAttributeAsString") format_CommandObjAttributeAsString(cmd);
@@ -71,7 +72,7 @@ namespace textx::istrings {
         return istrings_workspace;
     }
 
-    std::string i(std::string istring_text, const std::unordered_map<std::string,ExternalLink> &external_links) {
+    std::string i(std::string istring_text, std::unordered_map<std::string,ExternalLink> external_links) {
         auto mm = textx::istrings::get_istrings_metamodel_workspace();
         {
             std::ostringstream s;
