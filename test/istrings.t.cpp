@@ -63,7 +63,7 @@ TEST_CASE("istrings_metamodel1", "[textx/istrings]")
     //std::cout << m->val() << "\n";
 }
 
-TEST_CASE("istrings_metamodel2", "[textx/istrings]")
+TEST_CASE("istrings_metamodel2_str", "[textx/istrings]")
 {
     auto model = get_example_model();
     auto res = textx::istrings::i(
@@ -73,6 +73,15 @@ TEST_CASE("istrings_metamodel2", "[textx/istrings]")
 
     CHECK( res.size()>0 );
     CHECK( res == "info='My Shapes'");
+
+    // res = textx::istrings::i(
+    //     R"(info='{% model.info %}\n123')",
+    //     { {"model", model->val().obj()} }
+    // );
+
+    // CHECK( res.size()>0 );
+    // CHECK( res == "info='My Shapes'\n123");
+
 }
 
 TEST_CASE("istrings_metamodel3_forloop", "[textx/istrings]")
@@ -80,17 +89,25 @@ TEST_CASE("istrings_metamodel3_forloop", "[textx/istrings]")
     auto model = get_example_model();
     auto res = textx::istrings::i(
         R"(
-            info='{% model.info %}
-            -------
-                {% FOR o: model.shapes %}
-                    inner_type: {% o.type_name %}
-                {% ENDFOR %}
-            -------
-        ')",
+        info='{% model.info %}'
+        -------
+        {% FOR o: model.shapes %}
+        inner_type: {% o.type_name %}
+        {% ENDFOR %}
+        -------
+        )",
         { {"model", model->val().obj()} }
     );
 
     CHECK( res.size()>0 );
     std::cout << res << "\n";
-    CHECK( res == "info='My Shapes'");
+    CHECK( res ==
+R"(
+info='My Shapes'
+-------
+inner_type: Point
+inner_type: Circle
+inner_type: Line
+-------
+)");
 }

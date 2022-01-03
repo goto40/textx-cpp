@@ -25,10 +25,11 @@ namespace {
             Data: Object | CommandForLoop; 
             CommandObjAttributeAsString: CMD_START obj=[Data] '.' fqn=FQN CMD_END;
             CommandForLoop:
-                CMD_START 'FOR' name=ID ':' obj=[Data] '.' fqn=FQN CMD_END
-                body=Model
-                CMD_START 'ENDFOR' CMD_END
+                CMD_START 'FOR' name=ID ':' obj=[Data] '.' fqn=FQN
+                body=CommandForLoopBody
+                'ENDFOR' CMD_END
             ;
+            CommandForLoopBody[noskipws]:                 CMD_END body=Model CMD_START;
             CMD_START: '{%';
             CMD_END: '%}';
             FQN: ID ('.' ID)*;
@@ -41,8 +42,77 @@ namespace {
 }
 
 namespace {
+    struct FormatterStream {
+        std::ostringstream s;
+        std::ostringstream line;
+        size_t global_indent=0xFFFFFFFF;
+        bool contains_nontextual_cmd = false;
+        template<class T>
+        FormatterStream& operator<<(const T& x) {
+            line << x;
+            if (line.str().find('\n')!=line.str().npos) {
+                consume();
+            }
+            return *this;
+        }
+        void consume() {
+            std::string l = line.str();
+            line.str("");
+            size_t idx = l.find('\n');
+            if (idx!=l.npos) {
+                 line << l.substr(idx+1);
+                 l = l.substr(0, idx+1);
+            }
+            if (contains_nontextual_cmd && line_is_empty(l)) {
+                // ok, ignore line
+            }
+            else {
+                if (line_is_empty(l)) {
+                    l="\n";
+                }
+                if (l.size()>1) {
+                    global_indent = std::min(global_indent, indent(l));
+                }
+                s << l;
+            }
+            contains_nontextual_cmd = false;
+        }
+        size_t indent(const std::string &l) {
+            for(size_t i=0;i<l.size();i++) {
+                if (!std::isspace(l[i])) return i;
+            }
+            return l.size();
+        }
+        bool line_is_empty(const std::string &l) {
+            for(size_t i=0;i<l.size();i++) {
+                if (!std::isspace(l[i])) return false;
+            }
+            return true;
+        }
+        void nontextual_cmd() {
+            // TODO memorize first pos
+            contains_nontextual_cmd = true;
+        }
+        std::string str() {
+            consume();
+            std::ostringstream out;
+            std::istringstream i{s.str()};
+            std::string l;
+            while( std::getline(i,l)) {
+                if (l.size()>=global_indent) {
+                    out << l.substr(global_indent) << "\n";
+                }
+                else {
+                    out << "\n";
+                }
+            }
+            l = out.str();
+            l = l.substr(0,l.size()-1); // remove last newline
+            return l;
+        }
+    };
     struct Formatter {
-        std::ostringstream &s;
+        FormatterStream &s;
         std::unordered_map<std::string,textx::istrings::ExternalLink> &external_links;
         std::unordered_map<std::string,std::shared_ptr<textx::object::Object>> loop_obj;
 
@@ -73,8 +143,10 @@ namespace {
             auto obj = get_obj( (*cmd)["obj"].obj() );
             auto fqn_query = (*cmd)["fqn"].str();
             for(auto &e: obj->fqn(fqn_query)) {
+                s.nontextual_cmd(); // for
                 loop_obj[name] = e.obj();
-                format_obj( (*cmd)["body"].obj() );
+                format_obj( (*cmd)["body"]["body"].obj() );
+                s.nontextual_cmd(); // endfor
             }
             loop_obj.erase(name);
         }
@@ -124,7 +196,7 @@ namespace textx::istrings {
             );
         }        
         auto m = mm->model_from_str(istring_text);
-        std::ostringstream s;
+        FormatterStream s;
         Formatter f{s, external_links};
         
         f.format_obj(m->val().obj());
