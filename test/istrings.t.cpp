@@ -1,10 +1,10 @@
 #include "catch.hpp"
-#include "textx/fstrings.h"
+#include "textx/istrings.h"
 
 namespace {
     auto get_example_model() {
         auto mm = textx::metamodel_from_str(R"#(
-            Model: shapes+=Shape[','];
+            Model: 'shapes' info=STRING ':' shapes+=Shape[','];
             Shape: Point|ComplexShape;
             ComplexShape: Circle|Line;
             Point: type_name='Point' '(' x=NUMBER ',' y=NUMBER ')';
@@ -12,6 +12,7 @@ namespace {
             Line: type_name='Line' '(' p1=Point ',' p2=Point ')';
         )#");
         auto m = mm->model_from_str(R"(
+            shapes "My Shapes":
             Point(1,2),
             Circle(Point(333,4.5),9),
             Line(Point(0,0),Point(1,1))
@@ -20,13 +21,13 @@ namespace {
     }
 }
 
-TEST_CASE("fstrings_metamodel0", "[textx/fstrings]")
+TEST_CASE("istrings_metamodel0", "[textx/istrings]")
 {
     auto model_text = R"(
         Hello World
         123
     )";
-    auto m = textx::fstrings::get_fstrings_metamodel_workspace()->model_from_str(model_text);
+    auto m = textx::istrings::get_istrings_metamodel_workspace()->model_from_str(model_text);
     CHECK( (*m)["parts"].size()==0 );
     std::ostringstream s;
     for (auto &t: (*m)["text"]) {
@@ -36,15 +37,15 @@ TEST_CASE("fstrings_metamodel0", "[textx/fstrings]")
     //std::cout << m->val() << "\n";
 }
 
-TEST_CASE("fstrings_metamodel1", "[textx/fstrings]")
+TEST_CASE("istrings_metamodel1", "[textx/istrings]")
 {
     auto model_text = R"(
         Hello World {% model.x %}
         123
     )";
-    auto mm = textx::fstrings::get_fstrings_metamodel_workspace();
-    mm->get_metamodel_by_shortcut("FSTRINGS")->clear_builtin_models();
-    mm->get_metamodel_by_shortcut("FSTRINGS")->add_builtin_model(
+    auto mm = textx::istrings::get_istrings_metamodel_workspace();
+    mm->get_metamodel_by_shortcut("ISTRINGS")->clear_builtin_models();
+    mm->get_metamodel_by_shortcut("ISTRINGS")->add_builtin_model(
         mm->model_from_str("EXTERNAL_LINKAGE","object model")
     );
     auto m = mm->model_from_str(model_text);
@@ -62,16 +63,14 @@ TEST_CASE("fstrings_metamodel1", "[textx/fstrings]")
     //std::cout << m->val() << "\n";
 }
 
-TEST_CASE("fstrings_metamodel2", "[textx/fstrings]")
+TEST_CASE("istrings_metamodel2", "[textx/istrings]")
 {
     auto model = get_example_model();
-    auto res = textx::fstrings::f(
-        R"(
-            Hello World {% model.x %}
-            123
-        )",
-        { {"model", model} }
+    auto res = textx::istrings::i(
+        R"(info='{% model.info %}')",
+        { {"model", model->val().obj()} }
     );
 
     CHECK( res.size()>0 );
+    CHECK( res == "info='My Shapes'");
 }
