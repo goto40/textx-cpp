@@ -100,7 +100,7 @@ TEST_CASE("istrings_metamodel3_forloop", "[textx/istrings]")
     );
 
     CHECK( res.size()>0 );
-    std::cout << res << "\n";
+    //std::cout << res << "\n";
     CHECK( res ==
 R"(
 info='My Shapes'

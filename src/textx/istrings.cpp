@@ -55,7 +55,7 @@ namespace {
             }
             return *this;
         }
-        void consume() {
+        void consume() { // consume/process current line
             std::string l = line.str();
             line.str("");
             size_t idx = l.find('\n');
@@ -71,13 +71,13 @@ namespace {
                     l="\n";
                 }
                 if (l.size()>1) {
-                    global_indent = std::min(global_indent, indent(l));
+                    global_indent = std::min(global_indent, measure_indent(l));
                 }
                 s << l;
             }
             contains_nontextual_cmd = false;
         }
-        size_t indent(const std::string &l) {
+        size_t measure_indent(const std::string &l) {
             for(size_t i=0;i<l.size();i++) {
                 if (!std::isspace(l[i])) return i;
             }
@@ -95,6 +95,7 @@ namespace {
         }
         std::string str() {
             consume();
+            // a little hacky... remove global intend:
             std::ostringstream out;
             std::istringstream i{s.str()};
             std::string l;
