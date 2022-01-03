@@ -83,6 +83,7 @@ namespace textx
 
         void add_rule(std::string_view name, R p)
         {
+            //std::cout << "ADD RULE " << name << "\n";
             std::ostringstream n;
             n << "rule://" << name;
             if constexpr (std::is_same_v<textx::arpeggio::Pattern, R>) {

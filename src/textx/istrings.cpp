@@ -14,19 +14,26 @@ namespace {
 
         workspace->add_metamodel_from_str_for_extension("istr", "ISTRINGS.tx",
         R"#(
-            reference EXTERNAL_LINKAGE
+            import EXTERNAL_LINKAGE
             Model[noskipws]: parts*=Part text*=Text;
             Part: text*=Text command=Command;
             Text: SpaceText|NormalText|NewlineText;
             NewlineText: text = /[\n]/;
             SpaceText: text = /[\t ]+/; // no newline
             NormalText: text = /([^{\s\n]|{[^%\s\n])([^{\n]|{[^%\n])*/;
-            Command[skipws]: CommandObjAttributeAsString;
-            CommandObjAttributeAsString: CMD_START obj=[EXTERNAL_LINKAGE.Object] '.' fqn=FQN CMD_END;
+            Command[skipws]: CommandObjAttributeAsString | CommandForLoop;
+            Data: Object | CommandForLoop; 
+            CommandObjAttributeAsString: CMD_START obj=[Object] '.' fqn=FQN CMD_END;
+            CommandForLoop:
+                CMD_START 'FOR' name=ID ':' obj=[Object] '.' fqn=FQN CMD_END
+                body=Model
+                CMD_START 'ENDFOR' CMD_END
+            ;
             CMD_START: '{%';
             CMD_END: '%}';
             FQN: ID ('.' ID)*;
         )#");
+        // TODO: prevent double vars!
 
         workspace->set_default_metamodel(workspace->get_metamodel_by_shortcut("ISTRINGS"));
         return workspace;
@@ -38,12 +45,24 @@ namespace {
         std::ostringstream &s;
         std::unordered_map<std::string,textx::istrings::ExternalLink> &external_links;
 
+        std::shared_ptr<textx::object::Object> get_obj(std::shared_ptr<textx::object::Object> ref_obj) {
+            if (ref_obj->type == "Object") {
+                return std::get<std::shared_ptr<textx::object::Object>>(external_links[(*ref_obj)["name"].str()]);
+            }
+            else {
+                throw std::runtime_error("todo");
+            }
+        }
+
         void format_CommandObjAttributeAsString(std::shared_ptr<textx::object::Object> cmd) {
-            auto obj = std::get<std::shared_ptr<textx::object::Object>>(external_links[(*cmd)["obj"]["name"].str()]);
+            auto obj = get_obj((*cmd)["obj"].obj());
             s << obj->fqn( (*cmd)["fqn"].str() ).str();
+        }
+        void format_CommandForLoop(std::shared_ptr<textx::object::Object> cmd) {
         }
         void format_cmd(std::shared_ptr<textx::object::Object> cmd) {
             if (cmd->type=="CommandObjAttributeAsString") format_CommandObjAttributeAsString(cmd);
+            else if (cmd->type=="CommandForLoop") format_CommandForLoop(cmd);
             else {
                 throw std::runtime_error(std::string("unexpected command type: ")+cmd->type);
             }

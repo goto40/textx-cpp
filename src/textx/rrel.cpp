@@ -242,7 +242,7 @@ namespace textx::rrel {
     ) const {
         //std::cout << "Parent(" << type << ")\n";
         auto obj = data.obj;
-        auto mm = obj->tx_model()->tx_metamodel();
+        auto mm = data.mm;
         obj = obj->parent();
         while(obj!=nullptr) {
             //std::cout << "...Parent(" << obj->type << ")\n";
@@ -250,7 +250,7 @@ namespace textx::rrel {
             obj = obj->parent();
         }
         if (obj!=nullptr) {
-            MYYIELD((py::RRELInternalResult{py::RRELInternalResultData{obj,data.lookup_list,data.matched_path}}));
+            MYYIELD((py::RRELInternalResult{py::RRELInternalResultData{data.mm, obj,data.lookup_list,data.matched_path}}));
         }
         co_return;
     }
@@ -325,7 +325,7 @@ namespace textx::rrel {
                             }
                             else if (!consume_name) {
                                 MYDBG(std::cout << "no consume...\n";)
-                                MYYIELD((py::RRELInternalResultData{ itarget.obj(), data.lookup_list, data.matched_path }));
+                                MYYIELD((py::RRELInternalResultData{ data.mm, itarget.obj(), data.lookup_list, data.matched_path }));
                             }
                             else if (!itarget.is_null() && itarget.obj()->has_attr("name") && itarget["name"].str() == data.lookup_list[0]) {
                                 MYDBG(std::cout << "consume...\n";)
@@ -337,7 +337,7 @@ namespace textx::rrel {
                                 auto matched_path_copy = data.matched_path;
                                 matched_path_copy.push_back( itarget.obj() );
                                 MYDBG(std::cout << "yield..."<<itarget.obj().get()<<"\n";)
-                                MYYIELD((py::RRELInternalResultData{itarget.obj(), lookup_copy, matched_path_copy}));
+                                MYYIELD((py::RRELInternalResultData{data.mm, itarget.obj(), lookup_copy, matched_path_copy}));
                             }
                         }
                     }
@@ -349,7 +349,7 @@ namespace textx::rrel {
                             co_return;
                         }
                         else if (!consume_name) {
-                            MYYIELD((py::RRELInternalResultData{ itarget.obj(), data.lookup_list, data.matched_path }));
+                            MYYIELD((py::RRELInternalResultData{ data.mm, itarget.obj(), data.lookup_list, data.matched_path }));
                         }
                         else if (!itarget.is_null() && itarget.obj()->has_attr("name") && itarget["name"].str() == data.lookup_list[0]) {
                             std::vector<std::string> lookup_copy{
@@ -358,7 +358,7 @@ namespace textx::rrel {
                             };
                             auto matched_path_copy = data.matched_path;
                             matched_path_copy.push_back( itarget.obj() );
-                            MYYIELD((py::RRELInternalResultData{itarget.obj(), lookup_copy, matched_path_copy}));
+                            MYYIELD((py::RRELInternalResultData{ data.mm, itarget.obj(), lookup_copy, matched_path_copy}));
                         }
                     }
                 }
@@ -379,7 +379,7 @@ namespace textx::rrel {
             counter--;
         }
         if (counter==1) {
-            MYYIELD((py::RRELInternalResult{py::RRELInternalResultData{obj,data.lookup_list,data.matched_path}}));
+            MYYIELD((py::RRELInternalResult{py::RRELInternalResultData{ data.mm, obj, data.lookup_list, data.matched_path}}));
         }
         co_return;
     }
@@ -399,7 +399,7 @@ namespace textx::rrel {
                 if (start_at_root()) {
                     if (data.obj->tx_model()->val().is_obj()) {
                         auto root = data.obj->tx_model()->val().obj();
-                        MYYIELD((py::RRELInternalResult{py::RRELInternalResultData{root,data.lookup_list,data.matched_path}}));
+                        MYYIELD((py::RRELInternalResult{py::RRELInternalResultData{data.mm,root,data.lookup_list,data.matched_path}}));
                     }
                 }
             }
@@ -505,14 +505,15 @@ namespace textx::rrel {
             }
         };
         // important: use ref(...) here to protect (do not duplicate) the state
-        for (const py::RRELInternalResult res : rrel_tree.get_next_matches({obj, lookup, {}}, std::ref(allowed), "")) {
+        for (const py::RRELInternalResult res : rrel_tree.get_next_matches({obj->tx_model()->tx_metamodel(), obj, lookup, {}}, std::ref(allowed), "")) {
             if(std::holds_alternative<textx::scoping::Postponed>(res)) {
                 MYDBG(std::cout << "FINAL: POSTPONED\n";)
                 return textx::scoping::Postponed{};
             }
             else if (std::get<0>(res).lookup_list.size()==0 && std::get<0>(res).obj!=nullptr) {
                 auto obj = std::get<0>(res).obj;
-                if (obj_cls=="" || obj->is_instance(obj_cls)) {
+                auto mm = std::get<0>(res).mm;
+                if (obj_cls=="" || mm->is_instance(obj->type, obj_cls)) {
                     MYDBG(std::cout << "FINAL: RES, ";)
                     MYDBG(obj->print(std::cout);)
                     MYDBG(std::cout <<"\n";)

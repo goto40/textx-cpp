@@ -44,20 +44,23 @@ namespace textx {
                 auto import = i.search("rule://import_stm");
                 if (import) {
                     std::string name = import->children[1].captured.value();
-                    TEXTX_ASSERT(filename.size()>0);
+                    auto imported_mm = workspace->get_metamodel_by_shortcut(name);
+                    if (imported_mm==nullptr) {
+                        TEXTX_ASSERT(filename.size()>0);
 
-                    auto basedir = std::filesystem::path(filename).parent_path();
-                    auto basedir0 = std::filesystem::path(".");
-                    auto import_filename = name+".tx";
+                        auto basedir = std::filesystem::path(filename).parent_path();
+                        auto basedir0 = std::filesystem::path(".");
+                        auto import_filename = name+".tx";
 
-                    auto p = basedir/import_filename;
-                    if (!std::filesystem::exists(p)) {
-                        p = basedir0/import_filename;
+                        auto p = basedir/import_filename;
+                        if (!std::filesystem::exists(p)) {
+                            p = basedir0/import_filename;
+                        }
+                        if (!std::filesystem::exists(p)) {
+                            textx::arpeggio::raise(import->children[1].start(), import_filename+" not found.");
+                        }
+                        imported_mm = workspace->metamodel_from_file(p);
                     }
-                    if (!std::filesystem::exists(p)) {
-                        textx::arpeggio::raise(import->children[1].start(), import_filename+" not found.");
-                    }
-                    auto imported_mm = workspace->metamodel_from_file(p);
                     imported_models.push_back(imported_mm);
                     imported_models_by_name[name]=imported_mm;
                 }
@@ -154,7 +157,9 @@ namespace textx {
             }
         }
         else {
+            //std::cout << "looking for " << name << " in " << this->grammar_name << "\n";
             if (grammar.get_rules().count(name)>0) {
+                //std::cout << "found " << name << " in my model\n";
                 if (grammar_name.size()==0) {
                     return name;
                 }
@@ -165,7 +170,9 @@ namespace textx {
             for(auto p:imported_models) {
                 auto sp = p.lock();
                 TEXTX_ASSERT(sp!=nullptr);
+                //std::cout << "looking for " << name << " in imported models\n";
                 if (sp->has_rule(name, true)) {
+                    //std::cout << "found " << name << " in imported models\n";
                     return sp->get_fqn_for_rule(name.substr(n+1));
                 }
             }
@@ -177,6 +184,7 @@ namespace textx {
                 }
             }
         }
+        //std::cout << "failed search for " << name << "... in " << this->grammar_name << "\n";
         throw std::runtime_error(std::string("rule ")+name+" not found.");
     }
 
@@ -354,6 +362,7 @@ namespace textx {
     }
 
     bool Metamodel::is_instance(std::string special, std::string base) const {
+        //std::cout << "isinstance " << special << "--" << base << "\n";
         auto fqn_special = get_fqn_for_rule(special);
         auto fqn_base = get_fqn_for_rule(base);
         if (fqn_special == fqn_base) {

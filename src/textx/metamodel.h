@@ -36,7 +36,10 @@ namespace textx {
         Metamodel(std::string_view grammar, bool include_basic_metamodel=true, std::string filename="", std::shared_ptr<textx::Workspace> workspace=nullptr);
         std::shared_ptr<textx::Workspace> tx_default_workspace();
         bool is_instance(std::string special, std::string base) const;
-        bool is_base_of(std::string base, std::string special) const { return is_instance(special, base); }
+        bool is_base_of(std::string base, std::string special) const { 
+            //std::cout << "IS_BASE_OF\n";
+            return is_instance(special, base);
+        }
         Rule& operator[](std::string name);
         const Rule& operator[](std::string name) const;
         Rule& find_rule(std::string name, bool allow_referenced_mm);
@@ -107,8 +110,8 @@ namespace textx {
         }
     };
 
-    inline auto metamodel_from_str(std::string_view grammar, std::shared_ptr<textx::Workspace> workspace=nullptr) {
-        return std::make_shared<textx::Metamodel>(grammar, true, "", workspace);
+    inline auto metamodel_from_str(std::string_view grammar, std::string filename="", std::shared_ptr<textx::Workspace> workspace=nullptr) {
+        return std::make_shared<textx::Metamodel>(grammar, true, filename, workspace);
     }
 
     inline auto metamodel_from_file(std::filesystem::path p, std::shared_ptr<textx::Workspace> workspace=nullptr) {

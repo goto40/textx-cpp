@@ -146,7 +146,7 @@ namespace textx {
 
             std::shared_ptr<textx::Metamodel> mm;
             if (grammar.has_value()) {
-                mm = textx::metamodel_from_str(grammar.value(), shared_from_this());
+                mm = textx::metamodel_from_str(grammar.value(), filename, shared_from_this());
             }
             else {
                 mm = textx::metamodel_from_file(filename, shared_from_this());

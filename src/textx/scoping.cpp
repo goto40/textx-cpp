@@ -28,8 +28,9 @@ namespace textx::scoping {
                 // }
                 if (!v.is_null() && v.obj()->has_attr("name") && (*v.obj())["name"].str()==obj_name) {
                     if(target_type.has_value()) {
-                        auto &mm = *v.obj()->tx_model()->tx_metamodel();
-                        if (!mm.is_base_of(target_type.value(),v.obj()->type)) {
+                        //use master mm! 
+                        // no: auto &mm = *v.obj()->tx_model()->tx_metamodel();
+                        if (!mm->is_base_of(target_type.value(),v.obj()->type)) {
                             textx::arpeggio::raise(v.obj()->pos,"'", obj_name, "' has not expected type '", target_type.value(), "'");
                         }
                     }

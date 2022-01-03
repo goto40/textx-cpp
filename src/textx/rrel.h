@@ -18,6 +18,7 @@ namespace textx::rrel {
     using MatchedPath = textx::scoping::MatchedPath;
     namespace py {
         struct RRELInternalResultData {
+            std::shared_ptr<textx::Metamodel> mm;
             std::shared_ptr<textx::object::Object> obj;
             std::vector<std::string> lookup_list;
             MatchedPath matched_path;
