@@ -47,6 +47,7 @@ namespace {
         std::ostringstream line;
         size_t global_indent=0xFFFFFFFF;
         bool contains_nontextual_cmd = false;
+        size_t current_pos_of_first_command=0xFFFFFFFF;
         template<class T>
         FormatterStream& operator<<(const T& x) {
             line << x;
@@ -56,26 +57,30 @@ namespace {
             return *this;
         }
         void consume() { // consume/process current line
-            std::string l = line.str();
-            line.str("");
-            size_t idx = l.find('\n');
-            if (idx!=l.npos) {
-                 line << l.substr(idx+1);
-                 l = l.substr(0, idx+1);
-            }
-            if (contains_nontextual_cmd && line_is_empty(l)) {
-                // ok, ignore line
-            }
-            else {
-                if (line_is_empty(l)) {
-                    l="\n";
+            do {
+                std::string l = line.str();
+                line.str("");
+                size_t idx = l.find('\n');
+                if (idx!=l.npos) {
+                    line << l.substr(idx+1);
+                    l = l.substr(0, idx+1);
+                    idx = l.find('\n');
                 }
-                if (l.size()>1) {
-                    global_indent = std::min(global_indent, measure_indent(l));
+                if (contains_nontextual_cmd && line_is_empty(l)) {
+                    // ok, ignore line
                 }
-                s << l;
-            }
-            contains_nontextual_cmd = false;
+                else {
+                    if (line_is_empty(l)) {
+                        l="\n";
+                    }
+                    if (l.size()>1) {
+                        global_indent = std::min(global_indent, measure_indent(l));
+                    }
+                    s << l;
+                }
+                contains_nontextual_cmd = false;
+                current_pos_of_first_command = 0xFFFFFFFF;
+            } while (line.str().find('\n') != line.str().npos);
         }
         size_t measure_indent(const std::string &l) {
             for(size_t i=0;i<l.size();i++) {
@@ -91,6 +96,9 @@ namespace {
         }
         void nontextual_cmd() {
             // TODO memorize first pos
+            if (current_pos_of_first_command==0xFFFFFFFF) {
+                current_pos_of_first_command = line.str().size();
+            }
             contains_nontextual_cmd = true;
         }
         std::string str() {
