@@ -167,3 +167,27 @@ info='My Shapes'
 -------
 )");
 }
+
+TEST_CASE("istrings_metamodel3_forloop_inline", "[textx/istrings]")
+{
+    auto model = get_example_model();
+    auto res = textx::istrings::i(
+        R"(
+        info='{% model.info %}'
+        -------
+            inline:{% FOR o: model.shapes %} {% o.type_name %}{% ENDFOR %}
+        -------
+        )",
+        { {"model", model->val().obj()} }
+    );
+
+    CHECK( res.size()>0 );
+    //std::cout << res << "\n";
+    CHECK( res ==
+R"(
+info='My Shapes'
+-------
+    inline: Point Circle Line
+-------
+)");
+}
