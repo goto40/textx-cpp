@@ -1,5 +1,8 @@
 #include "textx/istrings.h"
 #include <stack>
+
+#define DBG(x)
+
 namespace {
     std::shared_ptr<textx::Workspace> private_get_istrings_metamodel_workspace() {
         auto workspace = textx::Workspace::create();
@@ -21,7 +24,7 @@ namespace {
             NewlineText: text = /[\n]/;
             SpaceText: text = /[\t ]+/; // no newline
             NormalText: text = /([^{\s\n]|{[^%\s\n])([^{\n]|{[^%\n])*/;
-            Command[skipws]: CommandObjAttributeAsString | CommandForLoop;
+            Command[skipws]: CommandObjAttributeAsString | CommandForLoop | CommandObj2StrFun;
             Data: Object | CommandForLoop; 
             CommandObjAttributeAsString: CMD_START obj=[Data] '.' fqn=FQN CMD_END;
             CommandForLoop:
@@ -29,7 +32,10 @@ namespace {
                 body=CommandForLoopBody
                 'ENDFOR' CMD_END
             ;
-            CommandForLoopBody[noskipws]:                 CMD_END body=Model CMD_START;
+            CommandForLoopBody[noskipws]: CMD_END body=Model CMD_START;
+            CommandObj2StrFun:
+                 CMD_START call=[Function] "(" obj=[Data] ('.' fqn=FQN)? ")" CMD_END
+            ;
             CMD_START: '{%';
             CMD_END: '%}';
             FQN: ID ('.' ID)*;
@@ -148,14 +154,16 @@ namespace {
                 }
                 if (!li.ignore) {
                     out << std::string(concrete_intend, ' ') << li.text
-                        //<< li.indent << "," << global_indent << "; l=" << li.nest_level << " i=" << intend << " c=" << intend_correction
                         << "\n";
+                    DBG(std::cout << std::string(concrete_intend, ' ') << li.text)
+                    DBG(    << li.indent << "," << global_indent << "; l=" << li.nest_level << " i=" << intend << " c=" << intend_correction)
+                    DBG(    << "\n";)
                 }
-                // else {
-                //     out << std::string(concrete_intend, ' ') << "IGNORED"
-                //         << li.indent << "," << global_indent << "; l=" << li.nest_level << " i=" << intend << " c=" << intend_correction
-                //         << "\n";
-                // }
+                DBG(else {)
+                DBG(    std::cout << std::string(concrete_intend, ' ') << "IGNORED")
+                DBG(        << li.indent << "," << global_indent << "; l=" << li.nest_level << " i=" << intend << " c=" << intend_correction)
+                DBG(        << "\n";)
+                DBG(})
                 if (!li.ignore) {
                     prev_level = li.nest_level;
                 }
@@ -165,7 +173,24 @@ namespace {
             l = l.substr(0,l.size()-1); // remove last newline
             return l;
         }
+        size_t current_col() { return line.str().size(); }
     };
+
+    std::string add_intend_after_newline(std::string input, size_t intend) {
+        std::istringstream input_stream{input};
+        std::ostringstream output_stream;
+        std::string l;
+        bool first = true;
+        while(std::getline(input_stream, l)) {
+            if (!first) {
+                output_stream << std::string(intend, ' ');
+            }
+            output_stream << l << "\n";
+            first = false;
+        }
+        l = output_stream.str();
+        return l.substr(0,l.size()-1);
+    }
     struct Formatter {
         FormatterStream &s;
         std::unordered_map<std::string,textx::istrings::ExternalLink> &external_links;
@@ -207,9 +232,20 @@ namespace {
             s.dec_level();
             loop_obj.erase(name);
         }
+        void format_CommandObj2StrFun(std::shared_ptr<textx::object::Object> cmd) {
+            auto fun = std::get<textx::istrings::Obj2StrFun>(external_links[(*cmd)["call"]["name"].str()]);
+            auto obj = get_obj( (*cmd)["obj"].obj() );
+            if (!(*cmd)["fqn"].is_null()) {
+                obj = obj->fqn( (*cmd)["fqn"].str() ).obj();
+            }
+            std::string res = fun(obj);
+            res = add_intend_after_newline(res, s.current_col());
+            s << res;
+        }
         void format_cmd(std::shared_ptr<textx::object::Object> cmd) {
             if (cmd->type=="CommandObjAttributeAsString") format_CommandObjAttributeAsString(cmd);
             else if (cmd->type=="CommandForLoop") format_CommandForLoop(cmd);
+            else if (cmd->type=="CommandObj2StrFun") format_CommandObj2StrFun(cmd);
             else {
                 throw std::runtime_error(std::string("unexpected command type: ")+cmd->type);
             }
@@ -246,6 +282,12 @@ namespace textx::istrings {
             for (auto &[k,v]: external_links) {
                 if (std::holds_alternative<std::shared_ptr<textx::object::Object>>(v)) {
                     s << "object " << k << "\n";
+                }
+                else if (std::holds_alternative<textx::istrings::Obj2StrFun>(v)) {
+                    s << "function " << k << "\n";
+                }
+                else {
+                    throw std::runtime_error("unexpected: unknown external link type");
                 }
             }
             mm->get_metamodel_by_shortcut("ISTRINGS")->add_builtin_model(
