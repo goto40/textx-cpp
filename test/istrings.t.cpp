@@ -90,7 +90,7 @@ TEST_CASE("istrings_metamodel3_forloop", "[textx/istrings]")
     auto res = textx::istrings::i(
         R"(
         info='{% model.info %}'
-        -------
+        -0------
         {% FOR o: model.shapes %}
         inner_type: {% o.type_name %}
         {% ENDFOR %}
@@ -104,7 +104,7 @@ TEST_CASE("istrings_metamodel3_forloop", "[textx/istrings]")
     CHECK( res ==
 R"(
 info='My Shapes'
--------
+-0------
 inner_type: Point
 inner_type: Circle
 inner_type: Line
@@ -118,9 +118,9 @@ TEST_CASE("istrings_metamodel3_forloop_indent_removed", "[textx/istrings]")
     auto res = textx::istrings::i(
         R"(
         info='{% model.info %}'
-        -------
+        -1------
         {% FOR o: model.shapes %}
-           inner_type: {% o.type_name %}
+            inner_type: {% o.type_name %}
         {% ENDFOR %}
         -------
         )",
@@ -132,7 +132,7 @@ TEST_CASE("istrings_metamodel3_forloop_indent_removed", "[textx/istrings]")
     CHECK( res ==
 R"(
 info='My Shapes'
--------
+-1------
 inner_type: Point
 inner_type: Circle
 inner_type: Line
@@ -146,7 +146,7 @@ TEST_CASE("istrings_metamodel3_forloop_indent_active", "[textx/istrings]")
     auto res = textx::istrings::i(
         R"(
         info='{% model.info %}'
-        -------
+        -2------
             {% FOR o: model.shapes %}
             inner_type: {% o.type_name %}
             {% ENDFOR %}
@@ -160,7 +160,7 @@ TEST_CASE("istrings_metamodel3_forloop_indent_active", "[textx/istrings]")
     CHECK( res ==
 R"(
 info='My Shapes'
--------
+-2------
     inner_type: Point
     inner_type: Circle
     inner_type: Line

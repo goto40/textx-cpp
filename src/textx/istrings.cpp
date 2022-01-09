@@ -1,5 +1,5 @@
 #include "textx/istrings.h"
-
+#include <stack>
 namespace {
     std::shared_ptr<textx::Workspace> private_get_istrings_metamodel_workspace() {
         auto workspace = textx::Workspace::create();
@@ -45,6 +45,8 @@ namespace {
     struct Line {
         std::string text;
         size_t indent;
+        size_t nest_level;
+        bool ignore=false;
         bool is_empty() { return text.empty(); }
     };
     struct FormatterStream {
@@ -53,6 +55,9 @@ namespace {
         size_t global_indent=0xFFFFFFFF;
         bool contains_nontextual_cmd = false;
         size_t current_pos_of_first_command=0xFFFFFFFF;
+        size_t nest_level=0;
+        void inc_level() { nest_level++; }
+        void dec_level() { TEXTX_ASSERT(nest_level>0); nest_level--; }
         template<class T>
         FormatterStream& operator<<(const T& x) {
             line << x;
@@ -73,6 +78,11 @@ namespace {
                 }
                 if (contains_nontextual_cmd && line_is_empty(l)) {
                     // ok, ignore line
+                    size_t indent=0;
+                    if (contains_nontextual_cmd) {
+                        indent = current_pos_of_first_command;
+                    }
+                    lines.emplace_back("",indent, nest_level, true);
                 }
                 else {
                     size_t indent=0;
@@ -84,7 +94,7 @@ namespace {
                         global_indent = std::min(global_indent, indent);
                         l = l.substr(indent);
                     }
-                    lines.emplace_back(l,indent);
+                    lines.emplace_back(l,indent, nest_level, false);
                 }
                 contains_nontextual_cmd = false;
                 current_pos_of_first_command = 0xFFFFFFFF;
@@ -111,15 +121,45 @@ namespace {
         }
         std::string str() {
             consume();
-            // a little hacky... remove global intend:
             std::ostringstream out;
+            size_t prev_level = 0;
+            size_t intend_correction = 0;
+            size_t prev_intend = 0;
+            std::stack<size_t> nested_intend_correction;
             for (auto& li: lines) {
+                size_t intend = 0;
                 if (li.indent>=global_indent) {
-                    out << std::string(li.indent-global_indent, ' ');
+                    intend = li.indent-global_indent;
                 }
-                out << li.text
-                //  << li.indent << "," << global_indent
-                    << "\n";
+                if (prev_level<li.nest_level) {
+                    nested_intend_correction.push(intend_correction);
+                    if (intend>prev_intend && !li.ignore) {
+                        intend_correction += intend-prev_intend;
+                    }
+                }
+                else if (prev_level>li.nest_level) {
+                    TEXTX_ASSERT(nested_intend_correction.size()>0);
+                    intend_correction = nested_intend_correction.top();
+                    nested_intend_correction.pop();
+                }
+                size_t concrete_intend = intend;
+                if (concrete_intend>=intend_correction) {
+                    concrete_intend -= intend_correction;
+                }
+                if (!li.ignore) {
+                    out << std::string(concrete_intend, ' ') << li.text
+                        //<< li.indent << "," << global_indent << "; l=" << li.nest_level << " i=" << intend << " c=" << intend_correction
+                        << "\n";
+                }
+                // else {
+                //     out << std::string(concrete_intend, ' ') << "IGNORED"
+                //         << li.indent << "," << global_indent << "; l=" << li.nest_level << " i=" << intend << " c=" << intend_correction
+                //         << "\n";
+                // }
+                if (!li.ignore) {
+                    prev_level = li.nest_level;
+                }
+                prev_intend = intend;
             }
             std::string l = out.str();
             l = l.substr(0,l.size()-1); // remove last newline
@@ -157,12 +197,14 @@ namespace {
             auto name = (*cmd)["name"].str();
             auto obj = get_obj( (*cmd)["obj"].obj() );
             auto fqn_query = (*cmd)["fqn"].str();
+            s.inc_level();
             for(auto &e: obj->fqn(fqn_query)) {
                 s.nontextual_cmd(); // for
                 loop_obj[name] = e.obj();
                 format_obj( (*cmd)["body"]["body"].obj() );
                 s.nontextual_cmd(); // endfor
             }
+            s.dec_level();
             loop_obj.erase(name);
         }
         void format_cmd(std::shared_ptr<textx::object::Object> cmd) {
