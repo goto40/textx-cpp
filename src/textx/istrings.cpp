@@ -42,8 +42,13 @@ namespace {
 }
 
 namespace {
+    struct Line {
+        std::string text;
+        size_t indent;
+        bool is_empty() { return text.empty(); }
+    };
     struct FormatterStream {
-        std::ostringstream s;
+        std::vector<Line> lines;
         std::ostringstream line;
         size_t global_indent=0xFFFFFFFF;
         bool contains_nontextual_cmd = false;
@@ -63,20 +68,23 @@ namespace {
                 size_t idx = l.find('\n');
                 if (idx!=l.npos) {
                     line << l.substr(idx+1);
-                    l = l.substr(0, idx+1);
+                    l = l.substr(0, idx);
                     idx = l.find('\n');
                 }
                 if (contains_nontextual_cmd && line_is_empty(l)) {
                     // ok, ignore line
                 }
                 else {
+                    size_t indent=0;
                     if (line_is_empty(l)) {
-                        l="\n";
+                        l="";
                     }
                     if (l.size()>1) {
-                        global_indent = std::min(global_indent, measure_indent(l));
+                        indent = measure_indent(l);
+                        global_indent = std::min(global_indent, indent);
+                        l = l.substr(indent);
                     }
-                    s << l;
+                    lines.emplace_back(l,indent);
                 }
                 contains_nontextual_cmd = false;
                 current_pos_of_first_command = 0xFFFFFFFF;
@@ -105,17 +113,15 @@ namespace {
             consume();
             // a little hacky... remove global intend:
             std::ostringstream out;
-            std::istringstream i{s.str()};
-            std::string l;
-            while( std::getline(i,l)) {
-                if (l.size()>=global_indent) {
-                    out << l.substr(global_indent) << "\n";
+            for (auto& li: lines) {
+                if (li.indent>=global_indent) {
+                    out << std::string(li.indent-global_indent, ' ');
                 }
-                else {
-                    out << "\n";
-                }
+                out << li.text
+                //  << li.indent << "," << global_indent
+                    << "\n";
             }
-            l = out.str();
+            std::string l = out.str();
             l = l.substr(0,l.size()-1); // remove last newline
             return l;
         }
