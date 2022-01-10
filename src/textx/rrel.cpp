@@ -90,6 +90,13 @@ namespace {
         return std::make_unique<tr::RRELNavigation>(name, consume_name);
     }
 
+    std::unique_ptr<tr::RRELFQNNavigation> rrel_fqn_navigation(const ta::Match& m) {
+        TEXTX_ASSERT(m.name_is("rule://rrel_fqn_navigation"), " unexpected: ", m);
+        TEXTX_ASSERT(m.children.size()==3, " unexpected, expected seq with '<name>'", m);
+        std::string name = m.children[1].captured.value();
+        return std::make_unique<tr::RRELFQNNavigation>(name);
+    }
+
     std::unique_ptr<tr::RRELPathElement> rrel_path_element(const ta::Match& choice) {
         TEXTX_ASSERT(choice.type() == ta::MatchType::ordered_choice);
         TEXTX_ASSERT_EQUAL(choice.children.size(), 1);
@@ -104,6 +111,9 @@ namespace {
         }
         else if (choice.children[0].name_is("rule://rrel_navigation")) {
             return rrel_navigation(choice.children[0]);
+        }
+        else if (choice.children[0].name_is("rule://rrel_fqn_navigation")) {
+            return rrel_fqn_navigation(choice.children[0]);
         }
         else if (choice.children[0].name_is("rule://rrel_path_element")) {
             return rrel_path_element(choice.children[0]);
@@ -197,6 +207,9 @@ namespace textx::rrel {
     void RRELParent::print(std::ostream& o) const {
         o << "parent(" << type << ")";
     }
+    void RRELFQNNavigation::print(std::ostream& o) const {
+        o << "'" << name << "'";
+    }
     void RRELBrackets::print(std::ostream& o) const {
         o << "(";
         seq->print(o);
@@ -255,6 +268,38 @@ namespace textx::rrel {
         co_return;
     }
 
+    rrel_generator<const py::RRELInternalResult> RRELFQNNavigation::get_next_matches(
+        py::RRELInternalResultData data,
+        AllowedFunc allowed,
+        bool first_element
+    ) const {
+        if (first_element) { // always start_at_root
+            data.obj = data.obj->tx_model()->val().obj();
+        }
+        std::vector<std::shared_ptr<textx::object::Object>> start;
+        start.push_back(data.obj);
+        if (data.obj->parent()==nullptr) {
+            // not implemented this way in python:
+            for (auto wm: data.obj->tx_model()->tx_imported_models()) {
+                auto m = wm.lock();
+                if (m->val().is_obj()) {
+                    auto root = m->val().obj();
+                    start.push_back(root);
+                }
+            }
+        }
+        MYDBG(std::cout << "---- FQN ----\n";)
+
+        for(auto obj: start) {
+            try {
+                auto res = obj->fqn(name);
+                MYYIELD((py::RRELInternalResult{py::RRELInternalResultData{data.mm, obj,data.lookup_list,data.matched_path}}));
+            }
+            catch (...) {} // quick solution
+        }
+        co_return;
+    }
+
     rrel_generator<const py::RRELInternalResult> RRELBrackets::get_next_matches(
         py::RRELInternalResultData data,
         AllowedFunc allowed,
@@ -293,7 +338,7 @@ namespace textx::rrel {
             std::vector<std::shared_ptr<textx::object::Object>> start;
             start.push_back(data.obj);
             if (data.obj->parent()==nullptr) {
-                // not implemented thsi way in python:
+                // not implemented this way in python:
                 for (auto wm: data.obj->tx_model()->tx_imported_models()) {
                     auto m = wm.lock();
                     if (m->val().is_obj()) {

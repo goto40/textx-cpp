@@ -51,6 +51,8 @@ TEST_CASE("adapted_from_python_textx_tests_test_rrel_basic_parser2", "[textx/rre
     CHECK(r->str() == "+p:a.b.c");
     r = textx::rrel::create_RREL_expression("+mp:a.b.c");
     CHECK(r->str() == "+mp:a.b.c");
+    r = textx::rrel::create_RREL_expression("a.'b'.'c'");
+    CHECK(r->str() == "a.'b'.'c'");
 }
 
 TEST_CASE("simple_rrel1", "[textx/rrel]")

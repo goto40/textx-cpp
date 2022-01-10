@@ -72,6 +72,18 @@ namespace textx::rrel {
         bool start_locally() const override { return true; }
     };
 
+    struct RRELFQNNavigation : RRELPathElement {
+        std::string name;
+        RRELFQNNavigation(std::string name) : name{std::move(name)} {}
+        void print(std::ostream& o) const override;
+        rrel_generator<const py::RRELInternalResult> get_next_matches(
+            py::RRELInternalResultData data,
+            AllowedFunc allowed,
+            bool first_element=false
+        ) const override;
+        bool start_locally() const override { return true; }
+    };
+
     struct RRELNavigation : RRELPathElement {
         std::string name;
         bool consume_name;
