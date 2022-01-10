@@ -277,7 +277,9 @@ TEST_CASE("istrings_metamodel4_functions_plus_newline", "[textx/istrings]")
         -------
             {% FOR o: model.shapes %}
                 {% print(o) %}
-            
+
+                  x
+
             {% ENDFOR %}
         -------
         )",
@@ -305,6 +307,8 @@ info='My Shapes'
         '2'
     }
 
+      x
+
     Circle{
       type_name=
         'Circle'
@@ -320,6 +324,8 @@ info='My Shapes'
       r=
         '9'
     }
+
+      x
 
     Line{
       type_name=
@@ -343,6 +349,8 @@ info='My Shapes'
             '1'
         }
     }
+
+      x
 
 -------
 )");
