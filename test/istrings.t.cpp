@@ -267,3 +267,83 @@ info='My Shapes'
 -------
 )");
 }
+
+TEST_CASE("istrings_metamodel4_functions_plus_newline", "[textx/istrings]")
+{
+    auto model = get_example_model();
+    auto res = textx::istrings::i(
+        R"(
+        info='{% model.info %}'
+        -------
+            {% FOR o: model.shapes %}
+                {% print(o) %}
+            
+            {% ENDFOR %}
+        -------
+        )",
+        {
+            {"model", model->val().obj()},
+            {"print", [](std::shared_ptr<textx::object::Object> o) -> std::string {
+                std::ostringstream s;
+                o->print(s);
+                return s.str();
+            } }
+        }
+    );
+
+    //std::cout << res << "\n";
+    CHECK( res ==
+R"(
+info='My Shapes'
+-------
+    Point{
+      type_name=
+        'Point'
+      x=
+        '1'
+      y=
+        '2'
+    }
+
+    Circle{
+      type_name=
+        'Circle'
+      center=
+        Point{
+          type_name=
+            'Point'
+          x=
+            '333'
+          y=
+            '4.5'
+        }
+      r=
+        '9'
+    }
+
+    Line{
+      type_name=
+        'Line'
+      p1=
+        Point{
+          type_name=
+            'Point'
+          x=
+            '0'
+          y=
+            '0'
+        }
+      p2=
+        Point{
+          type_name=
+            'Point'
+          x=
+            '1'
+          y=
+            '1'
+        }
+    }
+
+-------
+)");
+}
