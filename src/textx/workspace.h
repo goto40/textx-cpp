@@ -52,7 +52,10 @@ namespace textx {
         WorkspaceImpl() = default;
     public:
         static std::shared_ptr<WorkspaceImpl> create() { return std::shared_ptr<textx::WorkspaceImpl<Ptr4DefaultMM>>{new textx::WorkspaceImpl<Ptr4DefaultMM>{}}; }
-        void set_default_metamodel(std::shared_ptr<textx::Metamodel> m) override { default_metamodel=m; }
+        void set_default_metamodel(std::shared_ptr<textx::Metamodel> m) override {
+            TEXTX_ASSERT(m!=nullptr, "default metamodel must not be a nullptr");
+            default_metamodel=m;
+        }
         void add_metamodel_for_extension(std::string n, std::shared_ptr<textx::Metamodel> m) override { extension_to_metamodel[n]=m; }
         void add_metamodel_from_file_for_extension(std::string n, std::filesystem::path filename) override {
             add_metamodel_for_extension(n, this->metamodel_from_file(filename));

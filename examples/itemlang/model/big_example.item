@@ -1,0 +1,201 @@
+package big_example (property_set big_example.Set)
+
+property_set Set {
+    property optional applicable for rawtype,enum_value custom_enum_raw: STRING
+}
+
+constants MyOtherConstants {
+    constant three: built_in.uint32 = 0x3
+    constant maxlen: built_in.uint32 = 3000
+}
+constants MyConstants {
+    constant enum_value_of_Trinagle: built_in.uint32 = MyOtherConstants.three
+    constant enum_value_of_Polygon: built_in.uint32 = (MyOtherConstants.three+enum_value_of_Trinagle)/2-1
+}
+
+enum TypeSelector : built_in.uint32 {
+    value POINT = 1
+    value POLY = MyConstants.enum_value_of_Polygon
+    value TRIANGLE = big_example.MyConstants.enum_value_of_Trinagle
+}
+
+enum OnOff : built_in.bool {
+    value ON = 1 (.description="on", .custom_enum_raw="the_on_value")
+    value OFF = 0 (.custom_enum_raw="the_off_value")
+}
+
+enum ABC : built_in.int2 (.description="test") {
+    value A = 0 (.description="test")
+    value B = 1 (.description="test")
+    value C = -1 (.description="test")
+}
+
+struct Header {
+    constant three: built_in.uint32 = 6/2
+    scalar id: TypeSelector (.defaultValue=POLY, .is_message_id_field=true)
+    scalar length: built_in.uint32 (.is_message_length_field=true)
+}
+
+struct Point {
+    scalar x: built_in.float
+    scalar y: built_in.float
+}
+
+struct Polygon {
+    scalar n: built_in.uint32 (.maxValue=7, .defaultValue=3)
+    array p: Point[n] (.fixedSizeInBytes=20)
+    array info: built_in.char[256] (.defaultStringValue="your favorite polygon")
+}
+
+struct Color {
+    array rgb: built_in.float[3]
+}
+
+struct Triangle {
+    constant three: built_in.uint32 = (MyOtherConstants.three+3)/2
+    array p: Point[Header.three] (.fixedSizeInBytes = 100)
+    array c: Color[three]
+}
+
+struct MultiMessage {
+    scalar header: Header
+    scalar mycontainer: built_in.uint32
+    embedded scalar code: built_in.int20
+    embedded array onoff: OnOff[10]
+    embedded scalar abc: ABC
+    variant payload: header.id -> {
+        POINT: Point
+        TypeSelector.POLY: Polygon
+        big_example.TypeSelector.TRIANGLE: big_example.Triangle (.fixedSizeInBytes = 500)
+   }
+}
+
+struct Info {
+    array text1: built_in.char[100]  (.defaultStringValue="This is text1")
+    scalar n: built_in.uint32 (.defaultValue=16, .maxValue=1000)
+    array text2: built_in.char[n]  (.defaultStringValue="This is text2 ABCDEFGHIJKL")
+    scalar c: built_in.char (.defaultStringValue="P")
+}
+
+struct EmbeddedArrayDim {
+    scalar x: built_in.uint32
+    embedded scalar r: built_in.uint2 (.defaultValue=1, .maxValue=3)
+    embedded array c: built_in.uint3[3]
+    embedded scalar d: built_in.uint21
+    array ok: built_in.float[r]
+}
+
+struct EmbeddedArrayDim2 {
+    scalar container1: built_in.uint64
+    embedded scalar s2_1: built_in.uint2 (.defaultValue=1, .maxValue=3)
+    embedded array a3_1: built_in.uint3[16]
+    embedded scalar s14_1: built_in.uint14 (.minValue=1, .maxValue=7)
+    array ok: built_in.float[s2_1]
+    scalar container2: built_in.uint64
+    embedded scalar s2_2: built_in.sint2
+    embedded array a3_2: built_in.sint3[16]
+    embedded scalar s14_2: built_in.sint14
+    scalar container3: built_in.uint32
+    embedded scalar s_onoff: OnOff
+    embedded array a_onoff: OnOff[31]
+}
+
+struct NDPoint {
+    scalar dim: built_in.uint32 (.maxValue=3)
+    scalar x: built_in.int32
+    if (dim>1) scalar y: built_in.int32
+    if (dim>2) scalar z: built_in.int32
+}
+
+struct VersionedData {
+    scalar version: built_in.uint32 (.maxValue=1)
+    scalar n: built_in.uint32 (.defaultValue=0, .maxValue=1000)
+    array data: built_in.uint32[n]
+    if (version==0) array data0: built_in.uint32[n]
+    if (version==1) array data1: built_in.uint32[n]
+}
+
+struct Headers1 {
+    scalar header: Header
+    scalar header_extra: Header (.is_payload=true)
+}
+struct Headers2 {
+    scalar header_extra: Header (.is_payload=true)
+    scalar header: Header
+}
+struct Headers3 {
+    scalar header: Header
+    array header_extra: Header[2]
+}
+struct Headers4 {
+    scalar header: Header
+    array header_extra: Header[1] // since ararys are not considered for "times per message", this is ok
+}
+struct Headers5_noheader {
+    array header_extra: Header[1]
+}
+struct Headers6_noheader {
+    scalar header_extra: Header  (.is_payload=true)
+}
+
+struct FixpointExample {
+    scalar u1: built_in.uint32 (.fixpointLsbValue=0.1)
+    scalar s1: built_in.sint16 (.fixpointLsbValue=0.1)
+    array au1: built_in.uint32[2] (.fixpointLsbValue=0.1)
+    array as1: built_in.sint16[2] (.fixpointLsbValue=0.1)
+
+    scalar u2: built_in.uint32 (.fixpointLsbValue=0.1, .fixpointOffsetValue=-100.0)
+    scalar s2: built_in.sint16 (.fixpointLsbValue=0.1, .fixpointOffsetValue=-100.0)
+    array au2: built_in.uint32[2] (.fixpointLsbValue=0.1, .fixpointOffsetValue=-100.0)
+    array as2: built_in.sint16[2] (.fixpointLsbValue=0.1, .fixpointOffsetValue=-100.0)
+
+    scalar u3: built_in.uint32 (.fixpointMsbValue=360.0, .fixpointOffsetValue=-180.0)
+    scalar s3: built_in.sint16 (.fixpointMsbValue=360.0, .fixpointOffsetValue=-180.0)
+
+    scalar c4: built_in.uint32
+    embedded scalar u4: built_in.uint10 (.fixpointLsbValue=0.1, .fixpointOffsetValue=-100.0)
+    embedded scalar s4: built_in.sint10 (.fixpointLsbValue=0.1, .fixpointOffsetValue=-100.0)
+    embedded array a4: built_in.sint6[2] (.fixpointLsbValue=0.1, .fixpointOffsetValue=-100.0)
+}
+
+struct FixpointExample2 {
+    scalar u1: built_in.uint32 (.fixpointLsbValue=0.1)
+    scalar s1: built_in.sint16 (.fixpointLsbValue=0.1)
+    array as1: built_in.sint32[2] (.fixpointLsbValue=0.1)
+    scalar c4: built_in.uint32
+    embedded scalar u4: built_in.uint10 (.fixpointLsbValue=0.1)
+    embedded scalar s4: built_in.sint10 (.fixpointLsbValue=0.1)
+    embedded array a4: built_in.sint6[2] (.fixpointLsbValue=0.1)
+    array md: built_in.sint32[2][3] (.fixpointLsbValue=0.1)
+}
+
+struct AllInOne {
+    // header (inner structure with unique properties, enums, variant with poly inside/dyn length)
+    scalar header: Header
+    scalar version : built_in.uint32 (.maxValue=1, .defaultValue=1)
+    if (version>0) variant payload: header.id -> {
+        POINT: Point
+        TypeSelector.POLY: Polygon
+        big_example.TypeSelector.TRIANGLE: big_example.Triangle
+    }
+    scalar m: built_in.uint32 (.defaultValue=16, .maxValue=1000)
+    array headers: Header[m][3]
+
+    // fixpoint stuff (normal and embedded)
+    scalar fixpoint_u32:                    built_in.uint32       (.fixpointLsbValue=0.1, .fixpointOffsetValue=100, .defaultValue=21)
+    scalar fixpoint_s16:                    built_in.sint16       (.fixpointLsbValue=0.1, .fixpointOffsetValue=100, .defaultValue=-21)
+    array fixpoint_array_s32:               built_in.sint32[2]    (.fixpointLsbValue=0.01, .fixpointOffsetValue=100, .defaultValue=11)
+    scalar c4:                              built_in.uint32
+    embedded scalar fixpoint_u10_embedded:  built_in.uint10       (.fixpointLsbValue=0.1, .fixpointOffsetValue=100, .defaultValue=21)
+    embedded scalar fixpoint_s10_embedded:  built_in.sint10       (.fixpointLsbValue=0.1, .fixpointOffsetValue=100, .defaultValue=-21)
+    embedded array fixpoint_array_s6:       built_in.sint6[2]     (.fixpointLsbValue=0.01, .fixpointOffsetValue=100, .defaultValue=11)
+    array fixpoint_marray_s32:              built_in.sint32[2][3] (.fixpointLsbValue=0.01, .fixpointOffsetValue=100, .defaultValue=-11)
+
+    // embedded enum and uint, sint
+    scalar c5:                              built_in.uint32
+    embedded scalar embedded_enum_on:       OnOff                 (.defaultValue=ON)
+    embedded scalar embedded_enum_off:      OnOff                 (.defaultValue=OFF)
+    embedded array embedded_enum_array:     OnOff[3]              (.defaultValue=OFF)
+    embedded scalar embedded_minus22:       built_in.sint17       (.defaultValue=-22)
+    embedded scalar embedded_plus22:        built_in.uint10       (.defaultValue=22)
+}

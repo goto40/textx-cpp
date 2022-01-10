@@ -134,7 +134,7 @@ namespace itemlang {
             BoolNumber: 'true'|'false';
         )###");
 
-        workspace->set_default_metamodel(workspace->get_metamodel_by_shortcut("ISTRINGS"));
+        workspace->set_default_metamodel(workspace->get_metamodel_by_shortcut("ITEMLANG"));
         return workspace;
     }
 }

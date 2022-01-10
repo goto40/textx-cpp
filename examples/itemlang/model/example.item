@@ -1,0 +1,46 @@
+
+package items
+
+struct Point {
+  scalar x : built_in.float
+  scalar y : built_in.float
+}
+struct Line {
+  scalar p1 : Point
+  scalar p2 : Point  
+}
+struct Circle {
+  scalar center : Point
+  scalar radius : built_in.float  
+}
+struct ColoredTriangle {
+  array color : built_in.float[3]
+  array points : Point[3]
+}
+struct Header {
+  scalar n: built_in.uint32 (.defaultValue=1, .maxValue=10)
+}
+struct Polygon {
+  scalar header: Header
+  array points : Point[header.n]
+}
+struct VariantExample {
+    scalar selector: built_in.uint32
+    variant payload: selector -> {
+        10: Point
+        11: Line
+        12: Circle
+        20: Polygon
+        0: ColoredTriangle
+    }
+}
+struct Region {
+  scalar min : Point
+  scalar max : Point
+}
+struct Image {
+  scalar w: built_in.uint32  (.defaultValue=1, .maxValue=4000)
+  scalar h: built_in.uint32  (.defaultValue=1, .maxValue=4000)
+  array pixel : built_in.float[w*h]
+}
+
