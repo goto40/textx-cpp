@@ -112,7 +112,7 @@ namespace itemlang {
             // Note: "scalar" is used to disallow "arrays"
             ApplicableFor: ApplicableForRawType|'array'|'scalar'|'variant'|'struct_definition'|'enum_value'|'enum'|'struct';
             ApplicableForRawType: 'rawtype' ('(' concrete_types+=[RawType|FQN][','] ')')?;
-            Property: '.' definition=[PropertyDefinition] '=' (
+            Property: '.' definition=[PropertyDefinition|ID|^(~package,~packages)*.~property_set.~extends*.property_definitions,'built_in'.'default_properties'.property_definitions] '=' (
             textValue=TextValue |
             numberValue=NumberValue
             );
