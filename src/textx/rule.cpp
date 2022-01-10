@@ -460,14 +460,14 @@ namespace textx {
         bool is_boolean_involved = false;
         std::function<size_t(const textx::arpeggio::Match&,size_t)> traverse;
         traverse = [&](const textx::arpeggio::Match& m,size_t c) -> size_t {
-            if (get_multiplicity(m)==AttributeCardinality::boolean) {
-                is_boolean_involved = true;
-            }
             if (get_multiplicity(m)==AttributeCardinality::list) {
                 c = 2; // more than 1 --> list
             }
             if (is_assignment_to_attribute(m,name)) {
                 //std::cout << "found assignment " << name << " with " << c << "\n";
+                if (get_multiplicity(m)==AttributeCardinality::boolean) {
+                    is_boolean_involved = true;
+                }
                 return c;
             }
             else {
@@ -488,7 +488,7 @@ namespace textx {
         size_t ret = traverse(match, 1);
         //std::cout << match << "\n=="<< ret << " for " << name << "\n\n";
         if (ret>1) {
-            TEXTX_ASSERT(!is_boolean_involved, "only one boolean assignment is allowed (no list of booleans)");
+            TEXTX_ASSERT(!is_boolean_involved, "only one boolean assignment is allowed (no list of booleans) for ", name, " in ", match.start());
             return AttributeCardinality::list;
         }
         else {

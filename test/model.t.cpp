@@ -144,16 +144,14 @@ TEST_CASE("model_ordered_choice_regression1", "[textx/model]")
                 CHECK(m);
                 CHECK((*m)["a"].is_boolean());
                 CHECK((*m)["a"].boolean());
-                CHECK((*m)["b"].is_boolean());
-                CHECK((*m)["b"].boolean());
+                CHECK(!(*m)["b"].is_boolean());
             }
             {
                 auto m = mm->model_from_str("B A");
                 CHECK(m);
                 CHECK((*m)["a"].is_boolean());
                 CHECK((*m)["a"].boolean());
-                CHECK((*m)["b"].is_boolean());
-                CHECK((*m)["b"].boolean());
+                CHECK(!(*m)["b"].is_boolean());
             }
             CHECK(mm->model_from_str("B"));
             CHECK(mm->model_from_str("A"));
@@ -161,8 +159,7 @@ TEST_CASE("model_ordered_choice_regression1", "[textx/model]")
             CHECK(m);
             CHECK((*m)["a"].is_boolean());
             CHECK(!(*m)["a"].boolean());
-            CHECK((*m)["b"].is_boolean());
-            CHECK(!(*m)["b"].boolean());
+            CHECK(!(*m)["b"].is_boolean());
         }
     }
 }

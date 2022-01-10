@@ -1,7 +1,7 @@
 #include "catch.hpp"
 #include <iostream>
 #include <sstream>
-#include "textx/lang.h"
+#include "textx/metamodel.h"
 
 TEST_CASE("parse_item_lang_grammar", "[textx/lang/item_lang_example]")
 {
@@ -135,8 +135,7 @@ HexNumber: /0x[0-9a-fA-F]+/;
 BoolNumber: 'true'|'false';
         )###";
 
-        textx::lang::TextxGrammar textx_grammar;
-        CHECK(textx_grammar.parse_or_throw(grammar1));
+        auto mm = textx::metamodel_from_str(grammar1);
         
         // BENCHMARK("parse item grammar speed test") {
         //     return textx_grammar.parse_or_throw(grammar1); // The return is a handy way to avoid the compiler optimizing away the benchmark code. https://github.com/catchorg/Catch2/blob/devel/docs/benchmarks.md
