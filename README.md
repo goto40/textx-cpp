@@ -198,6 +198,15 @@ Note: these limitation are not complete.
  * Some details are not yet implemented:
    * noskipws/skipws is not yet supported.
    * has_match_suppression is not yet supported.
+* Be careful with greedy regexps for comments: in textx for python you can use the following for C++ like comments:
+  ```
+  Comment: /\/\/.*$/;
+  ```
+  In textx-cpp you need the non-greedy variant somehow:
+
+  ```
+  Comment: /\/\/.*?$/;
+  ```
 
 ## <a name="openpoints"></a> Open Points
 Prio 1:

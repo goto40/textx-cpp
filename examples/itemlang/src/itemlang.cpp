@@ -127,7 +127,7 @@ namespace itemlang {
             NumberValue: x=Formula;
 
             FQN: ID('.'ID)*;
-            Comment: /\/\/.*$/;
+            Comment: /\/\/.*?$/;
             InternalType: 'INT'|'UINT'|'FLOAT'|'STRING'|'BOOL'|'ATTRTYPE'|'ENUM';
             ExtNumber: BoolNumber|NUMBER|HexNumber;
             HexNumber: /0x[0-9a-fA-F]+/;
