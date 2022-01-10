@@ -130,27 +130,54 @@ namespace {
             std::ostringstream out;
             size_t prev_level = 0;
             size_t intend_correction = 0;
-            size_t prev_intend = 0;
+            size_t base_intend_for_next_correction_adaptation = 0;
+            size_t activate_next_correction_adaptation = 0;
             std::stack<size_t> nested_intend_correction;
             for (auto& li: lines) {
                 size_t intend = 0;
                 if (li.indent>=global_indent) {
                     intend = li.indent-global_indent;
                 }
+                size_t concrete_intend = intend;
+                if (concrete_intend>=intend_correction) {
+                    concrete_intend -= intend_correction;
+                }
+
+                if (activate_next_correction_adaptation>0) {
+                    // update correction
+                    activate_next_correction_adaptation=0;
+                    if (intend>=base_intend_for_next_correction_adaptation) {
+                        size_t corr = intend-base_intend_for_next_correction_adaptation;
+                        intend_correction += corr;
+                    }
+                    else {
+                        size_t corr = base_intend_for_next_correction_adaptation-intend;
+                        if (intend_correction>=corr) {
+                            intend_correction -= corr;
+                        }
+                        else {
+                            intend_correction = 0;
+                        }
+                    }
+
+                    concrete_intend = intend;
+                    if (concrete_intend>=intend_correction) {
+                        concrete_intend -= intend_correction;
+                    }
+                }
+
                 if (prev_level<li.nest_level) {
                     nested_intend_correction.push(intend_correction);
-                    if (intend>prev_intend && !li.ignore) {
-                        intend_correction += intend-prev_intend;
+                    if (activate_next_correction_adaptation==0) { // use first occurrence (of a "for") in line as ref
+                        base_intend_for_next_correction_adaptation = intend;
                     }
+                    activate_next_correction_adaptation++;
                 }
                 else if (prev_level>li.nest_level) {
                     TEXTX_ASSERT(nested_intend_correction.size()>0);
                     intend_correction = nested_intend_correction.top();
                     nested_intend_correction.pop();
-                }
-                size_t concrete_intend = intend;
-                if (concrete_intend>=intend_correction) {
-                    concrete_intend -= intend_correction;
+                    if (activate_next_correction_adaptation>0) activate_next_correction_adaptation--;
                 }
                 if (!li.ignore) {
                     out << std::string(concrete_intend, ' ') << li.text
@@ -164,10 +191,7 @@ namespace {
                 DBG(        << li.indent << "," << global_indent << "; l=" << li.nest_level << " i=" << intend << " c=" << intend_correction)
                 DBG(        << "\n";)
                 DBG(})
-                if (!li.ignore) {
-                    prev_level = li.nest_level;
-                }
-                prev_intend = intend;
+                prev_level = li.nest_level;
             }
             std::string l = out.str();
             l = l.substr(0,l.size()-1); // remove last newline
