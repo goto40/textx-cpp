@@ -105,8 +105,11 @@ namespace textx::object {
         else if (is_ref()) {
             o << std::string(indent,' ') << "-[ref]->" << ref().name << "(" << ref().obj.lock() << ")"<< "\n";
         }
+        else if (is_boolean()) {
+            o << std::string(indent,' ') << "bool(" << boolean() << ")\n";
+        }
         else {
-            throw std::runtime_error("unexpected");
+            throw std::runtime_error("unexpected, Value::print");
         }
     }
 

@@ -74,7 +74,7 @@ namespace textx::object {
             return std::holds_alternative<MatchText>(data);
         }
 
-        bool boolean() {
+        bool boolean() const {
             TEXTX_ASSERT(std::holds_alternative<bool>(data), "no boolean");
             return std::get<bool>(data);
         }
@@ -201,7 +201,7 @@ namespace textx::object {
             return std::holds_alternative<std::vector<Value>>(data);
         }
 
-        bool boolean() {
+        bool boolean() const {
             TEXTX_ASSERT(std::holds_alternative<Value>(data));
             auto &value = std::get<Value>(data);
             TEXTX_ASSERT(std::holds_alternative<bool>(value.data), "no boolean");

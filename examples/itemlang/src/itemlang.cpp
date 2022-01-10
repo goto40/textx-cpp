@@ -134,7 +134,37 @@ namespace itemlang {
             BoolNumber: 'true'|'false';
         )###");
 
-        workspace->set_default_metamodel(workspace->get_metamodel_by_shortcut("ITEMLANG"));
+        auto mm = workspace->get_metamodel_by_shortcut("ITEMLANG");
+        workspace->set_default_metamodel(mm);
+
+        auto m = workspace->model_from_str(
+        R"###(
+            package built_in
+            property_set default_properties {
+                property optional applicable for rawtype minValue : ATTRTYPE
+                property optional applicable for rawtype maxValue : ATTRTYPE
+                property optional applicable for rawtype constValue : ATTRTYPE
+                property optional applicable for rawtype, enum defaultValue : ATTRTYPE
+                property optional applicable for rawtype(char) defaultStringValue : STRING
+                property optional description : STRING
+                property optional applicable for scalar, struct is_payload : BOOL
+                property optional applicable for scalar, rawtype, enum is_message_id_field : BOOL { 0 to 1 times per message }
+                property optional applicable for scalar, rawtype, enum is_message_length_field :
+                                                                                            BOOL { 0 to 1 times per message }
+                property optional applicable for rawtype fixpointLsbValue : FLOAT
+                property optional applicable for rawtype fixpointOffsetValue : FLOAT
+                property optional applicable for rawtype fixpointMsbValue : FLOAT
+                property optional applicable for struct fixedSizeInBytes : UINT
+            }
+            rawtype double FLOAT 64
+            rawtype float64 FLOAT 64
+            rawtype float FLOAT 32
+            rawtype float32 FLOAT 32
+            rawtype bool BOOL 1
+            rawtype char INT 8
+        )###");
+        mm->add_builtin_model(m);
+
         return workspace;
     }
 }
