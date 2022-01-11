@@ -51,8 +51,8 @@ TEST_CASE("adapted_from_python_textx_tests_test_rrel_basic_parser2", "[textx/rre
     CHECK(r->str() == "+p:a.b.c");
     r = textx::rrel::create_RREL_expression("+mp:a.b.c");
     CHECK(r->str() == "+mp:a.b.c");
-    r = textx::rrel::create_RREL_expression("a.'b'.'c'");
-    CHECK(r->str() == "a.'b'.'c'");
+    r = textx::rrel::create_RREL_expression("a.'b'~b.'c'~x");
+    CHECK(r->str() == "a.'b'~b.'c'~x");
 }
 
 TEST_CASE("simple_rrel1", "[textx/rrel]")
@@ -113,7 +113,7 @@ namespace {
                 'attr' name=ID ';'
         ;
 
-        Comment: /#.*/;
+        Comment: /#.*?$/;
         FQN: ID('.'ID)*;
     )#";
 
@@ -484,4 +484,43 @@ TEST_CASE("rrel_regression1", "[textx/rrel]")
         call calld: a.d
     )#");
     CHECK(m!=nullptr);
+}
+
+TEST_CASE("test_rrel_navigation_with_fixed_str", "[textx/rrel]")
+{
+    auto mm = textx::metamodel_from_str(R"#(
+        Model: types_collection*=TypesCollection ('activeTypes' '=' active_types=[TypesCollection])? usings*=Using;
+        Using: 'using' name=ID "=" type=[Type|ID|
+                ~active_types.types,                // "regular lookup"
+                'builtin'~types_collection.types    // "default lookup" - name "builtin" hard coded in grammar
+            ];
+        TypesCollection: 'types' name=ID "{" types*=Type "}";
+        Type: 'type' name=ID;
+        Comment: /#.*?$/;
+    )#");
+    auto builtin = mm->model_from_str(R"#(
+        types builtin {
+            type i32
+            type i64
+            type f32
+            type f64
+        }
+    )#");
+    mm->add_builtin_model(builtin);
+
+    auto m = mm->model_from_str(R"#(
+        types MyTypes {
+            type Int
+            type Double
+        }
+        types OtherTypes {
+            type Foo
+            type Bar
+        }
+        activeTypes=MyTypes
+        using myDouble = Double
+        using myInt = Int    # found via "regular lookup"
+        using myi32 = i32    # found via "default lookup"
+        # using myFoo = Foo  # --> not found 
+    )#");
 }

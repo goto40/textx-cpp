@@ -72,22 +72,11 @@ namespace textx::rrel {
         bool start_locally() const override { return true; }
     };
 
-    struct RRELFQNNavigation : RRELPathElement {
-        std::string name;
-        RRELFQNNavigation(std::string name) : name{std::move(name)} {}
-        void print(std::ostream& o) const override;
-        rrel_generator<const py::RRELInternalResult> get_next_matches(
-            py::RRELInternalResultData data,
-            AllowedFunc allowed,
-            bool first_element=false
-        ) const override;
-        bool start_locally() const override { return true; }
-    };
-
     struct RRELNavigation : RRELPathElement {
         std::string name;
+        std::string fixed_name;
         bool consume_name;
-        RRELNavigation(std::string name, bool consume_name) : name{std::move(name)}, consume_name{consume_name} {}
+        RRELNavigation(std::string name, std::string fixed_name, bool consume_name) : name{std::move(name)}, fixed_name{fixed_name}, consume_name{consume_name} {}
         void print(std::ostream& o) const override;
         rrel_generator<const py::RRELInternalResult> get_next_matches(
             py::RRELInternalResultData data,

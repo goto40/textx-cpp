@@ -112,10 +112,14 @@ namespace itemlang {
             // Note: "scalar" is used to disallow "arrays"
             ApplicableFor: ApplicableForRawType|'array'|'scalar'|'variant'|'struct_definition'|'enum_value'|'enum'|'struct';
             ApplicableForRawType: 'rawtype' ('(' concrete_types+=[RawType|FQN][','] ')')?;
-            Property: '.' definition=[PropertyDefinition|ID|^(~package,~packages)*.~property_set.~extends*.property_definitions,'built_in'.'default_properties'.property_definitions] '=' (
-            textValue=TextValue |
-            numberValue=NumberValue
-            );
+            Property: '.' definition=[
+                PropertyDefinition|ID|
+                    ^(~package,~packages)*.~property_set.~extends*.property_definitions,
+                    'built_in'~package.'default_properties'~property_sets.property_definitions
+                ] '=' (
+                    textValue=TextValue |
+                    numberValue=NumberValue
+                );
 
             Constants: 'constants' name=ID ('(' '.' 'description' '=' description=STRING ')')?
             '{'
@@ -135,9 +139,11 @@ namespace itemlang {
         )###");
 
         auto mm = workspace->get_metamodel_by_shortcut("ITEMLANG");
+        mm->set_resolver("*.*", std::make_unique<textx::scoping::FQNRefResolver>());
         workspace->set_default_metamodel(mm);
 
-        auto m = workspace->model_from_str(
+        std::ostringstream built_in_model_text;
+        built_in_model_text <<
         R"###(
             package built_in
             property_set default_properties {
@@ -162,7 +168,16 @@ namespace itemlang {
             rawtype float32 FLOAT 32
             rawtype bool BOOL 1
             rawtype char INT 8
-        )###");
+        )###";
+        for (size_t b=1; b<65; b++) {
+            built_in_model_text << "rawtype uint" << b << " UINT "<< b << "\n";
+        }
+        for (size_t b=2; b<65; b++) {
+            built_in_model_text << "rawtype int" << b << " INT "<< b << "\n";
+            built_in_model_text << "rawtype sint" << b << " INT "<< b << "\n";
+        }
+
+        auto m = workspace->model_from_str(built_in_model_text.str());
         mm->add_builtin_model(m);
 
         return workspace;

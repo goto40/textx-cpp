@@ -1,0 +1,6 @@
+package abc {
+    struct IntPoint {
+        scalar x: built_in.uint32
+        scalar y: built_in.uint32
+    }
+}

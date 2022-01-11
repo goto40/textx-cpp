@@ -158,12 +158,11 @@ namespace textx
                                                   ref("rrel_id"),
                                                   ta::str_match(")")}));
 
-            add_rule("rrel_navigation", ta::sequence({ta::capture(ta::optional(ta::str_match("~"))),
+            add_rule("rrel_navigation", ta::sequence({ta::optional(ta::sequence({
+                                                        ta::capture(ta::optional(ref("string_value"))),
+                                                        ta::capture(ta::str_match("~"))
+                                                      })),
                                                       ref("rrel_id")}));
-
-            add_rule("rrel_fqn_navigation", ta::sequence({ta::str_match("'"),
-                                                          ref("rrel_id"),
-                                                          ta::str_match("'")}));
 
             add_rule("rrel_brackets", ta::sequence({ta::str_match("("),
                                                     ref("rrel_sequence"),
@@ -173,7 +172,6 @@ namespace textx
 
             add_rule("rrel_path_element", ta::ordered_choice({ref("rrel_parent"),
                                                               ref("rrel_brackets"),
-                                                              ref("rrel_fqn_navigation"),
                                                               ref("rrel_navigation")}));
 
             add_rule("rrel_zero_or_more", ta::sequence({ref("rrel_path_element"),

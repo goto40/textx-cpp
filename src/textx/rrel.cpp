@@ -83,18 +83,19 @@ namespace {
         TEXTX_ASSERT(m.name_is("rule://rrel_navigation"), " unexpected: ", m);
         TEXTX_ASSERT(m.children.size()==2, " unexpected, expected seq with '*' at the end ", m);
         bool consume_name = true;
-        if (m.children[0].captured.value() == "~") {
+        std::string fixed_name = "";
+        if (m.children[0].children.size()>0) {
+            TEXTX_ASSERT_EQUAL(m.children[0].children[0].children.size(), 2);
             consume_name = false;
+            TEXTX_ASSERT(m.children[0].children[0].children[0].captured.has_value());
+            fixed_name = m.children[0].children[0].children[0].captured.value();
+            if (fixed_name.size() > 0) {
+                TEXTX_ASSERT(fixed_name.size() > 2)
+                fixed_name = fixed_name.substr(1,fixed_name.size()-2);
+            }
         }
         std::string name = m.children[1].captured.value();
-        return std::make_unique<tr::RRELNavigation>(name, consume_name);
-    }
-
-    std::unique_ptr<tr::RRELFQNNavigation> rrel_fqn_navigation(const ta::Match& m) {
-        TEXTX_ASSERT(m.name_is("rule://rrel_fqn_navigation"), " unexpected: ", m);
-        TEXTX_ASSERT(m.children.size()==3, " unexpected, expected seq with '<name>'", m);
-        std::string name = m.children[1].captured.value();
-        return std::make_unique<tr::RRELFQNNavigation>(name);
+        return std::make_unique<tr::RRELNavigation>(name, fixed_name, consume_name);
     }
 
     std::unique_ptr<tr::RRELPathElement> rrel_path_element(const ta::Match& choice) {
@@ -111,9 +112,6 @@ namespace {
         }
         else if (choice.children[0].name_is("rule://rrel_navigation")) {
             return rrel_navigation(choice.children[0]);
-        }
-        else if (choice.children[0].name_is("rule://rrel_fqn_navigation")) {
-            return rrel_fqn_navigation(choice.children[0]);
         }
         else if (choice.children[0].name_is("rule://rrel_path_element")) {
             return rrel_path_element(choice.children[0]);
@@ -207,9 +205,7 @@ namespace textx::rrel {
     void RRELParent::print(std::ostream& o) const {
         o << "parent(" << type << ")";
     }
-    void RRELFQNNavigation::print(std::ostream& o) const {
-        o << "'" << name << "'";
-    }
+
     void RRELBrackets::print(std::ostream& o) const {
         o << "(";
         seq->print(o);
@@ -224,6 +220,9 @@ namespace textx::rrel {
         }
     }
     void RRELNavigation::print(std::ostream& o) const { 
+        if (fixed_name.size()>0) {
+            o << "'" << fixed_name << "'";
+        }
         if (!consume_name) { o << "~"; }
         o << name;
     }
@@ -264,38 +263,6 @@ namespace textx::rrel {
         }
         if (obj!=nullptr) {
             MYYIELD((py::RRELInternalResult{py::RRELInternalResultData{data.mm, obj,data.lookup_list,data.matched_path}}));
-        }
-        co_return;
-    }
-
-    rrel_generator<const py::RRELInternalResult> RRELFQNNavigation::get_next_matches(
-        py::RRELInternalResultData data,
-        AllowedFunc allowed,
-        bool first_element
-    ) const {
-        if (first_element) { // always start_at_root
-            data.obj = data.obj->tx_model()->val().obj();
-        }
-        std::vector<std::shared_ptr<textx::object::Object>> start;
-        start.push_back(data.obj);
-        if (data.obj->parent()==nullptr) {
-            // not implemented this way in python:
-            for (auto wm: data.obj->tx_model()->tx_imported_models()) {
-                auto m = wm.lock();
-                if (m->val().is_obj()) {
-                    auto root = m->val().obj();
-                    start.push_back(root);
-                }
-            }
-        }
-        MYDBG(std::cout << "---- FQN ----\n";)
-
-        for(auto obj: start) {
-            try {
-                auto res = obj->fqn(name);
-                MYYIELD((py::RRELInternalResult{py::RRELInternalResultData{data.mm, obj,data.lookup_list,data.matched_path}}));
-            }
-            catch (...) {} // quick solution
         }
         co_return;
     }
@@ -369,8 +336,18 @@ namespace textx::rrel {
                                 co_return;
                             }
                             else if (!consume_name) {
-                                MYDBG(std::cout << "no consume...\n";)
-                                MYYIELD((py::RRELInternalResultData{ data.mm, itarget.obj(), data.lookup_list, data.matched_path }));
+                                if (fixed_name.size()>0 && itarget.obj()->has_attr("name")) {
+                                    if (itarget["name"].str() == fixed_name) {
+                                        MYDBG(std::cout << "no consume with fixed name...\n";)
+                                        //std::cout << "no consume with fixed name " << fixed_name << "...\n";
+                                        MYYIELD((py::RRELInternalResultData{ data.mm, itarget.obj(), data.lookup_list, data.matched_path }));
+                                    }
+                                }
+                                else {
+                                    TEXTX_ASSERT(fixed_name.size()==0, "when specifying a fixed name you need to reference an attribute with a name");
+                                    MYDBG(std::cout << "no consume...\n";)
+                                    MYYIELD((py::RRELInternalResultData{ data.mm, itarget.obj(), data.lookup_list, data.matched_path }));
+                                }
                             }
                             else if (!itarget.is_null() && itarget.obj()->has_attr("name") && itarget["name"].str() == data.lookup_list[0]) {
                                 MYDBG(std::cout << "consume...\n";)

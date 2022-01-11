@@ -128,6 +128,7 @@ namespace textx::scoping {
         };
 
         for(auto& [aname,attr]: origin->attributes) {
+            if (attr.is_null()) continue; // optional attributes (x=ID)?
             if (check_obj_and_name(attr)) {
                 auto res = dot_separated_name_search(attr.obj(), v_obj_name, target_type, idx+1);
                 if (res) return res;
