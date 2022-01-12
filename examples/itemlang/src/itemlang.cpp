@@ -113,7 +113,7 @@ namespace itemlang {
             ApplicableFor: ApplicableForRawType|'array'|'scalar'|'variant'|'struct_definition'|'enum_value'|'enum'|'struct';
             ApplicableForRawType: 'rawtype' ('(' concrete_types+=[RawType|FQN][','] ')')?;
             Property: '.' definition=[
-                PropertyDefinition|ID|
+                PropertyDefinition|ID|+mp:
                     ^(~package,~packages)*.~property_set.~extends*.property_definitions,
                     'built_in'~package.'default_properties'~property_sets.property_definitions
                 ] '=' (

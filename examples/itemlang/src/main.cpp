@@ -1,4 +1,5 @@
 #include "itemlang.h"
+#include "textx/export.h"
 #include <iostream>
 
 int main(int argc, const char** argv) {
@@ -6,7 +7,8 @@ int main(int argc, const char** argv) {
     try {
         auto workspace = itemlang::get_itemlang_metamodel_workspace();
         auto m = workspace->model_from_file(argv[1]);
-        std::cout << m->val() << "\n";
+        //std::cout << m->val() << "\n";
+        textx::save_as_simple_json(m, std::cout);
     }
     catch(std::exception& e) {
         std::cerr << e.what();
