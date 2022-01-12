@@ -156,14 +156,18 @@ namespace {
         TEXTX_ASSERT(m.name_is("rule://rrel_expression"), "unexpected: ", m);
         TEXTX_ASSERT(m.children.size()==2," unexpected ",m);
         bool use_proxy = false;
+        bool use_multimodel = false;
         std::string flags = "";
         if (m.children[0].children.size()>0) {
             flags = m.children[0].children[0].captured.value();
             if (flags.find('p')!=-1) { use_proxy = true; }
+            if (flags.find('m')!=-1) { use_multimodel = true; }
         }
-        return std::make_unique<tr::RRELExpression>(
-            rrel_sequence(m.children[1]), use_proxy, flags
+        auto ret = std::make_unique<tr::RRELExpression>(
+            rrel_sequence(m.children[1]), use_proxy, use_multimodel, flags
         );
+        ret->setExpression(ret.get());
+        return ret;
     }
 }
 
@@ -306,11 +310,13 @@ namespace textx::rrel {
             start.push_back(data.obj);
             if (data.obj->parent()==nullptr) {
                 // not implemented this way in python:
-                for (auto wm: data.obj->tx_model()->tx_imported_models()) {
-                    auto m = wm.lock();
-                    if (m->val().is_obj()) {
-                        auto root = m->val().obj();
-                        start.push_back(root);
+                if (expression->use_multimodel) {
+                    for (auto wm: data.obj->tx_model()->tx_imported_models()) {
+                        auto m = wm.lock();
+                        if (m->val().is_obj()) {
+                            auto root = m->val().obj();
+                            start.push_back(root);
+                        }
                     }
                 }
             }
@@ -566,5 +572,10 @@ namespace textx::rrel {
             return {obj, objpath};
         }
     }
+
+    void RRELExpression::setExpression(RRELExpression *e) { TEXTX_ASSERT(e==this); seq->setExpression(e); }
+    void RRELBrackets::setExpression(RRELExpression *e) { expression=e; seq->setExpression(e); }
+    void RRELSequence::setExpression(RRELExpression *e) { expression=e; for (auto &p: paths) p->setExpression(e); }
+    void RRELPath::setExpression(RRELExpression *e) { expression=e; for (auto &p: path_elements) p->setExpression(e); }
 
 }

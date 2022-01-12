@@ -40,9 +40,11 @@ namespace textx::rrel {
     struct RRELBase;
     using AllowedFunc = std::function<bool(std::shared_ptr<textx::object::Object>, std::vector<std::string>, const RRELBase*)>;
 
+    struct RRELExpression;
     struct RRELBase {
         virtual ~RRELBase() = default;
         virtual void print(std::ostream& o) const=0;
+        virtual void setExpression(RRELExpression *e)=0;
         virtual rrel_generator<const py::RRELInternalResult> get_next_matches(
             py::RRELInternalResultData data,
             AllowedFunc allowed,
@@ -60,8 +62,28 @@ namespace textx::rrel {
     struct RRELPathElement : RRELBase {
     };
 
+    struct RRELSequence;
+
+    struct RRELExpression : RRELBase {
+        std::unique_ptr<RRELSequence> seq;
+        std::string flags;
+        bool use_proxy;
+        bool use_multimodel;
+        // note: importURI handled differently (ignored here)
+        RRELExpression(std::unique_ptr<RRELSequence> &&seq, bool use_proxy, bool use_multimodel, std::string flags) : seq{std::move(seq)}, use_proxy{use_proxy}, use_multimodel{use_multimodel}, flags{flags} {}
+        void print(std::ostream& o) const override;
+        void setExpression(RRELExpression *e) override;
+        rrel_generator<const py::RRELInternalResult> get_next_matches(
+            py::RRELInternalResultData data,
+            AllowedFunc allowed,
+            bool first_element=false
+        ) const override;
+    };
+
     struct RRELParent : RRELPathElement {
         std::string type;
+        RRELExpression *expression;
+        void setExpression(RRELExpression *e) override { expression=e; }
         RRELParent(std::string type) : type{std::move(type)} {}
         void print(std::ostream& o) const override;
         rrel_generator<const py::RRELInternalResult> get_next_matches(
@@ -76,6 +98,8 @@ namespace textx::rrel {
         std::string name;
         std::string fixed_name;
         bool consume_name;
+        RRELExpression *expression;
+        void setExpression(RRELExpression *e) override { expression=e; }
         RRELNavigation(std::string name, std::string fixed_name, bool consume_name) : name{std::move(name)}, fixed_name{fixed_name}, consume_name{consume_name} {}
         void print(std::ostream& o) const override;
         rrel_generator<const py::RRELInternalResult> get_next_matches(
@@ -90,6 +114,8 @@ namespace textx::rrel {
     struct RRELBrackets : RRELPathElement {
         std::unique_ptr<RRELSequence> seq;
         RRELBrackets(std::unique_ptr<RRELSequence> &&seq) : seq{std::move(seq)} {}
+        RRELExpression *expression;
+        void setExpression(RRELExpression *e) override;
         void print(std::ostream& o) const override;
         rrel_generator<const py::RRELInternalResult> get_next_matches(
             py::RRELInternalResultData data,
@@ -105,6 +131,8 @@ namespace textx::rrel {
         size_t n;
         RRELDots(size_t n) : n{n} {}
         void print(std::ostream& o) const override;
+        RRELExpression *expression;
+        void setExpression(RRELExpression *e) override { expression=e; }
         rrel_generator<const py::RRELInternalResult> get_next_matches(
             py::RRELInternalResultData data,
             AllowedFunc allowed,
@@ -118,6 +146,8 @@ namespace textx::rrel {
         std::vector<std::unique_ptr<RRELPath>> paths;
         RRELSequence(std::vector<std::unique_ptr<RRELPath>> &&paths) : paths{std::move(paths)} {};
         void print(std::ostream& o) const override;
+        RRELExpression *expression;
+        void setExpression(RRELExpression *e) override;
         rrel_generator<const py::RRELInternalResult> get_next_matches(
             py::RRELInternalResultData data,
             AllowedFunc allowed,
@@ -131,6 +161,8 @@ namespace textx::rrel {
         std::unique_ptr<RRELPathElement> path_element;
         RRELZeroOrMore(std::unique_ptr<RRELPathElement> path_element) : path_element{std::move(path_element)} {}
         void print(std::ostream& o) const override;
+        RRELExpression *expression;
+        void setExpression(RRELExpression *e) override { expression=e; path_element->setExpression(e); }
         rrel_generator<const py::RRELInternalResult> get_next_matches(
             py::RRELInternalResultData data,
             AllowedFunc allowed,
@@ -151,6 +183,8 @@ namespace textx::rrel {
         std::vector<std::unique_ptr<RRELPathElement>> path_elements;
         RRELPath(std::vector<std::unique_ptr<RRELPathElement>> &&path_elements) : path_elements{std::move(path_elements)} {};       
         void print(std::ostream& o) const override;
+        RRELExpression *expression;
+        void setExpression(RRELExpression *e) override;
         rrel_generator<const py::RRELInternalResult> get_next_matches(
             py::RRELInternalResultData data,
             AllowedFunc allowed,
@@ -171,20 +205,6 @@ namespace textx::rrel {
             bool first_element=false,
             size_t idx=0
         ) const;
-    };
-
-    struct RRELExpression : RRELBase {
-        std::unique_ptr<RRELSequence> seq;
-        std::string flags;
-        bool use_proxy;
-        // note: importURI handled differently (ignored here)
-        RRELExpression(std::unique_ptr<RRELSequence> &&seq, bool use_proxy, std::string flags) : seq{std::move(seq)}, use_proxy{use_proxy}, flags{flags} {}
-        void print(std::ostream& o) const override;
-        rrel_generator<const py::RRELInternalResult> get_next_matches(
-            py::RRELInternalResultData data,
-            AllowedFunc allowed,
-            bool first_element=false
-        ) const override;
     };
 
     std::unique_ptr<RRELExpression> create_RREL_expression(const textx::arpeggio::Match& m);

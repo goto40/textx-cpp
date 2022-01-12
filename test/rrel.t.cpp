@@ -490,7 +490,7 @@ TEST_CASE("test_rrel_navigation_with_fixed_str", "[textx/rrel]")
 {
     auto mm = textx::metamodel_from_str(R"#(
         Model: types_collection*=TypesCollection ('activeTypes' '=' active_types=[TypesCollection])? usings*=Using;
-        Using: 'using' name=ID "=" type=[Type|ID|
+        Using: 'using' name=ID "=" type=[Type|ID|+m:
                 ~active_types.types,                // "regular lookup"
                 'builtin'~types_collection.types    // "default lookup" - name "builtin" hard coded in grammar
             ];
