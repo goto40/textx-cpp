@@ -286,7 +286,7 @@ namespace textx::object {
 
         textx::arpeggio::TextPosition get_pos() { return pos; }
         std::shared_ptr<Object> parent() { return weak_parent.lock(); }
-        std::shared_ptr<textx::Model> tx_model() { return weak_model.lock(); }
+        std::shared_ptr<textx::Model> tx_model() const { return weak_model.lock(); }
         bool has_attr(std::string n) { return attributes.count(n)>0; }
         const AttributeValue& operator[](std::string name) const;
         AttributeValue& operator[](std::string name);

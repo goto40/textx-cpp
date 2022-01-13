@@ -21,7 +21,7 @@ namespace textx {
         size_t resolve_references();
         friend textx::Metamodel;
     public:
-        std::shared_ptr<textx::Metamodel> tx_metamodel() { return weak_mm.lock(); }
+        std::shared_ptr<textx::Metamodel> tx_metamodel() const { return weak_mm.lock(); }
         textx::object::Value& val() { 
             return root;
         }

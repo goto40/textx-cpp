@@ -1,10 +1,20 @@
 #include "textx/export.h"
 #include "textx/assert.h"
+#include "textx/metamodel.h"
 #include <fstream>
 #include <stdexcept>
+#include <filesystem>
 
 namespace {
     namespace intern {
+        std::filesystem::path rel_path_to_json_for_second(std::filesystem::path original_model, std::filesystem::path second) {
+            auto rel = std::filesystem::relative(second, original_model);
+            return rel.parent_path() / (std::string{rel.stem()}+".json");
+        }
+        std::string path_to_obj(std::shared_ptr<const textx::object::Object> obj) {
+            //path through model + index if in array
+            return "TODO";
+        }
         void save(std::ostream &o, std::shared_ptr<const textx::object::Object> obj, size_t indent=0);
         template<class T>
         void save_attr(std::ostream &o, std::shared_ptr<const textx::object::Object> obj, const std::string &name, const T& attr, size_t indent) {
@@ -21,15 +31,23 @@ namespace {
                 save(o, attr.obj(), indent+1);
             }
             else if (attr.is_ref()) {
-                o << "{\"ref\": \"" << "TODO" << "\"}";
+                if (attr.obj()->tx_model() == obj->tx_model()) {
+                    // within file:
+                    o << "{\"ref\": \"" << "#/" << path_to_obj(attr.obj()) << "\"}";
+                }
+                else {
+                    o << "{\"ref\": \"" << "FILE-TODO" << "#/" << path_to_obj(attr.obj()) << "\"}";
+                }
             }
             else {
                 TEXTX_ASSERT(false, "unexpected case for attr ", name, " in obj of type ", obj->type);
             }
         }
         void save(std::ostream &o, std::shared_ptr<const textx::object::Object> obj, size_t indent) {
+            auto type = obj->type;
             o << "{";
-            bool first=true;
+            o << "\n" << std::string((indent+1)*2, ' ') << "\"" << "$type" << "\":" << "\"" << type << "\"";
+            bool first=false;
             for (auto& [name, attr]: obj->attributes) {
                 if (!first) o << ",";
                 o << "\n";
@@ -62,7 +80,9 @@ namespace textx {
 
     void save_as_simple_json(std::shared_ptr<textx::Model> model) {
         TEXTX_ASSERT(model->tx_filename().size()>0);
-        std::ofstream f{model->tx_filename()};
+        auto source = model->tx_filename();
+        auto fn = std::string{std::filesystem::path{source}.stem()}+".json";
+        std::ofstream f{fn};
         save_as_simple_json(model, f);
     }
 

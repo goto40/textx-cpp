@@ -8,7 +8,7 @@ int main(int argc, const char** argv) {
         auto workspace = itemlang::get_itemlang_metamodel_workspace();
         auto m = workspace->model_from_file(argv[1]);
         //std::cout << m->val() << "\n";
-        textx::save_as_simple_json(m, std::cout);
+        textx::save_as_simple_json(m);
     }
     catch(std::exception& e) {
         std::cerr << e.what();
