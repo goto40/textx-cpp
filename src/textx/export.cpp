@@ -12,8 +12,25 @@ namespace {
             return rel.parent_path() / (std::string{rel.stem()}+".json");
         }
         std::string path_to_obj(std::shared_ptr<const textx::object::Object> obj) {
-            //path through model + index if in array
-            return "TODO";
+            if (obj->parent()==nullptr) return "";
+            else {
+                auto p = obj->parent();
+                for (auto  [n,a]: p->attributes) {
+                    if (a.is_pure_obj() && a.obj()==obj) {
+                        return path_to_obj(p)+"/"+n;
+                    }
+                    else if (a.is_list()) {
+                        size_t idx=0;
+                        for (auto e: a) {
+                            if (e.is_obj() && e.obj()==obj) {
+                                return path_to_obj(p)+"/"+n+"["+std::to_string(idx)+"]";
+                            }
+                            idx++;
+                        }
+                    }
+                }
+            }
+            throw std::runtime_error("unexpected navigation through object error.");
         }
         void save(std::ostream &o, std::shared_ptr<const textx::object::Object> obj, size_t indent=0);
         template<class T>
@@ -33,10 +50,10 @@ namespace {
             else if (attr.is_ref()) {
                 if (attr.obj()->tx_model() == obj->tx_model()) {
                     // within file:
-                    o << "{\"ref\": \"" << "#/" << path_to_obj(attr.obj()) << "\"}";
+                    o << "{\"$ref\": \"" << "#" << path_to_obj(attr.obj()) << "\"}";
                 }
                 else {
-                    o << "{\"ref\": \"" << "FILE-TODO" << "#/" << path_to_obj(attr.obj()) << "\"}";
+                    o << "{\"$ref\": \"" << "FILE-TODO" << "#" << path_to_obj(attr.obj()) << "\"}";
                 }
             }
             else {
