@@ -177,7 +177,7 @@ namespace itemlang {
             built_in_model_text << "rawtype sint" << b << " INT "<< b << "\n";
         }
 
-        auto m = workspace->model_from_str(built_in_model_text.str());
+        auto m = workspace->model_from_str("BUILT_IN.item", built_in_model_text.str());
         mm->add_builtin_model(m);
 
         return workspace;

@@ -159,6 +159,12 @@ namespace textx {
         }
 
         std::shared_ptr<textx::Model> model_from_str(std::string shortcut, std::string model_text) override {
+            std::string fn = "";
+            size_t p = shortcut.find('.');
+            if (p!=shortcut.npos) {
+                fn = shortcut;
+                shortcut = shortcut.substr(p+1);
+            }
             std::shared_ptr<textx::Metamodel> default_metamodel_ptr = nullptr;
 
             if constexpr (std::is_same_v<Ptr4DefaultMM<textx::Metamodel>, std::weak_ptr<textx::Metamodel> >) {
@@ -170,10 +176,10 @@ namespace textx {
 
             auto mm = get_metamodel_by_shortcut(shortcut);
             if (mm) {
-                return mm->model_from_str(model_text,"",true,shared_from_this());
+                return mm->model_from_str(model_text,fn,true,shared_from_this());
             }
             else if (default_metamodel_ptr!=nullptr) {
-                return default_metamodel_ptr->model_from_str(model_text,"",true,shared_from_this());
+                return default_metamodel_ptr->model_from_str(model_text,fn,true,shared_from_this());
             }
             else {
                 throw std::runtime_error(std::string{"no metamodel available for metamodel "}+shortcut);

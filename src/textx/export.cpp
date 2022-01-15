@@ -9,8 +9,16 @@ namespace {
     namespace intern {
         std::filesystem::path rel_path_to_json_for_second(std::filesystem::path original_model, std::filesystem::path second) {
             auto rel = std::filesystem::relative(second, original_model);
-            std::cout << original_model << "+" << second << "=" << rel << "\n";
-            return rel.parent_path() / (std::string{rel.stem()}+".json");
+            //std::cout << original_model << "+" << second << "=" << rel << "\n";
+            if (std::string{rel}.size()==0) {
+                std::cout << "second: "<< second << "\n";
+                return second;
+            }
+            else {
+                auto ret = rel.parent_path() / ((std::string{rel.stem()}+".json"));
+                std::cout << ret << "\n";
+                return ret;
+            }
         }
         std::string path_to_obj(std::shared_ptr<const textx::object::Object> obj) {
             if (obj->parent()==nullptr) return "";
