@@ -9,6 +9,7 @@ namespace {
     namespace intern {
         std::filesystem::path rel_path_to_json_for_second(std::filesystem::path original_model, std::filesystem::path second) {
             auto rel = std::filesystem::relative(second, original_model);
+            std::cout << original_model << "+" << second << "=" << rel << "\n";
             return rel.parent_path() / (std::string{rel.stem()}+".json");
         }
         std::string path_to_obj(std::shared_ptr<const textx::object::Object> obj) {
@@ -53,7 +54,11 @@ namespace {
                     o << "{\"$ref\": \"" << "#" << path_to_obj(attr.obj()) << "\"}";
                 }
                 else {
-                    o << "{\"$ref\": \"" << "FILE-TODO" << "#" << path_to_obj(attr.obj()) << "\"}";
+                    // cross file
+                    auto f0 = attr.obj()->tx_model()->tx_filename();
+                    auto f1 = obj->tx_model()->tx_filename();
+                    auto fn = rel_path_to_json_for_second(f0,f1);
+                    o << "{\"$ref\": \"" << fn << "#" << path_to_obj(attr.obj()) << "\"}";
                 }
             }
             else {
