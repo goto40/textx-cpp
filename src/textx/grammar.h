@@ -80,6 +80,7 @@ namespace textx
         auto begin() const { return rules.begin(); }
         auto end() { return rules.end(); }
         auto end() const { return rules.end(); }
+        size_t size() const { return rules.size(); }
 
         void add_rule(std::string_view name, R p)
         {

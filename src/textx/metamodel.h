@@ -59,6 +59,7 @@ namespace textx {
         auto end() { return grammar.end(); }
         auto begin() const { return grammar.begin(); }
         auto end() const { return grammar.end(); }
+        size_t size() const { return grammar.size(); }
 
         std::shared_ptr<textx::Model> model_from_str(std::string_view text, std::string filename="", bool is_main_model=true, std::shared_ptr<textx::Workspace> workspace=nullptr);
         std::shared_ptr<textx::Model> model_from_file(std::filesystem::path p, bool is_main_model=true, std::shared_ptr<textx::Workspace> workspace=nullptr);
