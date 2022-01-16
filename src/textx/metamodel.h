@@ -47,6 +47,18 @@ namespace textx {
         bool has_rule(std::string name, bool allow_referenced_mm) const;
         std::string get_fqn_for_rule(std::string name) const;
         textx::arpeggio::Pattern ref(std::string name);
+        std::string tx_grammar_name() {
+            TEXTX_ASSERT(not grammar_name.empty());
+            return grammar_name;
+        }
+        std::string tx_main_rule_name() {
+            return grammar.get_main_rule_name();
+        }
+
+        auto begin() { return grammar.begin(); }
+        auto end() { return grammar.end(); }
+        auto begin() const { return grammar.begin(); }
+        auto end() const { return grammar.end(); }
 
         std::shared_ptr<textx::Model> model_from_str(std::string_view text, std::string filename="", bool is_main_model=true, std::shared_ptr<textx::Workspace> workspace=nullptr);
         std::shared_ptr<textx::Model> model_from_file(std::filesystem::path p, bool is_main_model=true, std::shared_ptr<textx::Workspace> workspace=nullptr);

@@ -105,12 +105,22 @@ namespace {
             o << "\n";
             o << std::string(indent*2, ' ') << "}";
         }
+
+        std::string get_schema_url_filename(std::shared_ptr<textx::Metamodel> mm) {
+            return mm->tx_grammar_name()+"-schema.json";
+        }
+
     }    
 }
 
 namespace textx {
 
-    void save_as_simple_json(std::shared_ptr<textx::Model> model, bool save_all) {
+    void save_model_as_json(std::shared_ptr<textx::Model> model, bool save_all, std::string schema_url) {
+        if (schema_url.empty()) {
+            schema_url = "./"+model->tx_metamodel()->tx_grammar_name();
+            save_metamodel_as_json_schema(model->tx_metamodel());
+        }
+
         TEXTX_ASSERT(model->tx_filename().size()>0);
         auto source0 = std::filesystem::path{model->tx_filename()};
 
@@ -127,15 +137,95 @@ namespace textx {
             auto fn = intern::rel_path_to_json_for_second(source0, source);
             //std::cout << "CREATING " << fn << "\n";
             std::ofstream f{fn};
-            save_as_simple_json(m, f);            
+            save_model_as_json(m, f);            
         }
     }
 
-    void save_as_simple_json(std::shared_ptr<textx::Model> model, std::ostream &o) {
+    void save_model_as_json(std::shared_ptr<textx::Model> model, std::ostream &o) {
         //TODO decide if file has to be generated or not, based on timestamp of model and dest (use exe date for internal models)
         TEXTX_ASSERT(model->val().is_obj());
         intern::save(o, model->val().obj());
         o << "\n";
+    }
+
+    void save_metamodel_as_json_schema(std::shared_ptr<textx::Metamodel> mm, bool save_all, std::string url_prefix) {
+        auto  fn = intern::get_schema_url_filename(mm);
+        std::ofstream f{fn};
+        save_metamodel_as_json_schema(mm, f, url_prefix);
+        // TODO save_all -- save all imported mm as well
+    }
+
+    void save_metamodel_as_json_schema(std::shared_ptr<textx::Metamodel> mm, std::ostream &s, std::string url_prefix) {
+        s << "{" << "\n";
+        s << "  '$schema': 'http://json-schema.org/draft-07/schema',\n";
+        s << "  '$ref': '#/$def/" << mm->tx_main_rule_name() << "',\n";
+        s << "  '$def': {\n";
+        for (auto& r: *mm) {
+            if (r.second.type() == textx::RuleType::common) {
+                s << "    '" << r.first << "': { // common\n";
+                // attributes can be scalar, list, boolean
+                // scalar/list can have a type or be a string
+                size_t n = r.second.get_attribute_info().size();
+                size_t idx=0;
+                for (auto &[attr_name, attr]: r.second.get_attribute_info()) {
+                    s << "      '" << attr_name << "': { // "<<  attr << "\n";
+                    if (attr.cardinality==AttributeCardinality::boolean) {
+                        s << "        " << "'type': 'boolean'\n";
+                    }
+                    else {
+                        std::string extra_intend="";
+                        if (attr.cardinality==AttributeCardinality::list) {
+                            s << "        " << "'type': 'array', 'items': {\n";
+                            extra_intend="  ";
+                        }
+                        else {
+                            TEXTX_ASSERT(attr.cardinality==AttributeCardinality::scalar);
+                        }
+
+                        if (!attr.type.has_value()) {
+                            s << "        " << extra_intend << "'type': 'string'\n";
+                        }
+                        else if (mm->operator[](attr.type.value()).type() == RuleType::match ) {
+                            s << "        " << extra_intend << "'type': 'string'\n";
+                        }
+                        else {
+                            // TODO also allow references in the model here... (!)
+                            s << "        " << extra_intend << "{ '$ref': '#/$def/"<< attr.type.value() << "' }\n";
+                        }
+
+                        if (attr.cardinality==AttributeCardinality::list) {
+                            s << "        " << "}\n";
+                        }
+                    }
+                    s << "      }";
+                    if (idx!=n-1) {
+                        s << ",";
+                    }
+                    s << "\n";
+                    idx++;
+                }
+                s << "    }\n";
+            }
+            else if (r.second.type() == textx::RuleType::abstract) {
+                s << "    '" << r.first << "': { // abstract\n";
+                s << "      " << "'oneOf': [\n";
+                size_t n = r.second.tx_inh_by().size();
+                size_t idx=0;
+                for(const auto &rule_name: r.second.tx_inh_by()) {
+                    // TODO modify reference if rule is from imported grammar
+                    s << "        " << "{ '$ref': '#/$def/"<< rule_name << "' }";
+                    if (idx!=n-1) {
+                        s << ",";
+                    }
+                    s << "\n";
+                    idx++;
+                }
+                s << "      " << "]\n";
+                s << "    }\n";
+            }
+        }
+        s << "  }\n";
+        s << "}" << "\n";
     }
 
 }

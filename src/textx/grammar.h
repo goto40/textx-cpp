@@ -146,6 +146,10 @@ namespace textx
         {
             main_rule_name = std::string(name);
         }
+        std::string get_main_rule_name()
+        {
+            return main_rule_name;
+        }
 
         std::string get_last_error_string(std::optional<std::string_view> text = std::nullopt)
         {

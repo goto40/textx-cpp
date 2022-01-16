@@ -5,7 +5,15 @@
 
 namespace textx {
 
-    void save_as_simple_json(std::shared_ptr<textx::Model> model, bool save_all=true);
-    void save_as_simple_json(std::shared_ptr<textx::Model> model, std::ostream &s);
-
+    /**
+     * @brief exports a model to a json file
+     * 
+     * @param model the model to be exported
+     * @param save_all also export all referenced models
+     * @param schema_url use this schema url (if empty a schema is generated locally)
+     */
+    void save_model_as_json(std::shared_ptr<textx::Model> model, bool save_all=true, std::string schema_url="");
+    void save_model_as_json(std::shared_ptr<textx::Model> model, std::ostream &s);
+    void save_metamodel_as_json_schema(std::shared_ptr<textx::Metamodel> mm, bool save_all=true, std::string url_prefix="./");
+    void save_metamodel_as_json_schema(std::shared_ptr<textx::Metamodel> mm, std::ostream &s, std::string url_prefix="./");
 }

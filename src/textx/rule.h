@@ -51,6 +51,7 @@ namespace textx {
         switch(ai.cardinality) {
             case AttributeCardinality::scalar: o << "scalar"; break;
             case AttributeCardinality::list: o << "list"; break;
+            case AttributeCardinality::boolean: o << "boolean"; break;
             default: throw std::runtime_error("unknown AttributeInfo");
         }
         if (ai.is_text()) {
