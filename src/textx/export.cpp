@@ -169,12 +169,14 @@ namespace textx {
                 if (!first) s << ",\n";
                 s << "    \"" << r.first << "\": {\n";
                 s << "      \"type\": \"object\",\n";
+                s << "      \"additionalProperties\": false,\n";                  
                 // attributes can be scalar, list, boolean
                 // scalar/list can have a type or be a string
                 size_t n = r.second.get_attribute_info().size();
                 size_t idx=0;
                 for (auto &[attr_name, attr]: r.second.get_attribute_info()) {
-                    s << "      \"" << attr_name << "\": {\n";
+                    std::string attr_name_json = std::string("^") + attr_name + "$";
+                    s << "      \"" << attr_name_json << "\": {\n";
                     if (attr.cardinality==AttributeCardinality::boolean) {
                         s << "        " << "\"type\": \"boolean\"\n";
                     }
