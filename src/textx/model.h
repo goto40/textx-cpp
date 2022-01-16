@@ -56,5 +56,7 @@ namespace textx {
         const textx::object::AttributeValue& operator[](std::string name) const { return val()[name]; }
         textx::object::AttributeValue& operator[](std::string name) { return val()[name]; }
         std::shared_ptr<textx::object::Object> fqn(std::string name);
+
+        std::unordered_set<std::shared_ptr<textx::Model>> get_all_referenced_models();
     };
 }

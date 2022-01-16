@@ -8,15 +8,16 @@
 namespace {
     namespace intern {
         std::filesystem::path rel_path_to_json_for_second(std::filesystem::path original_model, std::filesystem::path second) {
-            auto rel = std::filesystem::relative(second, original_model);
-            //std::cout << original_model << "+" << second << "=" << rel << "\n";
-            if (std::string{rel}.size()==0) {
-                std::cout << "second: "<< second << "\n";
-                return second;
+            if (original_model==second) {
+                auto ret = std::filesystem::path{std::string{original_model.stem()}+".json"};
+                return ret;
             }
             else {
+                auto rel = std::filesystem::relative(second, original_model);
+                if (std::string{rel}.size()==0) {
+                    rel = second;
+                }
                 auto ret = rel.parent_path() / ((std::string{rel.stem()}+".json"));
-                std::cout << ret << "\n";
                 return ret;
             }
         }
@@ -63,10 +64,11 @@ namespace {
                 }
                 else {
                     // cross file
-                    auto f0 = attr.obj()->tx_model()->tx_filename();
-                    auto f1 = obj->tx_model()->tx_filename();
+                    auto f0 = obj->tx_model()->tx_filename();
+                    auto f1 = attr.obj()->tx_model()->tx_filename();
                     auto fn = rel_path_to_json_for_second(f0,f1);
-                    o << "{\"$ref\": \"" << fn << "#" << path_to_obj(attr.obj()) << "\"}";
+                    // note: std::string{fn} is required in order not to enclose the file in '"'. 
+                    o << "{\"$ref\": \"" << std::string{fn} << "#" << path_to_obj(attr.obj()) << "\"}";
                 }
             }
             else {
@@ -108,15 +110,29 @@ namespace {
 
 namespace textx {
 
-    void save_as_simple_json(std::shared_ptr<textx::Model> model) {
+    void save_as_simple_json(std::shared_ptr<textx::Model> model, bool save_all) {
         TEXTX_ASSERT(model->tx_filename().size()>0);
-        auto source = model->tx_filename();
-        auto fn = std::string{std::filesystem::path{source}.stem()}+".json";
-        std::ofstream f{fn};
-        save_as_simple_json(model, f);
+        auto source0 = std::filesystem::path{model->tx_filename()};
+
+        std::unordered_set<std::shared_ptr<textx::Model>> all_models={};
+        if (save_all) {
+            all_models = {model->get_all_referenced_models()};
+        }
+        else {
+            all_models.insert(model);
+        }
+        for(auto &m: all_models) {
+            TEXTX_ASSERT(m->tx_filename().size()>0);
+            auto source = std::filesystem::path{m->tx_filename()};
+            auto fn = intern::rel_path_to_json_for_second(source0, source);
+            //std::cout << "CREATING " << fn << "\n";
+            std::ofstream f{fn};
+            save_as_simple_json(m, f);            
+        }
     }
 
     void save_as_simple_json(std::shared_ptr<textx::Model> model, std::ostream &o) {
+        //TODO decide if file has to be generated or not, based on timestamp of model and dest (use exe date for internal models)
         TEXTX_ASSERT(model->val().is_obj());
         intern::save(o, model->val().obj());
         o << "\n";

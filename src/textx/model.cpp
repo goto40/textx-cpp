@@ -171,4 +171,22 @@ namespace textx {
         return textx::scoping::dot_separated_name_search(val().obj(), name);
     }
 
+    std::unordered_set<std::shared_ptr<textx::Model>> Model::get_all_referenced_models() {
+        std::unordered_set<std::shared_ptr<textx::Model>> res={ shared_from_this() };
+        size_t n{res.size()}, n_old{};
+        do {
+            n_old = n;
+            for(auto m: res) {
+                for (auto other_m_weak: m->tx_imported_models()) {
+                    auto other_m = other_m_weak.lock();
+                    TEXTX_ASSERT(other_m != nullptr);
+                    res.insert(other_m);
+                }
+            }
+            n = res.size();
+        } while(n!=n_old);
+        return res;
+    }
+
+
 }
