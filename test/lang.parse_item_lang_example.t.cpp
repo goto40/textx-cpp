@@ -144,5 +144,23 @@ TEST_CASE("parse_item_lang_grammar", "[textx/lang/item_lang_example]")
         // BENCHMARK("parse item grammar speed test") {
         //     return textx_grammar.parse_or_throw(grammar1); // The return is a handy way to avoid the compiler optimizing away the benchmark code. https://github.com/catchorg/Catch2/blob/devel/docs/benchmarks.md
         // };
+
+
+        // regression:
+        {
+            auto &rule = mm->operator[]("Package"); // "constants"--> "Constants"
+            CHECK( rule.type() == textx::RuleType::common );
+            CHECK( rule["constants"].type.has_value() );
+            CHECK( rule["constants"].cardinality == textx::AttributeCardinality::list );
+            CHECK( rule["constants"].type.value() == "Constants" );
+        }        
+        {
+            auto &rule = mm->operator[]("Constants"); // "constant_entries"--> "Constant" (!)
+            CHECK( rule.type() == textx::RuleType::common );
+            CHECK( rule["constant_entries"].type.has_value() );
+            CHECK( rule["constant_entries"].cardinality == textx::AttributeCardinality::list );
+            CHECK( rule["constant_entries"].type.value() == "Constant" );
+        }
+
     }
 }
