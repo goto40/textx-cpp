@@ -42,7 +42,7 @@ namespace {
             }
             throw std::runtime_error("unexpected navigation through object error.");
         }
-        void save(std::ostream &o, std::shared_ptr<const textx::object::Object> obj, size_t indent=0);
+        void save(std::ostream &o, std::shared_ptr<const textx::object::Object> obj, size_t indent=0, std::string schema_url="");
         template<class T>
         void save_attr(std::ostream &o, std::shared_ptr<const textx::object::Object> obj, const std::string &name, const T& attr, size_t indent) {
             if (attr.is_null()) {
@@ -75,9 +75,12 @@ namespace {
                 TEXTX_ASSERT(false, "unexpected case for attr ", name, " in obj of type ", obj->type);
             }
         }
-        void save(std::ostream &o, std::shared_ptr<const textx::object::Object> obj, size_t indent) {
+        void save(std::ostream &o, std::shared_ptr<const textx::object::Object> obj, size_t indent, std::string schema_url) {
             auto type = obj->type;
             o << "{";
+            if (!schema_url.empty()) {
+                o << "\n" << std::string((indent+1)*2, ' ') << "\"" << "$schema" << "\":" << "\"" << schema_url << "\",";
+            }
             o << "\n" << std::string((indent+1)*2, ' ') << "\"" << "$type" << "\":" << "\"" << type << "\"";
             bool first=false;
             for (auto& [name, attr]: obj->attributes) {
@@ -117,7 +120,7 @@ namespace textx {
 
     void save_model_as_json(std::shared_ptr<textx::Model> model, bool save_all, std::string schema_url) {
         if (schema_url.empty()) {
-            schema_url = "./"+model->tx_metamodel()->tx_grammar_name();
+            schema_url = "./"+intern::get_schema_url_filename(model->tx_metamodel());
             save_metamodel_as_json_schema(model->tx_metamodel());
         }
 
@@ -137,14 +140,14 @@ namespace textx {
             auto fn = intern::rel_path_to_json_for_second(source0, source);
             //std::cout << "CREATING " << fn << "\n";
             std::ofstream f{fn};
-            save_model_as_json(m, f);            
+            save_model_as_json(m, f, schema_url);            
         }
     }
 
-    void save_model_as_json(std::shared_ptr<textx::Model> model, std::ostream &o) {
+    void save_model_as_json(std::shared_ptr<textx::Model> model, std::ostream &o, std::string schema_url) {
         //TODO decide if file has to be generated or not, based on timestamp of model and dest (use exe date for internal models)
         TEXTX_ASSERT(model->val().is_obj());
-        intern::save(o, model->val().obj());
+        intern::save(o, model->val().obj(), 0, schema_url);
         o << "\n";
     }
 
