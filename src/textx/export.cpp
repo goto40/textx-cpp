@@ -163,62 +163,70 @@ namespace textx {
         s << "  \"$schema\": \"http://json-schema.org/draft-07/schema\",\n";
         s << "  \"$ref\": \"#/$def/" << mm->tx_main_rule_name() << "\",\n";
         s << "  \"$def\": {\n";
+        s << "    \"$ref\": { \"type\": \"object\", \"properties\": { \"$ref\": \"string\" }},\n";
         bool first = true;
         for (auto& r: *mm) {
             if (r.second.type() == textx::RuleType::common) {
                 if (!first) s << ",\n";
                 s << "    \"" << r.first << "\": {\n";
                 s << "      \"type\": \"object\",\n";
-                s << "      \"additionalProperties\": false,\n";                  
+                s << "      \"additionalProperties\": false,\n";
+                s << "      \"properties\": {\n";
+                s << "        \"$schema\": {},\n";
+                s << "        \"$type\": \"string\",\n";
                 // attributes can be scalar, list, boolean
                 // scalar/list can have a type or be a string
                 size_t n = r.second.get_attribute_info().size();
                 size_t idx=0;
                 for (auto &[attr_name, attr]: r.second.get_attribute_info()) {
-                    std::string attr_name_json = std::string("^") + attr_name + "$";
-                    s << "      \"" << attr_name_json << "\": {\n";
+                    std::string attr_name_json = attr_name; // std::string("^") + attr_name + "$";
+                    s << "        \"" << attr_name_json << "\": {\n";
                     if (attr.cardinality==AttributeCardinality::boolean) {
-                        s << "        " << "\"type\": \"boolean\"\n";
+                        s << "          " << "\"type\": \"boolean\"\n";
                     }
                     else {
                         std::string extra_intend="";
                         if (attr.cardinality==AttributeCardinality::list) {
-                            s << "        " << "\"type\": \"array\", \"items\": {\n";
+                            s << "          " << "\"type\": \"array\", \"items\": {\n";
                             extra_intend="  ";
                         }
                         else {
                             TEXTX_ASSERT(attr.cardinality==AttributeCardinality::scalar);
                         }
 
-                        if (!attr.type.has_value()) {
-                            s << "        " << extra_intend << "\"type\": \"string\"\n";
+                        if (!attr.type.has_value()) { // no type --> string
+                            s << "          " << extra_intend << "\"type\": \"string\"\n";
                         }
                         else if (mm->operator[](attr.type.value()).type() == RuleType::match ) {
-                            s << "        " << extra_intend << "\"type\": \"string\"\n";
+                            s << "          " << extra_intend << "\"type\": \"string\"\n";
                         }
                         else {
                             // TODO also allow references in the model here... (!)
-                            s << "        " << extra_intend << "\"$ref\": \"#/$def/"<< attr.type.value() << "\"\n";
+                            s << "          " << extra_intend << "\"oneOf\": [\n";
+                            s << "          " << extra_intend << "  {\"$ref\": \"#/$def/"<< attr.type.value() << "\"},\n";
+                            s << "          " << extra_intend << "  {\"$ref\": \"#/$def/$ref\"}\n";
+                            s << "          " << extra_intend << "]\n";
                         }
 
                         if (attr.cardinality==AttributeCardinality::list) {
-                            s << "        " << "}\n";
+                            s << "          " << "}\n";
                         }
                     }
-                    s << "      }";
+                    s << "        }";
                     if (idx!=n-1) {
                         s << ",";
                     }
                     s << "\n";
                     idx++;
                 }
+                s << "      }\n";
                 s << "    }";
                 first = false;
             }
             else if (r.second.type() == textx::RuleType::abstract) {
                 if (!first) s << ",\n";
                 s << "    \"" << r.first << "\": {\n";
-                s << "      " << "\"oneOf\": [\n";
+                s << "      " << "\"oneOf\": [ \"string\", \n";
                 size_t n = r.second.tx_inh_by().size();
                 size_t idx=0;
                 for(const auto &rule_name: r.second.tx_inh_by()) {
