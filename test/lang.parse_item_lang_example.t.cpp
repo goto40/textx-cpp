@@ -153,6 +153,8 @@ TEST_CASE("parse_item_lang_grammar", "[textx/lang/item_lang_example]")
             CHECK( rule["constants"].type.has_value() );
             CHECK( rule["constants"].cardinality == textx::AttributeCardinality::list );
             CHECK( rule["constants"].type.value() == "Constants" );
+            //std::cout << "nb types:" << rule["constants"].types.size() << "\n";
+            //for (auto& t: rule["constants"].types) std::cout << " - " << t << "\n";
         }        
         {
             auto &rule = mm->operator[]("Constants"); // "constant_entries"--> "Constant" (!)
@@ -160,6 +162,8 @@ TEST_CASE("parse_item_lang_grammar", "[textx/lang/item_lang_example]")
             CHECK( rule["constant_entries"].type.has_value() );
             CHECK( rule["constant_entries"].cardinality == textx::AttributeCardinality::list );
             CHECK( rule["constant_entries"].type.value() == "Constant" );
+            //std::cout << "nb types:" << rule["constant_entries"].types.size() << "\n";
+            //for (auto& t: rule["constant_entries"].types) std::cout << " + " << t << "\n";
         }
 
     }

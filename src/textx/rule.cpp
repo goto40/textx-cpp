@@ -539,7 +539,24 @@ namespace textx {
                 type = "OBJECT";
             }
             else {
-                type = *type_set.begin(); // TODO select one not the base of another; then smallest
+                // select one not the base of another; then smallest
+                size_t n{type_set.size()}, n_old{};
+                do {
+                    if (type_set.size()==1) break;
+                    n_old = n;
+                    auto t0 = *type_set.begin();    
+                    if (std::any_of(
+                        types.begin(),
+                        types.end(),
+                        [&](auto &t){ return mm.is_base_of(t0,t) && t0!=t;}
+                    )) {
+                        type_set.erase(t0);
+                    }
+                    n = type_set.size();
+                } while(n!=n_old);
+
+                TEXTX_ASSERT(type_set.size()>0); // ==1??
+                type = *type_set.begin();
             }
         }
     }
