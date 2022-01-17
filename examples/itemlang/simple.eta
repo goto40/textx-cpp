@@ -1,3 +1,10 @@
+#pragma once
 #include <cstdint>
 
-for
+struct <%= it.name %> {
+
+    <% for(let a of it.attributes){ %>
+    // <%= a.name %>
+    
+    <% } %>
+};
