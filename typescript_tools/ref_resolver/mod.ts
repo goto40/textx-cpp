@@ -86,3 +86,21 @@ export async function load(fn_main: string): Promise<object> {
     all_files.set(fn_main, inner_resolve(root_obj, fn_main));
     return root_obj
 }
+
+export function findObjByTypeype(obj: object, typename: string): object[] {
+    let result: object[] = [];
+    function find(obj: object, typename: string) {
+        if ("$type" in obj) {
+            if (obj["$type" as keyof object]==typename) {
+                result.push(obj);
+            }
+        }
+        Object.keys(obj).some(function(k) {
+            if (obj[k as keyof object] && typeof obj[k as keyof object] === 'object') {
+                find(obj[k as keyof object], typename);
+            }
+        });
+    }
+    find(obj, typename);
+    return result;
+}
