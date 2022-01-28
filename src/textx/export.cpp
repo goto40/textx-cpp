@@ -118,10 +118,14 @@ namespace {
 
 namespace textx {
 
-    void save_model_as_json(std::shared_ptr<textx::Model> model, bool save_all, std::string schema_url) {
+    void save_model_as_json(std::shared_ptr<textx::Model> model, bool save_all, std::string schema_url, std::string dest_str) {
+        if (!std::filesystem::exists(dest_str)) {
+            std::filesystem::create_directory(dest_str);
+        }
+
         if (schema_url.empty()) {
             schema_url = "./"+intern::get_schema_url_filename(model->tx_metamodel());
-            save_metamodel_as_json_schema(model->tx_metamodel());
+            save_metamodel_as_json_schema(model->tx_metamodel(),true,"./",dest_str);
         }
 
         TEXTX_ASSERT(model->tx_filename().size()>0);
@@ -137,7 +141,7 @@ namespace textx {
         for(auto &m: all_models) {
             TEXTX_ASSERT(m->tx_filename().size()>0);
             auto source = std::filesystem::path{m->tx_filename()};
-            auto fn = intern::rel_path_to_json_for_second(source0, source);
+            auto fn = std::filesystem::path(dest_str) / intern::rel_path_to_json_for_second(source0, source);
             //std::cout << "CREATING " << fn << "\n";
             std::ofstream f{fn};
             save_model_as_json(m, f, schema_url);            
@@ -151,8 +155,8 @@ namespace textx {
         o << "\n";
     }
 
-    void save_metamodel_as_json_schema(std::shared_ptr<textx::Metamodel> mm, bool save_all, std::string url_prefix) {
-        auto  fn = intern::get_schema_url_filename(mm);
+    void save_metamodel_as_json_schema(std::shared_ptr<textx::Metamodel> mm, bool save_all, std::string url_prefix, std::string dest_str) {
+        auto fn = std::filesystem::path(dest_str) / intern::get_schema_url_filename(mm);
         std::ofstream f{fn};
         save_metamodel_as_json_schema(mm, f, url_prefix);
         // TODO save_all -- save all imported mm as well

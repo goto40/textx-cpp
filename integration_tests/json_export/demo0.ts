@@ -12,6 +12,6 @@ let structs = TextxObj.findObjByTypeype(obj, "Struct") as any;
 for(let i=0;i<structs.length;i++) {
     console.log( structs[i].name );
     let code = await Eta.renderFile(simpleEta, structs[i]) as string;
-    await Deno.writeTextFile(structs[i].name+".h", code);
+    await Deno.writeTextFile("src-gen/"+structs[i].name+".h", code);
 }
 
