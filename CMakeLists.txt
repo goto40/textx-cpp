@@ -8,12 +8,7 @@ set(CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake/modules ${CMAKE_MODULE_P
 
 include(Version) 
 
-if(EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/Catch2/single_include/catch2/catch.hpp)
-  set(CATCH_INCLUDE_PATH Catch2/single_include/catch2/)
-else()
-  find_path(CATCH_INCLUDE_PATH catch.hpp REQUIRED)
-endif()
-set(CPPCORO_INCLUDE_PATH cppcoro/include/)
+find_path(CATCH_INCLUDE_PATH catch.hpp REQUIRED)
 
 message("CATCH_INCLUDE_PATH=${CATCH_INCLUDE_PATH}")
 add_definitions(-DCATCH_CONFIG_ENABLE_BENCHMARKING)
