@@ -355,3 +355,41 @@ info='My Shapes'
 -------
 )");
 }
+
+TEST_CASE("istrings_array_access", "[textx/istrings]")
+{
+    auto model = get_example_model();
+    auto res = textx::istrings::i(
+        R"(
+        shape[1]='{% model.shapes[1].type_name %}'
+        {% print(model.shapes[1]) %}
+        )",
+        {
+            {"model", model->val().obj()},
+            {"print", [](std::shared_ptr<textx::object::Object> o) -> std::string {
+                std::ostringstream s;
+                o->print(s);
+                return s.str();
+            } }
+        }
+    );
+    //std::cout << res;
+    CHECK( res == R"#(
+shape[1]='Circle'
+Circle{
+  type_name=
+    'Circle'
+  center=
+    Point{
+      type_name=
+        'Point'
+      x=
+        '333'
+      y=
+        '4.5'
+    }
+  r=
+    '9'
+}
+)#");
+}

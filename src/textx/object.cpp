@@ -50,6 +50,19 @@ namespace textx::object {
         return tx_model()->tx_metamodel()->is_instance(type, base);
     }
 
+    namespace {
+        auto extract_array_index(std::string name) {
+            auto pos=name.find('[');
+            std::optional<size_t> array_index=std::nullopt;
+            if (pos!=std::string::npos) {
+                TEXTX_ASSERT(name[name.size()-1]==']', " syntax error in array access attr[idx]: ", name);
+                array_index = std::stoul(name.substr(pos+1,name.size()-pos-2));
+                name = name.substr(0,pos);
+            }
+            return std::make_pair(name, array_index);
+        }
+    }
+
     const AttributeValue& Object::operator[](std::string name) const {
         auto r = attributes.find(name);
         if (r==attributes.end()) {
@@ -66,23 +79,25 @@ namespace textx::object {
         return r->second;
     }
 
-    const AttributeValue& Object::fqn(std::string name) const {
-        size_t idx = name.find('.');
-        if (idx==name.npos) {
-            return this->operator[](name);
+    AttributeValue Object::fqn_attributes(std::string name) const {
+        size_t pos = name.find('.');
+        if (pos==name.npos) {
+            auto [the_name, idx] = extract_array_index(name);
+            if (idx.has_value()) {
+                return AttributeValue{this->operator[](the_name)[idx.value()]};
+            }
+            else {
+                return this->operator[](the_name);
+            }
         }
         else {
-            return this->operator[](name.substr(0,idx)).obj()->fqn(name.substr(idx+1));
-        }
-    }
-
-    AttributeValue& Object::fqn(std::string name) {
-        size_t idx = name.find('.');
-        if (idx==name.npos) {
-            return this->operator[](name);
-        }
-        else {
-            return this->operator[](name.substr(0,idx)).obj()->fqn(name.substr(idx+1));
+            auto [the_name, idx] = extract_array_index(name.substr(0,pos));
+            if (idx.has_value()) {
+                return AttributeValue{this->operator[](the_name)[idx.value()].obj()->fqn_attributes(name.substr(pos+1))};
+            }
+            else {
+                return this->operator[](the_name).obj()->fqn_attributes(name.substr(pos+1));
+            }
         }
     }
 

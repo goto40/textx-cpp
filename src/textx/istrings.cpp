@@ -26,19 +26,19 @@ namespace {
             NormalText: text = /([^{\s\n]|{[^%\s\n])([^{\n]|{[^%\n])*/;
             Command[skipws]: CommandObjAttributeAsString | CommandForLoop | CommandObj2StrFun;
             Data: Object | CommandForLoop; 
-            CommandObjAttributeAsString: CMD_START obj=[Data] '.' fqn=FQN CMD_END;
+            CommandObjAttributeAsString: CMD_START obj=[Data] '.' fqn=FQN_WITH_ARRAY_ACCESS CMD_END;
             CommandForLoop:
-                CMD_START 'FOR' name=ID ':' obj=[Data] '.' fqn=FQN
+                CMD_START 'FOR' name=ID ':' obj=[Data] '.' fqn=FQN_WITH_ARRAY_ACCESS
                 body=CommandForLoopBody
                 'ENDFOR' CMD_END
             ;
             CommandForLoopBody[noskipws]: CMD_END body=Model CMD_START;
             CommandObj2StrFun:
-                 CMD_START call=[Function] "(" obj=[Data] ('.' fqn=FQN)? ")" CMD_END
+                 CMD_START call=[Function] "(" obj=[Data] ('.' fqn=FQN_WITH_ARRAY_ACCESS)? ")" CMD_END
             ;
             CMD_START: '{%';
             CMD_END: '%}';
-            FQN: ID ('.' ID)*;
+            FQN_WITH_ARRAY_ACCESS: ID ('[' /\d+/ ']')? ('.' ID ('[' /\d+/ ']')?)*;
         )#");
         // TODO: prevent double vars!
 
@@ -240,14 +240,14 @@ namespace {
 
         void format_CommandObjAttributeAsString(std::shared_ptr<textx::object::Object> cmd) {
             auto obj = get_obj((*cmd)["obj"].obj());
-            s << obj->fqn( (*cmd)["fqn"].str() ).str();
+            s << obj->fqn_attributes( (*cmd)["fqn"].str() ).str();
         }
         void format_CommandForLoop(std::shared_ptr<textx::object::Object> cmd) {
             auto name = (*cmd)["name"].str();
             auto obj = get_obj( (*cmd)["obj"].obj() );
             auto fqn_query = (*cmd)["fqn"].str();
             s.inc_level();
-            for(auto &e: obj->fqn(fqn_query)) {
+            for(auto &e: obj->fqn_attributes(fqn_query)) {
                 s.nontextual_cmd(); // for
                 loop_obj[name] = e.obj();
                 format_obj( (*cmd)["body"]["body"].obj() );
@@ -260,7 +260,7 @@ namespace {
             auto fun = std::get<textx::istrings::Obj2StrFun>(external_links[(*cmd)["call"]["name"].str()]);
             auto obj = get_obj( (*cmd)["obj"].obj() );
             if (!(*cmd)["fqn"].is_null()) {
-                obj = obj->fqn( (*cmd)["fqn"].str() ).obj();
+                obj = obj->fqn_attributes( (*cmd)["fqn"].str() ).obj();
             }
             std::string res = fun(obj);
             res = add_intend_after_newline(res, s.current_col());
