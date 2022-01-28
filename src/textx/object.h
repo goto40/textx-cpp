@@ -328,4 +328,59 @@ namespace textx::object {
             textx::arpeggio::raise(v.pos, "unexpected situation (traversing the object)");
         }
     }
+
+    template<class T, class P=Object>
+    struct TypeSafeObjectPtr {
+        std::variant<std::weak_ptr<T>, std::shared_ptr<T>> ptr;
+        std::weak_ptr<Object> src_ptr;
+        std::weak_ptr<P> parent_ptr;
+
+        std::shared_ptr<Object> src() {
+            auto p = src_ptr.lock();
+            TEXTX_ASSERT(p!=nullptr);
+            return p;
+        }
+        std::shared_ptr<P> parent() {
+            auto p = parent_ptr.lock();
+            TEXTX_ASSERT(p!=nullptr);
+            return p;
+        }
+        auto operator!=(nullptr_t) {
+            if (ptr.index()==0) {
+                auto p = std::get<0>(ptr).lock();
+                return p!=nullptr;
+            }
+            else {
+                auto p = std::get<1>(ptr);
+                return p!=nullptr;
+            }
+        }
+        auto operator==(nullptr_t) {
+            return !(*this!=nullptr);
+        }
+        auto operator*() const {
+            if (ptr.index()==0) {
+                auto p = std::get<0>(ptr).lock();
+                TEXTX_ASSERT(p!=nullptr);
+                return *p;
+            }
+            else {
+                auto p = std::get<1>(ptr);
+                TEXTX_ASSERT(p!=nullptr);
+                return *p;
+            }
+        }
+        auto operator->() const {
+            if (ptr.index()==0) {
+                auto p = std::get<0>(ptr).lock();
+                TEXTX_ASSERT(p!=nullptr);
+                return p.get();
+            }
+            else {
+                auto p = std::get<1>(ptr);
+                TEXTX_ASSERT(p!=nullptr);
+                return p.get();
+            }
+        }
+    };    
 }
