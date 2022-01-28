@@ -227,3 +227,8 @@ TEST_CASE("model_with_optional_parts", "[textx/model]")
     CHECK( (*m->fqn("b1"))["refs"][0].is_obj() );
     CHECK( (*m->fqn("b1"))["refs"][0].is_ref() );
 }
+
+TEST_CASE("model_with_obj_attributes_which_can_be_strings", "[textx/model]")
+{
+    CHECK(false);
+}

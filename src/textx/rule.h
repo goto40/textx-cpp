@@ -43,7 +43,9 @@ namespace textx {
         AttributeCardinality cardinality = AttributeCardinality::scalar;
         std::optional<std::string> type = std::nullopt;
         std::vector<std::string> types={};
+        bool m_can_have_text = false;
         bool is_text() const { return !type.has_value(); }
+        bool can_have_text() const { return is_text() || m_can_have_text; }
         void adjust_type(Metamodel& mm);
     };
 
@@ -58,7 +60,11 @@ namespace textx {
             o << "/text";
         }
         else {
-            o << "/type(" << ai.type.value() << ")";
+            o << "/type(" << ai.type.value();
+            if (ai.can_have_text()) {
+                o << ";text";
+            }
+            o << ")";
         }
         return o;
     }
