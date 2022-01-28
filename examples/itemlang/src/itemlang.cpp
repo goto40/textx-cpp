@@ -1,16 +1,16 @@
 #include "itemlang.h"
 
 namespace itemlang {
-    std::shared_ptr<textx::Workspace> get_itemlang_metamodel_workspace() {
+    std::shared_ptr<textx::Workspace> get_workspace() {
         auto workspace = textx::Workspace::create();
 
         workspace->add_metamodel_from_str_for_extension("item", "ITEMLANG.tx",
         R"###(
             Model:
                 imports*=Import
-                (packages+=ExtPackage | package=Package);
+                (packages+=ExtPackage | packages=Package);
 
-            NestedPackage: '.' name=ID (package=NestedPackage|
+            NestedPackage: '.' name=ID (packages=NestedPackage|
                 ('(' ('property_set' property_set=[PropertySet|FQN])?
                     ('.' 'description' '=' description=STRING)?
                 ')')?
@@ -63,9 +63,9 @@ namespace itemlang {
                         parent(Constants).constant_entries,
                         parent(Struct).constant_entries,
                         parent(Attribute).~variant_selector.~ref.~type.enum_entries,
-                        ^(package,packages)*.constants.constant_entries,
-                        ^(package,packages)*.items.constant_entries,
-                        ^(package,packages)*.items.enum_entries
+                        ^(packages)*.constants.constant_entries,
+                        ^(packages)*.items.constant_entries,
+                        ^(packages)*.items.enum_entries
                 ];
             VariantMapping: id=Formula ('=' the_name=ID)? ':' type=[Struct|FQN] ( '(' properties*=Property[','] ')' )?;
 
@@ -114,8 +114,8 @@ namespace itemlang {
             ApplicableForRawType: 'rawtype' ('(' concrete_types+=[RawType|FQN][','] ')')?;
             Property: '.' definition=[
                 PropertyDefinition|ID|+mp:
-                    ^(~package,~packages)*.~property_set.~extends*.property_definitions,
-                    'built_in'~package.'default_properties'~property_sets.property_definitions
+                    ^(~packages)*.~property_set.~extends*.property_definitions,
+                    'built_in'~packages.'default_properties'~property_sets.property_definitions
                 ] '=' (
                     textValue=TextValue |
                     numberValue=NumberValue
