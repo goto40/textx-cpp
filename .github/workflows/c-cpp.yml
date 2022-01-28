@@ -18,7 +18,7 @@ jobs:
         run: |
           sudo apt install -y cmake g++-10 libboost-regex-dev catch
           git clone https://github.com/andreasbuhr/cppcoro.git
-          cp -r cppcoro/include/cppcoro /usr/include 
+          sudo cp -r cppcoro/include/cppcoro /usr/include 
       - name: build
         run: |
           mkdir build
