@@ -2,7 +2,17 @@ cmake_minimum_required(VERSION 2.8)
 project(textx)
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
-set(CMAKE_CXX_FLAGS "-fcoroutines")
+add_compile_options(
+  "-fcoroutines"
+  "$<$<CONFIG:DEBUG>:-fno-omit-frame-pointer>"
+  "$<$<CONFIG:DEBUG>:-fsanitize=address>"
+  "$<$<CONFIG:DEBUG>:-fsanitize=undefined>"
+)
+add_link_options(
+  "$<$<CONFIG:DEBUG>:-fno-omit-frame-pointer>"
+  "$<$<CONFIG:DEBUG>:-fsanitize=address>"
+  "$<$<CONFIG:DEBUG>:-fsanitize=undefined>"
+)
 
 set(CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake/modules ${CMAKE_MODULE_PATH})
 
