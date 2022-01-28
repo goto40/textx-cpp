@@ -7,5 +7,12 @@ RUN apt install -y libboost-regex-dev
 RUN git clone https://github.com/andreasbuhr/cppcoro.git
 RUN cp -r cppcoro/include/cppcoro /usr/include 
 
+RUN curl -fsSL https://deno.land/x/install/install.sh | sh
+
 COPY Dockerfile vscode_cache.tg[z] ./
 RUN tar xvzf vscode_cache.tgz -C / || echo "no cache found."
+
+RUN chmod -R a+rx /root
+
+ENV DENO_INSTALL="/root/.deno"
+ENV PATH="${DENO_INSTALL}/bin:${PATH}"
