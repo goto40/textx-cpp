@@ -9,8 +9,8 @@ It still has some small limitations (see below, [open points](#openpoints) and [
    * **multi meta models** (reference/include other meta models; see [test/multi_metamodel.t.cpp](test/multi_metamodel.t.cpp))
    * **RREL** for **easy scope providers** (defined inline in the grammar; see [test/rrel.t.cpp](test/rrel.t.cpp))
  * You also get
-   * simple "**istrings**" (indented strings, motivated by XTend: not a full language like XTend, but a simple way to format small parts of your generated code with automatic indentation - just plug your model and some custom C++ functions into your string templates; see [test/istring.t.cpp](test/istring.t.cpp)) 
-   * experimental **model json export** (see interactive [integration_test/json_export](integration_test/json_export))
+   * simple "**istrings**" (indented strings, motivated by XTend: not a full language like XTend, but a simple way to format small parts of your generated code with automatic indentation - just plug your model and some custom C++ functions into your string templates; see [test/istrings.t.cpp](test/istrings.t.cpp)) 
+   * experimental **model json export** (see interactive [integration_tests/json_export](integration_tests/json_export))
  * Examples, see: 
    - [test/model.t.cpp](test/model.t.cpp)
    - [test/scoping.t.cpp](test/scoping.t.cpp)
