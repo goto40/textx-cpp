@@ -3,6 +3,14 @@
 This is an interpreter for [textx](https://github.com/textX/textX) grammars written in C++. Check the [textx-docu](http://textx.github.io/textX/stable/) for a description of the grammar definition.
 It still has some small limitations (see below, [open points](#openpoints) and [limitations](#limitations)), but many grammars can be parsed.
  * This is a just-for-fun project and a proof of concept...
+ * You already get many/most textx-features, including
+   * **basic grammar** with references and scoping
+   * **multi file models** (importURI; see [test/multi_metamodel.t.cpp](test/multi_metamodel.t.cpp))
+   * **multi meta models** (reference/include other meta models; see [test/multi_metamodel.t.cpp](test/multi_metamodel.t.cpp))
+   * **RREL** for **easy scope providers** (defined inline in the grammar; see [test/rrel.t.cpp](test/rrel.t.cpp))
+ * You also get
+   * simple "**istrings**" (indented strings, motivated by XTend: not a full language like XTend, but a simple way to format small parts of your generated code with automatic indentation - just plug your model and some custom C++ functions into your string templates; see [test/istring.t.cpp](test/istring.t.cpp)) 
+   * experimental **model json export** (see interactive [integration_test/json_export](integration_test/json_export))
  * Examples, see: 
    - [test/model.t.cpp](test/model.t.cpp)
    - [test/scoping.t.cpp](test/scoping.t.cpp)
