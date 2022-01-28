@@ -277,7 +277,8 @@ namespace textx::rrel {
         bool first_element
     ) const {
         if (allowed(data.obj, data.lookup_list, this)) {
-            for (const auto& res: seq->get_next_matches(data, allowed, first_element)) {
+            auto generator_results = seq->get_next_matches(data, allowed, first_element); 
+            for (const auto& res: generator_results) {
                 MYYIELD(res);
             }
         }
@@ -290,7 +291,8 @@ namespace textx::rrel {
     ) const {
         if (allowed(data.obj, data.lookup_list, this)) {
             for (const auto& p: paths) {
-                for (const auto& res: p->get_next_matches(data, allowed, first_element)) {
+                auto generator_results = p->get_next_matches(data, allowed, first_element);
+                for (const auto& res: generator_results) {
                     MYYIELD(res);
                 }
             }
@@ -435,12 +437,14 @@ namespace textx::rrel {
                 MYYIELD(data);
             }
             //TODO? TEXTX_ASSERT( textx::utils::is_instance<RRELSequence>(*path_element) );
-            for (const auto& res: path_element->get_next_matches(data, allowed, first_element)) {
+            auto generator_results = path_element->get_next_matches(data, allowed, first_element);
+            for (const auto& res: generator_results) {
                 if( std::holds_alternative<textx::scoping::Postponed>(res)) {
                     MYYIELD((textx::scoping::Postponed{}));
                     co_return;
                 }
-                for (const auto& ires: intern_get_next_matches(std::get<0>(res), allowed, false, prevent_doubles)) {
+                auto igenerator_results = intern_get_next_matches(std::get<0>(res), allowed, false, prevent_doubles);
+                for (const auto& ires: igenerator_results) {
                     MYYIELD(ires);
                 }
             }
@@ -454,7 +458,8 @@ namespace textx::rrel {
         bool first_element
     ) const {
         std::unordered_set<std::pair<const textx::object::Object*,size_t>,textx::utils::pair_hash> prevent_doubles{};
-        for (const auto& res: intern_get_next_matches(data, allowed, first_element, prevent_doubles)) {
+        auto igenerator_results = intern_get_next_matches(data, allowed, first_element, prevent_doubles);
+        for (const auto& res: igenerator_results) {
             if( std::holds_alternative<textx::scoping::Postponed>(res)) {
                 MYYIELD((textx::scoping::Postponed{}));
                 co_return;
@@ -477,7 +482,8 @@ namespace textx::rrel {
     ) const {
         TEXTX_ASSERT(path_elements.size() > idx);
         auto &e = path_elements[idx];
-        for (const auto& res: e->get_next_matches(data, allowed, first_element)) {
+        auto generator_results = e->get_next_matches(data, allowed, first_element);
+        for (const auto& res: generator_results) {
             if( std::holds_alternative<textx::scoping::Postponed>(res)) {
                 MYYIELD((textx::scoping::Postponed{}));
                 co_return;
@@ -489,7 +495,8 @@ namespace textx::rrel {
                 if (std::get<0>(res).obj == nullptr) {
                     co_return;
                 }
-                for (const auto& ires: intern_get_next_matches(std::get<0>(res), allowed, false,idx+1)) {
+                auto igenerator_results = intern_get_next_matches(std::get<0>(res), allowed, false,idx+1);
+                for (const auto& ires: igenerator_results) {
                     MYYIELD(ires);
                 }
             }
@@ -501,7 +508,8 @@ namespace textx::rrel {
         AllowedFunc allowed,
         bool first_element
     ) const {
-        for (const auto& res: intern_get_next_matches(data, allowed, first_element)) {
+        auto igenerator_results = intern_get_next_matches(data, allowed, first_element);
+        for (const auto& res: igenerator_results) {
             MYYIELD(res);
         }
     }
@@ -512,7 +520,8 @@ namespace textx::rrel {
         bool first_element
     ) const {
         TEXTX_ASSERT(allowed(data.obj, data.lookup_list, this));
-        for (const auto& res: seq->get_next_matches(data, allowed, first_element)) {
+        auto generator_results = seq->get_next_matches(data, allowed, first_element);
+        for (const auto& res: generator_results) {
             MYYIELD(res);
         }
     }
@@ -533,7 +542,8 @@ namespace textx::rrel {
             }
         };
         // important: use ref(...) here to protect (do not duplicate) the state
-        for (const py::RRELInternalResult res : rrel_tree.get_next_matches({obj->tx_model()->tx_metamodel(), obj, lookup, {}}, std::ref(allowed), "")) {
+        auto generator_results = rrel_tree.get_next_matches({obj->tx_model()->tx_metamodel(), obj, lookup, {}}, std::ref(allowed), "");
+        for (const py::RRELInternalResult res : generator_results) {
             if(std::holds_alternative<textx::scoping::Postponed>(res)) {
                 MYDBG(std::cout << "FINAL: POSTPONED\n";)
                 return textx::scoping::Postponed{};

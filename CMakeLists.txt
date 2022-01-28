@@ -2,16 +2,22 @@ cmake_minimum_required(VERSION 2.8)
 project(textx)
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
+
+#
+# Note on ASAN/UBSAN
+# I had problems with coroutines... however with valgrind it seems ok.
+# --> to be observed!
+#
 add_compile_options(
   "-fcoroutines"
-  "$<$<CONFIG:DEBUG>:-fno-omit-frame-pointer>"
-  "$<$<CONFIG:DEBUG>:-fsanitize=address>"
-  "$<$<CONFIG:DEBUG>:-fsanitize=undefined>"
+#  "$<$<CONFIG:DEBUG>:-fno-omit-frame-pointer>"
+#  "$<$<CONFIG:DEBUG>:-fsanitize=address>"
+#  "$<$<CONFIG:DEBUG>:-fsanitize=undefined>"
 )
 add_link_options(
-  "$<$<CONFIG:DEBUG>:-fno-omit-frame-pointer>"
-  "$<$<CONFIG:DEBUG>:-fsanitize=address>"
-  "$<$<CONFIG:DEBUG>:-fsanitize=undefined>"
+#  "$<$<CONFIG:DEBUG>:-fno-omit-frame-pointer>"
+#  "$<$<CONFIG:DEBUG>:-fsanitize=address>"
+#  "$<$<CONFIG:DEBUG>:-fsanitize=undefined>"
 )
 
 set(CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake/modules ${CMAKE_MODULE_PATH})
