@@ -43,9 +43,16 @@ namespace textx {
         AttributeCardinality cardinality = AttributeCardinality::scalar;
         std::optional<std::string> type = std::nullopt;
         std::vector<std::string> types={};
-        bool m_can_have_text = false;
-        bool is_text() const { return !type.has_value(); }
-        bool can_have_text() const { return is_text() || m_can_have_text; }
+        bool m_maybe_str = false;
+        bool m_maybe_obj = false;
+        bool m_maybe_boolean = false;
+        bool is_str() const { return maybe_str() && !has_multi_type(); }
+        bool is_obj() const { return maybe_obj() && !has_multi_type(); }
+        bool is_boolean() const { return maybe_boolean() && !has_multi_type(); }
+        bool maybe_str() const { m_maybe_str; }
+        bool maybe_obj() const { m_maybe_obj; }
+        bool maybe_boolean() const { m_maybe_boolean; }
+        bool has_multi_type() const {static_cast<int>(m_maybe_boolean)+static_cast<int>(m_maybe_str)+static_cast<int>(m_maybe_obj)>1; }
         void adjust_type(Metamodel& mm);
     };
 

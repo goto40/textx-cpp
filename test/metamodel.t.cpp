@@ -416,3 +416,67 @@ TEST_CASE("metamodel_boolean_assignment", "[textx/metamodel]")
         CHECK_THROWS_WITH(textx::metamodel_from_str(grammar1), Catch::Matchers::Contains("no list of booleans"));
     }
 }
+TEST_CASE("model_with_obj_attributes_which_can_be_strings", "[textx/model]")
+{
+    {
+        auto grammar1 = R"(
+            Model: 'value' a?='A' | a='B' | a=C;
+            C: x='C';
+        )";
+        auto mm = textx::metamodel_from_str(grammar1);
+        CHECK((*mm)['Model'].get_attribute_info()['a'].maybe_boolean());
+        CHECK((*mm)['Model'].get_attribute_info()['a'].maybe_str());
+        CHECK((*mm)['Model'].get_attribute_info()['a'].maybe_obj());
+        CHECK((*mm)['Model'].get_attribute_info()['a'].has_multi_type());
+
+        CHECK(!(*mm)['Model'].get_attribute_info()['a'].is_boolean());
+        CHECK(!(*mm)['Model'].get_attribute_info()['a'].is_str());
+        CHECK(!(*mm)['Model'].get_attribute_info()['a'].is_obj());
+    }
+
+    {
+        auto grammar1 = R"(
+            Model: 'value' a?='A' | a='B' | a=C;
+            C: 'C';
+        )";
+        auto mm = textx::metamodel_from_str(grammar1);
+        CHECK((*mm)['Model'].get_attribute_info()['a'].maybe_boolean());
+        CHECK((*mm)['Model'].get_attribute_info()['a'].maybe_str());
+        CHECK((*mm)['Model'].get_attribute_info()['a'].has_multi_type());
+
+        CHECK(!(*mm)['Model'].get_attribute_info()['a'].maybe_obj());  // !
+        CHECK(!(*mm)['Model'].get_attribute_info()['a'].is_boolean());
+        CHECK(!(*mm)['Model'].get_attribute_info()['a'].is_str());
+        CHECK(!(*mm)['Model'].get_attribute_info()['a'].is_obj());
+    }
+
+    {
+        auto grammar1 = R"(
+            Model: 'value' a?='A' | a='B';
+        )";
+        auto mm = textx::metamodel_from_str(grammar1);
+        CHECK((*mm)['Model'].get_attribute_info()['a'].maybe_boolean());
+        CHECK((*mm)['Model'].get_attribute_info()['a'].maybe_str());
+        CHECK((*mm)['Model'].get_attribute_info()['a'].has_multi_type());
+
+        CHECK(!(*mm)['Model'].get_attribute_info()['a'].maybe_obj());  // !
+        CHECK(!(*mm)['Model'].get_attribute_info()['a'].is_boolean());
+        CHECK(!(*mm)['Model'].get_attribute_info()['a'].is_str());
+        CHECK(!(*mm)['Model'].get_attribute_info()['a'].is_obj());
+    }
+
+    {
+        auto grammar1 = R"(
+            Model: 'value' a?='A';
+        )";
+        auto mm = textx::metamodel_from_str(grammar1);
+        CHECK((*mm)['Model'].get_attribute_info()['a'].maybe_boolean());
+        CHECK((*mm)['Model'].get_attribute_info()['a'].is_boolean());
+
+        CHECK(!(*mm)['Model'].get_attribute_info()['a'].maybe_str());
+        CHECK(!(*mm)['Model'].get_attribute_info()['a'].maybe_obj());  // !
+        CHECK(!(*mm)['Model'].get_attribute_info()['a'].has_multi_type());
+        CHECK(!(*mm)['Model'].get_attribute_info()['a'].is_str());
+        CHECK(!(*mm)['Model'].get_attribute_info()['a'].is_obj());
+    }
+}
