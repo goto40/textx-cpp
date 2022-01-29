@@ -46,13 +46,13 @@ namespace textx {
         bool m_maybe_str = false;
         bool m_maybe_obj = false;
         bool m_maybe_boolean = false;
-        bool is_str() const { return maybe_str() && !has_multi_type(); }
-        bool is_obj() const { return maybe_obj() && !has_multi_type(); }
-        bool is_boolean() const { return maybe_boolean() && !has_multi_type(); }
-        bool maybe_str() const { m_maybe_str; }
-        bool maybe_obj() const { m_maybe_obj; }
-        bool maybe_boolean() const { m_maybe_boolean; }
-        bool has_multi_type() const {static_cast<int>(m_maybe_boolean)+static_cast<int>(m_maybe_str)+static_cast<int>(m_maybe_obj)>1; }
+        bool is_str() const { return maybe_str() && !is_multi_type(); }
+        bool is_obj() const { return maybe_obj() && !is_multi_type(); }
+        bool is_boolean() const { return maybe_boolean() && !is_multi_type(); }
+        bool maybe_str() const { return m_maybe_str; }
+        bool maybe_obj() const { return m_maybe_obj; }
+        bool maybe_boolean() const { return m_maybe_boolean; }
+        bool is_multi_type() const { return static_cast<int>(m_maybe_boolean)+static_cast<int>(m_maybe_str)+static_cast<int>(m_maybe_obj)>1; }
         void adjust_type(Metamodel& mm);
     };
 
@@ -63,14 +63,14 @@ namespace textx {
             case AttributeCardinality::boolean: o << "boolean"; break;
             default: throw std::runtime_error("unknown AttributeInfo");
         }
-        if (ai.is_text()) {
+        if (ai.maybe_str()) {
             o << "/text";
         }
-        else {
+        else if (ai.maybe_boolean()) {
+            o << "/boolean";
+        }
+        else { // if (ai.maybe_obj()) {
             o << "/type(" << ai.type.value();
-            if (ai.can_have_text()) {
-                o << ";text";
-            }
             o << ")";
         }
         return o;
@@ -109,14 +109,15 @@ namespace textx {
         Rule() = default;
         RuleType type() const { return m_type; }
 
-        void add_attribute(std::string name, std::string type) {
+        void add_attribute_with_rule_type(std::string name, std::string type) {
             attribute_info[name].types.push_back(type);
+            // do not decide if rule is an obj or a str (later!)
         }
-
-        void add_attribute(std::string name) {
-            if (attribute_info.count(name)==0) {
-                attribute_info[name] = {};
-            }
+        void add_attribute_with_str_type(std::string name, std::string type) {
+            attribute_info[name].m_maybe_str = true;
+        }
+        void add_attribute_with_boolean_type(std::string name, std::string type) {
+            attribute_info[name].m_maybe_boolean = true;
         }
 
         const auto& tx_inh_by() const { return m_tx_inh_by; }

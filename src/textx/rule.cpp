@@ -265,7 +265,7 @@ namespace {
                 parsestate.in_assignment = true;
                 TEXTX_ASSERT_EQUAL(match.children.size(),3 , "assignment must have 3 children");
                 TEXTX_ASSERT(match.children[0].captured.has_value(), "assignment name");
-                TEXTX_ASSERT(match.children[1].captured.has_value(), "asisgnment op");
+                TEXTX_ASSERT(match.children[1].captured.has_value(), "assignment op");
                 auto attribute_name = match.children[0].captured.value();
                 auto assignment_op = match.children[1].captured.value();
 
@@ -289,6 +289,7 @@ namespace {
                     rule.add_attribute(attribute_name, choice.children[0].children[0].captured.value());
                 }
                 else {
+                    
                     rule.add_attribute(attribute_name); // add type here
                 }
 

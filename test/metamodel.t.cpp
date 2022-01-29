@@ -20,7 +20,7 @@ TEST_CASE("metamodel_simple_expression2", "[textx/metamodel]")
 {
     {
         auto grammar1 = R"(
-            Model: 'A' 'B'* 'C'+;
+            Model: "A" 'B'* 'C'+;
         )";
 
         textx::Metamodel mm{grammar1};
@@ -34,7 +34,7 @@ TEST_CASE("metamodel_simple_expression3", "[textx/metamodel]")
 {
     {
         auto grammar1 = R"(
-            Model: ('A'|'B')* 'C'+;
+            Model: ("A"|'B')* 'C'+;
         )";
 
         textx::Metamodel mm{grammar1};
@@ -51,7 +51,7 @@ TEST_CASE("metamodel_simple_expression4", "[textx/metamodel]")
 {
     {
         auto grammar1 = R"(
-            Model: ('A' 'B' 'C')#;
+            Model: ("A" 'B' 'C')#;
         )";
 
         textx::Metamodel mm{grammar1};
@@ -95,7 +95,7 @@ TEST_CASE("metamodel_simple_expression6_pos_lookahead", "[textx/metamodel]")
 {
     {
         auto grammar1 = R"(
-            Model: "[" &('a'|'b'|'extra') /\w+/ "]";
+            Model: "[" &("a"|'b'|'extra') /\w+/ "]";
         )";
 
         textx::Metamodel mm{grammar1};
@@ -194,7 +194,7 @@ TEST_CASE("metamodel_simple_unordered_group_test1", "[textx/metamodel]")
 {
     {
         auto grammar1 = R"(
-            Model: ('A' 'B' 'C')#;
+            Model: ("A" 'B' 'C')#;
         )";
 
         textx::Metamodel mm{grammar1};
@@ -211,7 +211,7 @@ TEST_CASE("metamodel_simple_unordered_group_test2", "[textx/metamodel]")
 {
     {
         auto grammar1 = R"(
-            Model: ('A' 'B' 'C')#[','];
+            Model: ("A" 'B' 'C')#[','];
         )";
 
         textx::Metamodel mm{grammar1};
@@ -229,7 +229,7 @@ TEST_CASE("metamodel_simple_unordered_group_test3", "[textx/metamodel]")
 {
     {
         auto grammar1 = R"(
-            Model: ('A' 'B' 'C')#[/\d*/];
+            Model: ("A" 'B' 'C')#[/\d*/];
         )";
 
         textx::Metamodel mm{grammar1};
@@ -248,7 +248,7 @@ TEST_CASE("metamodel_simple_rule_ref", "[textx/metamodel]")
     {
         auto grammar1 = R"(
             Model: A B+ C;
-            A: 'a';
+            A: "a";
             B: 'b';
             C: 'c';
         )";
@@ -300,7 +300,7 @@ TEST_CASE("metamodel_simple_abstract_rule1", "[textx/metamodel]")
         CHECK(mm["A1"].type() == textx::RuleType::common);
         CHECK(mm["A2"].type() == textx::RuleType::match);
         CHECK(mm["A"].type() == textx::RuleType::abstract);
-        CHECK(mm["Model"]["value"].is_text() == false);
+        CHECK(mm["Model"]["value"].is_str() == false);
         CHECK(mm["Model"]["value"].type.value() == "A");
         //std::cout << mm << "\n";
     }
@@ -325,11 +325,11 @@ TEST_CASE("metamodel_simple_abstract_rule2", "[textx/metamodel]")
         CHECK(mm["A1"].type() == textx::RuleType::common);
         CHECK(mm["A2"].type() == textx::RuleType::common);
         CHECK(mm["A"].type() == textx::RuleType::abstract);
-        CHECK(mm["Model"]["a"].is_text() == false);
+        CHECK(mm["Model"]["a"].is_str() == false);
         CHECK(mm["Model"]["a"].type.value() == "A");
-        CHECK(mm["Model"]["a1"].is_text() == false);
+        CHECK(mm["Model"]["a1"].is_str() == false);
         CHECK(mm["Model"]["a1"].type.value() == "A1");
-        CHECK(mm["Model"]["a2"].is_text() == false);
+        CHECK(mm["Model"]["a2"].is_str() == false);
         CHECK(mm["Model"]["a2"].type.value() == "A2");
         //std::cout << mm << "\n";
     }
@@ -349,9 +349,9 @@ TEST_CASE("metamodel_simple_assignment_multiplicity1", "[textx/metamodel]")
         CHECK(mm["A1"].type() == textx::RuleType::common);
         CHECK(mm["A2"].type() == textx::RuleType::common);
         CHECK(mm["A3"].type() == textx::RuleType::common);
-        CHECK(mm["A1"]["x"].is_text() == true);
-        CHECK(mm["A2"]["x"].is_text() == true);
-        CHECK(mm["A3"]["x"].is_text() == true);
+        CHECK(mm["A1"]["x"].is_str() == true);
+        CHECK(mm["A2"]["x"].is_str() == true);
+        CHECK(mm["A3"]["x"].is_str() == true);
         CHECK(!mm["A1"]["x"].type.has_value());
         CHECK(!mm["A2"]["x"].type.has_value());
         CHECK(!mm["A3"]["x"].type.has_value());
@@ -386,11 +386,11 @@ TEST_CASE("metamodel_simple_obj_ref1", "[textx/metamodel]")
         CHECK(mm["A1"].type() == textx::RuleType::common);
         CHECK(mm["A2"].type() == textx::RuleType::common);
         CHECK(mm["A"].type() == textx::RuleType::abstract);
-        CHECK(mm["Model"]["a"].is_text() == false);
+        CHECK(mm["Model"]["a"].is_str() == false);
         CHECK(mm["Model"]["a"].type.value() == "A");
-        CHECK(mm["Model"]["a1"].is_text() == false);
+        CHECK(mm["Model"]["a1"].is_str() == false);
         CHECK(mm["Model"]["a1"].type.value() == "A1");
-        CHECK(mm["Model"]["a2"].is_text() == false);
+        CHECK(mm["Model"]["a2"].is_str() == false);
         CHECK(mm["Model"]["a2"].type.value() == "A2");
     }
 }
@@ -424,14 +424,14 @@ TEST_CASE("model_with_obj_attributes_which_can_be_strings", "[textx/model]")
             C: x='C';
         )";
         auto mm = textx::metamodel_from_str(grammar1);
-        CHECK((*mm)['Model'].get_attribute_info()['a'].maybe_boolean());
-        CHECK((*mm)['Model'].get_attribute_info()['a'].maybe_str());
-        CHECK((*mm)['Model'].get_attribute_info()['a'].maybe_obj());
-        CHECK((*mm)['Model'].get_attribute_info()['a'].has_multi_type());
+        CHECK((*mm)["Model"]["a"].maybe_boolean());
+        CHECK((*mm)["Model"]["a"].maybe_str());
+        CHECK((*mm)["Model"]["a"].maybe_obj());
+        CHECK((*mm)["Model"]["a"].is_multi_type());
 
-        CHECK(!(*mm)['Model'].get_attribute_info()['a'].is_boolean());
-        CHECK(!(*mm)['Model'].get_attribute_info()['a'].is_str());
-        CHECK(!(*mm)['Model'].get_attribute_info()['a'].is_obj());
+        CHECK(!(*mm)["Model"]["a"].is_boolean());
+        CHECK(!(*mm)["Model"]["a"].is_str());
+        CHECK(!(*mm)["Model"]["a"].is_obj());
     }
 
     {
@@ -440,14 +440,14 @@ TEST_CASE("model_with_obj_attributes_which_can_be_strings", "[textx/model]")
             C: 'C';
         )";
         auto mm = textx::metamodel_from_str(grammar1);
-        CHECK((*mm)['Model'].get_attribute_info()['a'].maybe_boolean());
-        CHECK((*mm)['Model'].get_attribute_info()['a'].maybe_str());
-        CHECK((*mm)['Model'].get_attribute_info()['a'].has_multi_type());
+        CHECK((*mm)["Model"]["a"].maybe_boolean());
+        CHECK((*mm)["Model"]["a"].maybe_str());
+        CHECK((*mm)["Model"]["a"].is_multi_type());
 
-        CHECK(!(*mm)['Model'].get_attribute_info()['a'].maybe_obj());  // !
-        CHECK(!(*mm)['Model'].get_attribute_info()['a'].is_boolean());
-        CHECK(!(*mm)['Model'].get_attribute_info()['a'].is_str());
-        CHECK(!(*mm)['Model'].get_attribute_info()['a'].is_obj());
+        CHECK(!(*mm)["Model"]["a"].maybe_obj());  // !
+        CHECK(!(*mm)["Model"]["a"].is_boolean());
+        CHECK(!(*mm)["Model"]["a"].is_str());
+        CHECK(!(*mm)["Model"]["a"].is_obj());
     }
 
     {
@@ -455,14 +455,14 @@ TEST_CASE("model_with_obj_attributes_which_can_be_strings", "[textx/model]")
             Model: 'value' a?='A' | a='B';
         )";
         auto mm = textx::metamodel_from_str(grammar1);
-        CHECK((*mm)['Model'].get_attribute_info()['a'].maybe_boolean());
-        CHECK((*mm)['Model'].get_attribute_info()['a'].maybe_str());
-        CHECK((*mm)['Model'].get_attribute_info()['a'].has_multi_type());
+        CHECK((*mm)["Model"]["a"].maybe_boolean());
+        CHECK((*mm)["Model"]["a"].maybe_str());
+        CHECK((*mm)["Model"]["a"].is_multi_type());
 
-        CHECK(!(*mm)['Model'].get_attribute_info()['a'].maybe_obj());  // !
-        CHECK(!(*mm)['Model'].get_attribute_info()['a'].is_boolean());
-        CHECK(!(*mm)['Model'].get_attribute_info()['a'].is_str());
-        CHECK(!(*mm)['Model'].get_attribute_info()['a'].is_obj());
+        CHECK(!(*mm)["Model"]["a"].maybe_obj());  // !
+        CHECK(!(*mm)["Model"]["a"].is_boolean());
+        CHECK(!(*mm)["Model"]["a"].is_str());
+        CHECK(!(*mm)["Model"]["a"].is_obj());
     }
 
     {
@@ -470,13 +470,13 @@ TEST_CASE("model_with_obj_attributes_which_can_be_strings", "[textx/model]")
             Model: 'value' a?='A';
         )";
         auto mm = textx::metamodel_from_str(grammar1);
-        CHECK((*mm)['Model'].get_attribute_info()['a'].maybe_boolean());
-        CHECK((*mm)['Model'].get_attribute_info()['a'].is_boolean());
+        CHECK((*mm)["Model"]["a"].maybe_boolean());
+        CHECK((*mm)["Model"]["a"].is_boolean());
+        CHECK((*mm)["Model"]["a"].is_multi_type());
 
-        CHECK(!(*mm)['Model'].get_attribute_info()['a'].maybe_str());
-        CHECK(!(*mm)['Model'].get_attribute_info()['a'].maybe_obj());  // !
-        CHECK(!(*mm)['Model'].get_attribute_info()['a'].has_multi_type());
-        CHECK(!(*mm)['Model'].get_attribute_info()['a'].is_str());
-        CHECK(!(*mm)['Model'].get_attribute_info()['a'].is_obj());
+        CHECK(!(*mm)["Model"]["a"].maybe_str());
+        CHECK(!(*mm)["Model"]["a"].maybe_obj());  // !
+        CHECK(!(*mm)["Model"]["a"].is_str());
+        CHECK(!(*mm)["Model"]["a"].is_obj());
     }
 }

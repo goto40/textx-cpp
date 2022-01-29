@@ -52,12 +52,19 @@ namespace textx {
             else if (info.cardinality == AttributeCardinality::scalar) {
                 obj->create_attribute_if_not_present(attr_name);
                 //std::cout << "create scalar " << attr_name << " from " << m0 <<   "\n";
-                if (info.is_text()) {
+                if (info.is_str()) {
                     std::string t="";
                     if (info.type.has_value()) {
                         t = info.type.value();
                     }
                     (*obj)[attr_name] = textx::object::AttributeValue{textx::object::Value{textx::object::MatchText{"",t},m0.start()}};
+                }
+                else if (info.is_boolean()) {
+                    std::string t="";
+                    if (info.type.has_value()) {
+                        t = info.type.value();
+                    }
+                    (*obj)[attr_name] = textx::object::AttributeValue{textx::object::Value{false,m0.start()}};
                 }
                 else {
                     (*obj)[attr_name] = textx::object::AttributeValue{textx::object::Value{std::shared_ptr<textx::object::Object>{}, m0.start()}};
