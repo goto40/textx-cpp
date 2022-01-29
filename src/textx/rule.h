@@ -113,10 +113,10 @@ namespace textx {
             attribute_info[name].types.push_back(type);
             // do not decide if rule is an obj or a str (later!)
         }
-        void add_attribute_with_str_type(std::string name, std::string type) {
+        void add_attribute_with_str_type(std::string name) {
             attribute_info[name].m_maybe_str = true;
         }
-        void add_attribute_with_boolean_type(std::string name, std::string type) {
+        void add_attribute_with_boolean_type(std::string name) {
             attribute_info[name].m_maybe_boolean = true;
         }
 

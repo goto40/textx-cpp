@@ -303,7 +303,7 @@ namespace {
                         rule.add_attribute_with_boolean_type(attribute_name);
                     }
                     else {
-                        rule.add_attribute_with_string_type(attribute_name);
+                        rule.add_attribute_with_str_type(attribute_name);
                     }
                 }
 
@@ -540,10 +540,19 @@ namespace textx {
 
     void AttributeInfo::adjust_type(textx::Metamodel& mm) {
         // remove all match types + adjust maybe_str
-        auto rem_it = std::remove_if(TODO);
+        auto rem_it = std::remove_if(
+            types.begin(),
+            types.end(),
+            [&mm](const std::string &rule_name){ return mm[rule_name].type()==RuleType::match; }
+        );
+        if (rem_it != types.end()) {
+            m_maybe_str = true;
+            types.erase(rem_it, types.end());
+        }
 
         // determine base + adjust maybe_obj
         if (types.size()>0) {
+            m_maybe_obj = true;
             std::unordered_set<std::string> type_set = {};
             for (auto& base: mm.tx_all_types()) {
                 if (std::all_of(
