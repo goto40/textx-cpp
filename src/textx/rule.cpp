@@ -283,14 +283,28 @@ namespace {
 
                 // register attribute
                 if (choice.children[0].name.value()=="rule://reference" && choice.children[0].children[0].name.value()=="rule://obj_ref") {
-                    rule.add_attribute(attribute_name, choice.children[0].children[0].children[1].captured.value()); // add type here
+                    if (assignment_op=="?=") {
+                        rule.add_attribute_with_boolean_type(attribute_name);
+                    }
+                    else {
+                        rule.add_attribute_with_rule_type(attribute_name, choice.children[0].children[0].children[1].captured.value()); // add type here
+                    }
                 }
                 else if (choice.children[0].name.value()=="rule://reference" && choice.children[0].children[0].name.value()=="rule://rule_ref") {
-                    rule.add_attribute(attribute_name, choice.children[0].children[0].captured.value());
+                    if (assignment_op=="?=") {
+                        rule.add_attribute_with_boolean_type(attribute_name);
+                    }
+                    else {
+                        rule.add_attribute_with_rule_type(attribute_name, choice.children[0].children[0].captured.value());
+                    }
                 }
                 else {
-                    
-                    rule.add_attribute(attribute_name); // add type here
+                    if (assignment_op=="?=") {
+                        rule.add_attribute_with_boolean_type(attribute_name);
+                    }
+                    else {
+                        rule.add_attribute_with_string_type(attribute_name);
+                    }
                 }
 
                 {
@@ -525,6 +539,10 @@ namespace textx {
     }
 
     void AttributeInfo::adjust_type(textx::Metamodel& mm) {
+        // remove all match types + adjust maybe_str
+        auto rem_it = std::remove_if(TODO);
+
+        // determine base + adjust maybe_obj
         if (types.size()>0) {
             std::unordered_set<std::string> type_set = {};
             for (auto& base: mm.tx_all_types()) {
