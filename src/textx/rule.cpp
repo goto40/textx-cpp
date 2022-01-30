@@ -554,7 +554,7 @@ namespace textx {
             [&mm](const std::string &rule_name){ return mm[rule_name].type()==RuleType::match; }
         );
         if (rem_it != types.end()) {
-            m_maybe_str = true;
+            m_maybe_str = true; // found possible match rule
             types.erase(rem_it, types.end());
         }
 

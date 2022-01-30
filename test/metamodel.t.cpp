@@ -485,7 +485,7 @@ TEST_CASE("model_with_obj_attributes_testing_multitype_info2_advanced_abstract_r
 {
     {
         auto grammar1 = R"(
-            Model: 'value' a=C b=K c=N d=O e=P;
+            Model: 'value' a=C b=K c=N d=O e=P q=Q l=L;
             C: D|E;
             D: 'D';
             E: F;
@@ -496,6 +496,9 @@ TEST_CASE("model_with_obj_attributes_testing_multitype_info2_advanced_abstract_r
             N: L|M|E;
             O: L|M|'test';
             P: '1'|'2'|'3';
+            Q: '1'|'2'|'3' L;
+            R: E L;
+            S: E L | M;
         )";
         auto mm = textx::metamodel_from_str(grammar1);
         CHECK((*mm)["Model"].type() == textx::RuleType::common);
@@ -509,6 +512,9 @@ TEST_CASE("model_with_obj_attributes_testing_multitype_info2_advanced_abstract_r
         CHECK((*mm)["N"].type() == textx::RuleType::abstract);
         CHECK((*mm)["O"].type() == textx::RuleType::abstract);
         CHECK((*mm)["P"].type() == textx::RuleType::match);
+        CHECK((*mm)["Q"].type() == textx::RuleType::abstract);
+        CHECK((*mm)["L"].type() == textx::RuleType::abstract);
+        CHECK((*mm)["S"].type() == textx::RuleType::abstract);
 
         CHECK((*mm)["Model"]["a"].is_str());
         CHECK((*mm)["Model"]["b"].is_obj());
@@ -524,5 +530,12 @@ TEST_CASE("model_with_obj_attributes_testing_multitype_info2_advanced_abstract_r
         CHECK(!(*mm)["Model"]["d"].maybe_boolean());
 
         CHECK((*mm)["Model"]["e"].is_str());
+
+        CHECK((*mm)["Model"]["q"].is_multi_type());
+        CHECK((*mm)["Model"]["q"].maybe_obj());
+        CHECK((*mm)["Model"]["q"].maybe_str());
+        CHECK(!(*mm)["Model"]["q"].maybe_boolean());
+
+        CHECK((*mm)["Model"]["l"].is_obj());
     }
 }
