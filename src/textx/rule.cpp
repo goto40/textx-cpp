@@ -530,6 +530,10 @@ namespace textx {
     }
 
     bool Rule::adjust_tx_inh_by(textx::Metamodel& mm) {
+        // rewrite this
+        // (a) determine inh_by-list (use only first common rule ref)
+        // (b) determine hint for "RuleType::abstract" in "determine_rule_type"
+        // (c) assert? rule_type != illegal (order of initializaion)???
         auto me = mm.get_fqn_for_rule(name);
         auto copy = tx_inh_by();
         bool ret = false;
@@ -611,13 +615,6 @@ namespace textx {
 
         // TODO determine_rule_type, see http://textx.github.io/textX/stable/grammar/#rule-types
         if (attribute_info.size()>0) {
-            if (name=="L"){
-                std::cout << name << ":";
-                for (auto [k,e]: attribute_info) {
-                    std::cout << k << " ";
-                }
-                std::cout << "\n";
-            }
             return textx::RuleType::common;
         }
         else if (std::count_if(
