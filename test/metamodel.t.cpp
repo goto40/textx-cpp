@@ -472,8 +472,8 @@ TEST_CASE("model_with_obj_attributes_which_can_be_strings", "[textx/model]")
         auto mm = textx::metamodel_from_str(grammar1);
         CHECK((*mm)["Model"]["a"].maybe_boolean());
         CHECK((*mm)["Model"]["a"].is_boolean());
-        CHECK((*mm)["Model"]["a"].is_multi_type());
 
+        CHECK(!(*mm)["Model"]["a"].is_multi_type());
         CHECK(!(*mm)["Model"]["a"].maybe_str());
         CHECK(!(*mm)["Model"]["a"].maybe_obj());  // !
         CHECK(!(*mm)["Model"]["a"].is_str());

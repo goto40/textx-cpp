@@ -474,12 +474,12 @@ namespace textx {
         TEXTX_ASSERT(attribute_info.count(name)>0);
         bool is_boolean_involved = false;
         std::function<size_t(const textx::arpeggio::Match&,size_t)> traverse;
-        traverse = [&](const textx::arpeggio::Match& m,size_t c) -> size_t {
+        traverse = [&is_boolean_involved,&name,&traverse](const textx::arpeggio::Match& m,size_t c) -> size_t {
             if (get_multiplicity(m)==AttributeCardinality::list) {
                 c = 2; // more than 1 --> list
             }
             if (is_assignment_to_attribute(m,name)) {
-                //std::cout << "found assignment " << name << " with " << c << "\n";
+                c = std::max<decltype(c)>(c,1);
                 if (get_multiplicity(m)==AttributeCardinality::boolean) {
                     is_boolean_involved = true;
                 }
@@ -488,20 +488,29 @@ namespace textx {
             else {
                 size_t ret = 0; // no assignment
                 if (is_rule(m,"rule://choice")) {
-                    for (auto &child: m.children) {
-                        ret = std::max(ret, traverse(child,c));
+                    // add_rule("choice", 
+                    //  0) ta::sequence({ref("sequence"), 
+                    //  1) ta::zero_or_more(
+                    //        ta::sequence({ta::str_match("|"),
+                    //                      ref("sequence")}))}));
+                    ret = traverse(m.children[0],ret);
+                    auto &zero_or_more = m.children[1];
+                    for (auto &zero_or_more_child: zero_or_more.children) {
+                        ret = std::max(ret, traverse(zero_or_more_child,0));
                     }
                 }
                 else {
                     for (auto &child: m.children) {
-                        ret += traverse(child,c);
+                        ret += traverse(child,0);
                     }
+                    ret = std::max(ret,c);
+                    std::string n = m.name.has_value()?m.name.value():"???";
                 }
                 return ret;
             }
         };
-        size_t ret = traverse(match, 1);
-        //std::cout << match << "\n=="<< ret << " for " << name << "\n\n";
+        size_t ret = traverse(match, 0);
+        //std::cout /*<< match*/ << "\n=="<< ret << " for " << name << "\n\n";
         if (ret>1) {
             TEXTX_ASSERT(!is_boolean_involved, "only one boolean assignment is allowed (no list of booleans) for ", name, " in ", match.start());
             return AttributeCardinality::list;
