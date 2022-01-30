@@ -96,19 +96,32 @@ namespace textx {
                 new_rule.post_process_created_rule(*this, rule_name, rule_params, rule_body);
             }
 
-            // fill-in inh_by infos
-            adjust_tx_inh_by();
-
             // fill "all types"
             get_all_types(all_types);
 
-            for (auto&[name,r] : grammar) {
-                std::unordered_set<std::string> recursion_stopper{};
-                r.m_type = r.determine_rule_type(recursion_stopper, *this);
+            bool all_rule_types_resolved = false;
+            size_t resolve_iteration_counter=0;
+            while(!all_rule_types_resolved) {
+                all_rule_types_resolved = true;
+                for (auto&[name,r] : grammar) {
+                    std::unordered_set<std::string> recursion_stopper{};
+                    r.m_type = r.determine_rule_type_and_adjust_inh_by(recursion_stopper, *this);
+                    if (r.m_type == RuleType::illegal) {
+                        all_rule_types_resolved = false;
+                    }
+                }
+                resolve_iteration_counter++;
+                if (resolve_iteration_counter>1000) {
+                    throw std::runtime_error("unexpected: rule types could not be resolved...");
+                }
             }
 
             for (auto&[name,r] : grammar) {
                 r.adjust_attr_types(*this);
+            }
+
+            for (auto&[name,r] : grammar) {
+                r.intern_arpeggio_rule_body = nullptr; // no dangling pointer, even if we decide to forget the parse tree now...
             }
 
             // comments
@@ -465,15 +478,6 @@ namespace textx {
         modeltext << file.rdbuf();
         auto m = model_from_str(modeltext.str(), p.string(), is_main_model, workspace);
         return m;
-    }
-
-    void Metamodel::adjust_tx_inh_by() {
-        bool cont=true;
-        while(cont) {
-            for (auto &[k,v]: grammar) {
-                cont = v.adjust_tx_inh_by(*this) && cont;
-            }
-        }
     }
 
     void Metamodel::get_all_types(std::unordered_set<std::string> &res) {

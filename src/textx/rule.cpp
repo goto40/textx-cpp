@@ -328,12 +328,10 @@ namespace {
                 }
 
                 if (assignment_op=="=") {
-                    // TODO handle assignment
                     TEXTX_ASSERT(std::holds_alternative<None>(repeat_modifiers),"no repeat modifiers allowed for an assignment");
                     return assignment_rhs_content;
                 }
                 else if (assignment_op=="*=") {
-                    // TODO handle assignment
                     return std::visit(overloaded{
                         [&](ta::Pattern&p) -> ta::Pattern { return ta::optional(ta::sequence({assignment_rhs_content, ta::zero_or_more(ta::sequence({p, assignment_rhs_content}))})); },
                         [&](Eolterm&) -> ta::Pattern { return ta::eolterm(ta::zero_or_more(assignment_rhs_content)); },
@@ -341,7 +339,6 @@ namespace {
                     }, repeat_modifiers);
                 }
                 else if (assignment_op=="+=") {
-                    // TODO handle assignment
                     return std::visit(overloaded{
                         [&](ta::Pattern&p) -> ta::Pattern { return ta::sequence({assignment_rhs_content, ta::zero_or_more(ta::sequence({p, assignment_rhs_content}))}); },
                         [&](Eolterm&) -> ta::Pattern { return ta::eolterm(ta::one_or_more(assignment_rhs_content)); },
@@ -349,7 +346,6 @@ namespace {
                     }, repeat_modifiers);
                 }
                 else if (assignment_op=="?=") {
-                    // TODO handle assignment
                     TEXTX_ASSERT(std::holds_alternative<None>(repeat_modifiers),"no repeat modifiers allowed for a boolean assignment");
                     return ta::optional(assignment_rhs_content);
                 }
@@ -461,6 +457,7 @@ namespace textx {
     void Rule::post_process_created_rule(textx::Metamodel& mm, std::string_view name, ta::Match rule_params, const ta::Match& rule_body) {
         auto& rule = *this;
         rule.pattern = transform_match2pattern(ParseState{}, mm, rule, rule_body);
+        rule.intern_arpeggio_rule_body = &rule_body;
         std::string rname = std::string("rule://")+std::string(name);
         for(auto& [k,v]: attribute_info) {
             v.cardinality = get_attribute_cardinality(rule_body, k);
@@ -530,10 +527,10 @@ namespace textx {
     }
 
     bool Rule::adjust_tx_inh_by(textx::Metamodel& mm) {
-        // rewrite this
+        // TODO rewrite this
         // (a) determine inh_by-list (use only first common rule ref)
-        // (b) determine hint for "RuleType::abstract" in "determine_rule_type"
-        // (c) assert? rule_type != illegal (order of initialization)???
+        // (b) determine hint for "RuleType::abstract" in "determine_rule_type_and_adjust_inh_by"
+        // (c) assert? rule_type == illegal (order of initialization!)
         // (d) add hint that rule can produce a string (e.g. Rule: Common|Match or Rule: Common|'str')
         auto me = mm.get_fqn_for_rule(name);
         auto copy = tx_inh_by();
@@ -607,14 +604,15 @@ namespace textx {
         }
     }
 
-    textx::RuleType Rule::determine_rule_type(std::unordered_set<std::string> &recursion_stopper, const Metamodel& mm) const {
+    textx::RuleType Rule::determine_rule_type_and_adjust_inh_by(std::unordered_set<std::string> &recursion_stopper, const Metamodel& mm) const {
         if (recursion_stopper.count(name)>0) {
             throw std::runtime_error("detected circular abstract rule reference");
         }
         recursion_stopper.insert(name);
         textx::OnExit onexit{ [&](){ recursion_stopper.erase(name); } };
 
-        // TODO determine_rule_type, see http://textx.github.io/textX/stable/grammar/#rule-types
+        //TODO cont = adjust_tx_inh_by(mm) && cont;
+
         if (attribute_info.size()>0) {
             return textx::RuleType::common;
         }
@@ -622,7 +620,7 @@ namespace textx {
             tx_inh_by().begin(),
             tx_inh_by().end(),
             [&](auto &n){
-                return mm[n].determine_rule_type(recursion_stopper, mm) != RuleType::match;
+                return mm[n].determine_rule_type_and_adjust_inh_by(recursion_stopper, mm) != RuleType::match;
             })>0) 
         {
             return textx::RuleType::abstract;
