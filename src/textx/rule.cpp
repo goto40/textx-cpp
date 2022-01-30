@@ -493,18 +493,18 @@ namespace textx {
                     //  1) ta::zero_or_more(
                     //        ta::sequence({ta::str_match("|"),
                     //                      ref("sequence")}))}));
-                    ret = traverse(m.children[0],ret);
+                    ret = traverse(m.children[0],c);
                     auto &zero_or_more = m.children[1];
                     for (auto &zero_or_more_child: zero_or_more.children) {
-                        ret = std::max(ret, traverse(zero_or_more_child,0));
+                        ret = std::max(ret, traverse(zero_or_more_child,c));
                     }
                 }
                 else {
                     for (auto &child: m.children) {
-                        ret += traverse(child,0);
+                        auto inner_ret = traverse(child,c);
+                        if (name=="a1" && inner_ret>0) std::cout << "inner_ret2b: " << name << ":" << inner_ret << "\n" << child;
+                        ret += inner_ret;
                     }
-                    ret = std::max(ret,c);
-                    std::string n = m.name.has_value()?m.name.value():"???";
                 }
                 return ret;
             }
