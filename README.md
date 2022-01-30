@@ -59,7 +59,7 @@ Each Attribute can be queried:
 
  * `is_str()`, `is_boolean()`, `is_obj()`: if it has a unique output type defined by the grammar (`type` indicates the type/rule-name of the object in case of `is_obj()`/`maybe_obj()`).
  * `maybe_str()`, `maybe_boolean()`, `may_obj()`: if it has a possible output type defined by the grammar.
- * `is_multi_type()` indicatinf if it has More than one possible output type defined by the grammar. 
+ * `is_multi_type()` indicating if it has More than one possible output type defined by the grammar. 
 
 ## Model representation
 
@@ -103,7 +103,7 @@ Example:
 
 ## Workspaces
 
-Use workspaces to manage metamodels and models:
+Use workspaces to manage meta models and models:
 
 Grammars:
 
@@ -172,8 +172,8 @@ auto m = workspace->model_from_file(fn);
       (the textx grammar language).
 
  * workspace.h
-    * Responsibility: manages (owns) all metamodels and models.
-    * Allows to load metamodels (from *.tx files) and to associate them to file endings.
+    * Responsibility: manages (owns) all meta models and models.
+    * Allows to load meta models (from *.tx files) and to associate them to file endings.
     * Allows to load models (from registered file endings) using the appropriate
     meta model.
 
@@ -198,7 +198,7 @@ auto m = workspace->model_from_file(fn);
 
  * boost regex
    * faster than built-in regex
-   * some special cases (unittests) fail with the built-in regex
+   * some special cases (unit tests) fail with the built-in regex
 
  * cppcoro (gcc compatible fork https://github.com/andreasbuhr/cppcoro)
    * for the `coro::generator<..>` required for the
@@ -233,7 +233,7 @@ Note: these limitation are not complete.
 
 ## <a name="openpoints"></a> Open Points
 Prio 1:
- * add more unittests / migrate tests / find bugs
+ * add more unit tests / migrate tests / find bugs
  * include asan into cmake instead of using valgrind.
 
 Prio 2:
