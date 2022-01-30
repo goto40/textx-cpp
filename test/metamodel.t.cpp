@@ -416,7 +416,7 @@ TEST_CASE("metamodel_boolean_assignment", "[textx/metamodel]")
         CHECK_THROWS_WITH(textx::metamodel_from_str(grammar1), Catch::Matchers::Contains("no list of booleans"));
     }
 }
-TEST_CASE("model_with_obj_attributes_which_can_be_strings", "[textx/model]")
+TEST_CASE("model_with_obj_attributes_testing_multitype_info1", "[textx/model]")
 {
     {
         auto grammar1 = R"(
@@ -478,5 +478,51 @@ TEST_CASE("model_with_obj_attributes_which_can_be_strings", "[textx/model]")
         CHECK(!(*mm)["Model"]["a"].maybe_obj());  // !
         CHECK(!(*mm)["Model"]["a"].is_str());
         CHECK(!(*mm)["Model"]["a"].is_obj());
+    }
+}
+
+TEST_CASE("model_with_obj_attributes_testing_multitype_info2_advanced_abstract_rules", "[textx/model]")
+{
+    {
+        auto grammar1 = R"(
+            Model: 'value' a=C b=K c=N d=O e=P;
+            C: D|E;
+            D: 'D';
+            E: F;
+            F: 'F';
+            K: L|M;
+            L: 'L' name=ID;
+            M: 'M' name=ID;
+            N: L|M|E;
+            O: L|M|'test';
+            P: '1'|'2'|'3';
+        )";
+        auto mm = textx::metamodel_from_str(grammar1);
+        CHECK((*mm)["A"].type() == textx::RuleType::common);
+        CHECK((*mm)["C"].type() == textx::RuleType::match);
+        CHECK((*mm)["D"].type() == textx::RuleType::match);
+        CHECK((*mm)["E"].type() == textx::RuleType::match);
+        CHECK((*mm)["F"].type() == textx::RuleType::match);
+        CHECK((*mm)["K"].type() == textx::RuleType::abstract);
+        CHECK((*mm)["L"].type() == textx::RuleType::common);
+        CHECK((*mm)["M"].type() == textx::RuleType::common);
+        CHECK((*mm)["N"].type() == textx::RuleType::abstract);
+        CHECK((*mm)["O"].type() == textx::RuleType::abstract);
+        CHECK((*mm)["P"].type() == textx::RuleType::match);
+
+        CHECK((*mm)["Model"]["a"].is_str());
+        CHECK((*mm)["Model"]["b"].is_obj());
+
+        CHECK((*mm)["Model"]["c"].is_multi_type());
+        CHECK((*mm)["Model"]["c"].maybe_obj());
+        CHECK((*mm)["Model"]["c"].maybe_str());
+        CHECK(!(*mm)["Model"]["c"].maybe_boolean());
+
+        CHECK((*mm)["Model"]["d"].is_multi_type());
+        CHECK((*mm)["Model"]["d"].maybe_obj());
+        CHECK((*mm)["Model"]["d"].maybe_str());
+        CHECK(!(*mm)["Model"]["d"].maybe_boolean());
+
+        CHECK((*mm)["Model"]["e"].is_str());
     }
 }
