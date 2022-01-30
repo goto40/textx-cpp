@@ -416,7 +416,7 @@ TEST_CASE("metamodel_boolean_assignment", "[textx/metamodel]")
         CHECK_THROWS_WITH(textx::metamodel_from_str(grammar1), Catch::Matchers::Contains("no list of booleans"));
     }
 }
-TEST_CASE("model_with_obj_attributes_testing_multitype_info1", "[textx/model]")
+TEST_CASE("metamodel_with_obj_attributes_testing_multitype_info1", "[textx/model]")
 {
     {
         auto grammar1 = R"(
@@ -481,7 +481,7 @@ TEST_CASE("model_with_obj_attributes_testing_multitype_info1", "[textx/model]")
     }
 }
 
-TEST_CASE("model_with_obj_attributes_testing_multitype_info2_advanced_abstract_rules", "[textx/model]")
+TEST_CASE("metamodel_with_obj_attributes_testing_multitype_info2_advanced_abstract_rules", "[textx/model]")
 {
     {
         auto grammar1 = R"(
@@ -540,5 +540,14 @@ TEST_CASE("model_with_obj_attributes_testing_multitype_info2_advanced_abstract_r
     }
 }
 
-// TODO: cyclic inheritance shoud yield an error
+TEST_CASE("metamodel_with_cyclic_inh", "[textx/model]")
+{
+    auto grammar1 = R"(
+        Model: 'value' a=C b=K c=N d=O e=P q=Q l=L;
+        K: L|M;
+        L: 'L' name=ID;
+        M: L|K;
+    )";
+    CHECK_THROWS(textx::metamodel_from_str(grammar1));
+}
 // TODO: Example with "Base: Special1| (Special2 NotSpecial3)"
