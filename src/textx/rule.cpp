@@ -534,6 +534,7 @@ namespace textx {
         // (a) determine inh_by-list (use only first common rule ref)
         // (b) determine hint for "RuleType::abstract" in "determine_rule_type"
         // (c) assert? rule_type != illegal (order of initialization)???
+        // (d) add hint that rule can produce a string (e.g. Rule: Common|Match or Rule: Common|'str')
         auto me = mm.get_fqn_for_rule(name);
         auto copy = tx_inh_by();
         bool ret = false;
