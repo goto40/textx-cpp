@@ -185,7 +185,7 @@ namespace textx {
                 for (auto &[attr_name, attr]: r.second.get_attribute_info()) {
                     std::string attr_name_json = attr_name; // std::string("^") + attr_name + "$";
                     s << "        \"" << attr_name_json << "\": {\n";
-                    if (attr.cardinality==AttributeCardinality::boolean) {
+                    if (attr.is_boolean()) { // TODO use maybe_boolean and also handle maybe_str etc. here somewhere...
                         s << "          " << "\"type\": \"boolean\"\n";
                     }
                     else {

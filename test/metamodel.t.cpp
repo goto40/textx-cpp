@@ -401,7 +401,21 @@ TEST_CASE("metamodel_boolean_assignment", "[textx/metamodel]")
         auto grammar1 = R"(
             Model: 'value' a?='A' b?='B';
         )";
-        CHECK(textx::metamodel_from_str(grammar1));
+        auto mm = textx::metamodel_from_str(grammar1);
+        CHECK( (*mm)["Model"]["a"].cardinality == textx::AttributeCardinality::scalar );
+        CHECK( (*mm)["Model"]["a"].is_boolean() );
+    }
+    {
+        auto grammar1 = R"(
+            Model: 'value' a?='A'  | a='B';
+        )";
+        auto mm = textx::metamodel_from_str(grammar1);
+        CHECK( (*mm)["Model"]["a"].cardinality == textx::AttributeCardinality::scalar );
+        CHECK( !(*mm)["Model"]["a"].is_boolean() );
+        CHECK( (*mm)["Model"]["a"].maybe_boolean() );
+        CHECK( !(*mm)["Model"]["a"].is_str() );
+        CHECK( (*mm)["Model"]["a"].maybe_str() );
+        CHECK( !(*mm)["Model"]["a"].maybe_obj() );
     }
     {
         auto grammar1 = R"(

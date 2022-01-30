@@ -17,7 +17,7 @@ namespace textx::scoping {
 namespace textx {
 
     class Metamodel;
-    enum class AttributeCardinality {scalar, list, boolean};
+    enum class AttributeCardinality {scalar, list};
     enum class RuleType {
         illegal,
         common,    /// Common rules are rules that contain at least one assignment, i.e., they have attributes defined.  
@@ -60,7 +60,6 @@ namespace textx {
         switch(ai.cardinality) {
             case AttributeCardinality::scalar: o << "scalar"; break;
             case AttributeCardinality::list: o << "list"; break;
-            case AttributeCardinality::boolean: o << "boolean"; break;
             default: throw std::runtime_error("unknown AttributeInfo");
         }
         if (ai.maybe_str()) {

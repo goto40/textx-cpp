@@ -55,11 +55,12 @@ Each rule (`textx::Rule`) holds the following information (see, e.g., `metamodel
  * if it potentially results in a string (`bool maybe_str()`),
  * all attributes (`operator[](std::string)` or for-each).
 
-Each Attribute can be queried:
+Each Attribute can be queried (via `AttributeInfo`):
 
- * `is_str()`, `is_boolean()`, `is_obj()`: if it has a unique output type defined by the grammar (`type` indicates the type/rule-name of the object in case of `is_obj()`/`maybe_obj()`).
+ * `is_str()`, `is_boolean()`, `is_obj()`: indicates if it has a *unique* output type defined by the grammar - this always implied `is_mulit_type()==false` (note: the member `type` of the `AttributeInfo` indicates the type/rule-name of the object in case of `is_obj()`/`maybe_obj()`).
  * `maybe_str()`, `maybe_boolean()`, `may_obj()`: if it has a possible output type defined by the grammar.
- * `is_multi_type()` indicating if it has More than one possible output type defined by the grammar. 
+ * `is_multi_type()` indicates if it has more than one possible output type defined by the grammar. 
+ * the `cardinality` indicates if the attribute represents a `AttributeCardinality::scalar` or a ``AttributeCardinality::list`.
 
 ## Model representation
 

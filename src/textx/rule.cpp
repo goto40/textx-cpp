@@ -105,7 +105,7 @@ namespace {
                     return textx::AttributeCardinality::list;
                 }
                 else if (assignment_op=="?=") {
-                    return textx::AttributeCardinality::boolean;
+                    return textx::AttributeCardinality::scalar;
                 }
             }
             if (match.name.value() == "rule://repeatable_expr") {
@@ -477,7 +477,8 @@ namespace textx {
             }
             if (is_assignment_to_attribute(m,name)) {
                 c = std::max<decltype(c)>(c,1);
-                if (get_multiplicity(m)==AttributeCardinality::boolean) {
+                TEXTX_ASSERT(m.children[1].captured.has_value(), "plausibility");
+                if (m.children[1].captured.value()=="?=") {
                     is_boolean_involved = true;
                 }
                 return c;
@@ -512,12 +513,7 @@ namespace textx {
             return AttributeCardinality::list;
         }
         else {
-            if (is_boolean_involved)  {
-                return AttributeCardinality::boolean;
-            }
-            else {
-                return AttributeCardinality::scalar;
-            }
+            return AttributeCardinality::scalar;
         }
     }
 

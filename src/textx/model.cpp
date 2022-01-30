@@ -70,11 +70,6 @@ namespace textx {
                     (*obj)[attr_name] = textx::object::AttributeValue{textx::object::Value{std::shared_ptr<textx::object::Object>{}, m0.start()}};
                 }
             }
-            else if (info.cardinality == AttributeCardinality::boolean) {
-                obj->create_attribute_if_not_present(attr_name);
-                //std::cout << "create boolean " << attr_name << " from " << m0 <<   "\n";
-                (*obj)[attr_name] = textx::object::AttributeValue{textx::object::Value{false, m0.start()}};
-            }
             else {
                 textx::arpeggio::raise(m0.start(), rule_name, attr_name, "unexpected attribute config found...");
             }
@@ -97,11 +92,11 @@ namespace textx {
                     auto target_type = mm[rule_name][attr_name].type.value();
                     std::string ref_name = std::string{textx::arpeggio::get_str(text, val.children[0])};
 
-                    if (mm[rule_name][attr_name].cardinality==AttributeCardinality::scalar) {
-                        (*obj)[attr_name].data = textx::object::Value{textx::object::ObjectRef{shared_from_this(), ref_name, rule_name, target_type, attr_name, obj}, val.start()};
-                    }
-                    else if (mm[rule_name][attr_name].cardinality==AttributeCardinality::boolean) {
+                    if (mm[rule_name][attr_name].maybe_boolean()) { // boolean
                         (*obj)[attr_name].data = textx::object::Value{val.children.size()>0, val.start()};
+                    }
+                    else if (mm[rule_name][attr_name].cardinality==AttributeCardinality::scalar) {
+                        (*obj)[attr_name].data = textx::object::Value{textx::object::ObjectRef{shared_from_this(), ref_name, rule_name, target_type, attr_name, obj}, val.start()};
                     }
                     else {
                         (*obj)[attr_name].append(textx::object::Value{textx::object::ObjectRef{shared_from_this(), ref_name, rule_name, target_type, attr_name, obj}, val.start()});
@@ -110,10 +105,12 @@ namespace textx {
                 else { // no reference
                     if (mm[rule_name][attr_name].cardinality==AttributeCardinality::scalar) {
                         //std::cout << "create " << attr_name << " from " << val << "\n";
-                        (*obj)[attr_name].data = create_model(text, val, mm, obj);
-                    }
-                    else if (mm[rule_name][attr_name].cardinality==AttributeCardinality::boolean) {
-                        (*obj)[attr_name].data = textx::object::Value{true, val.start()};
+                        if (mm[rule_name][attr_name].maybe_boolean()) { // boolean
+                            (*obj)[attr_name].data = textx::object::Value{true, val.start()};
+                        }
+                        else {
+                            (*obj)[attr_name].data = create_model(text, val, mm, obj);
+                        }
                     }
                     else {
                         (*obj)[attr_name].append(create_model(text, val, mm, obj));
