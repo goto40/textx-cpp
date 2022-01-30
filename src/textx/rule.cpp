@@ -623,6 +623,11 @@ namespace textx {
         // determine base + adjust maybe_obj
         if (types.size()>0) {
             m_maybe_obj = true;
+            for (std::string rule_name: types) {
+                if (mm[rule_name].maybe_str()) {
+                    m_maybe_str=true;
+                }
+            }
             std::unordered_set<std::string> type_set = {};
             for (auto& base: mm.tx_all_types()) {
                 if (std::all_of(

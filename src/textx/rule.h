@@ -120,7 +120,7 @@ namespace textx {
         void add_attribute_with_boolean_type(std::string name) {
             attribute_info[name].m_maybe_boolean = true;
         }
-        bool maybe_str() { return m_maybe_str; }
+        bool maybe_str() const { return m_maybe_str; }
 
         const auto& tx_inh_by() const { return m_tx_inh_by; }
         const auto& tx_params() const { return m_tx_params; }
