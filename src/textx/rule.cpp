@@ -363,6 +363,11 @@ namespace {
             [](ParseState parsestate, METAMODEL &mm, RULE& rule, const ta::Match& match) -> ta::Pattern {
                 auto ref_rule_name = match.captured.value();
                 if (!parsestate.in_assignment) {
+                    // TODO: this is very simplified:
+                    // you only have to add the first non-match rule for each choice!
+                    // this should be done probably after all rules have been parsed...
+                    
+                    //std::cout << "rule " << rule.tx_name() << " add_tx_inh_by+= " << ref_rule_name << "\n";
                     rule.add_tx_inh_by(ref_rule_name);
                 }
                 return mm.ref(ref_rule_name);
