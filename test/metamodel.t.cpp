@@ -556,9 +556,10 @@ TEST_CASE("metamodel_with_cyclic_inh", "[textx/model]")
 TEST_CASE("metamodel_abstract_rules_with_sequences_of_rules_only_using_the_first_rule", "[textx/model]")
 {
     // Example with "Base: Special1| (Special2 NotSpecial3)"
+    // "If there are multiple common rules than the first will be used as a result and the rest only for parsing" from
     auto grammar1 = R"(
         Model: 'value' x=Base;
-        Base: S1|(S2 NotS3); // only use first rule (S1) as possible instance for each choice-option
+        Base: S1|(S2 NotS3); // only use first rule (S2) as possible instance for each choice-option
         S1: name=ID;
         S2: name=ID;
         NotS3: name=ID;
