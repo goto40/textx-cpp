@@ -366,7 +366,7 @@ namespace {
                     // TODO: this is very simplified:
                     // you only have to add the first non-match rule for each choice!
                     // this should be done probably after all rules have been parsed...
-                    
+
                     //std::cout << "rule " << rule.tx_name() << " add_tx_inh_by+= " << ref_rule_name << "\n";
                     rule.add_tx_inh_by(ref_rule_name);
                 }
@@ -611,6 +611,13 @@ namespace textx {
 
         // TODO determine_rule_type, see http://textx.github.io/textX/stable/grammar/#rule-types
         if (attribute_info.size()>0) {
+            if (name=="L"){
+                std::cout << name << ":";
+                for (auto [k,e]: attribute_info) {
+                    std::cout << k << " ";
+                }
+                std::cout << "\n";
+            }
             return textx::RuleType::common;
         }
         else if (std::count_if(

@@ -513,7 +513,7 @@ TEST_CASE("model_with_obj_attributes_testing_multitype_info2_advanced_abstract_r
         CHECK((*mm)["O"].type() == textx::RuleType::abstract);
         CHECK((*mm)["P"].type() == textx::RuleType::match);
         CHECK((*mm)["Q"].type() == textx::RuleType::abstract);
-        CHECK((*mm)["L"].type() == textx::RuleType::abstract);
+        CHECK((*mm)["R"].type() == textx::RuleType::abstract); // to be discussed (how is this in original textx?)
         CHECK((*mm)["S"].type() == textx::RuleType::abstract);
 
         CHECK((*mm)["Model"]["a"].is_str());
