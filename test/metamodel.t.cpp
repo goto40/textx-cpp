@@ -499,6 +499,7 @@ TEST_CASE("metamodel_with_obj_attributes_testing_multitype_info2_advanced_abstra
             Q: '1'|'2'|'3' L;
             R: E L;
             S: E L | M;
+            T: M;
         )";
         auto mm = textx::metamodel_from_str(grammar1);
         CHECK((*mm)["Model"].type() == textx::RuleType::common);
@@ -515,6 +516,7 @@ TEST_CASE("metamodel_with_obj_attributes_testing_multitype_info2_advanced_abstra
         CHECK((*mm)["Q"].type() == textx::RuleType::abstract);
         CHECK((*mm)["R"].type() == textx::RuleType::abstract); // to be discussed (how is this in original textx?)
         CHECK((*mm)["S"].type() == textx::RuleType::abstract);
+        CHECK((*mm)["T"].type() == textx::RuleType::abstract);
 
         CHECK((*mm)["Model"]["a"].is_str());
         CHECK((*mm)["Model"]["b"].is_obj());
