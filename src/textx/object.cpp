@@ -67,7 +67,7 @@ namespace textx::object {
         auto r = attributes.find(name);
         if (r==attributes.end()) {
             throw std::runtime_error(std::string("attribute ")+name+" not found.");
-        } 
+        }
         return r->second;
     }
     
@@ -75,7 +75,7 @@ namespace textx::object {
         auto r = attributes.find(name);
         if (r==attributes.end()) {
             throw std::runtime_error(std::string("attribute ")+name+" not found.");
-        } 
+        }
         return r->second;
     }
 

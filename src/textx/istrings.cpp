@@ -34,8 +34,9 @@ namespace {
             ;
             CommandForLoopBody[noskipws]: CMD_END body=Model CMD_START;
             CommandObj2StrFun:
-                 CMD_START call=[Function] "(" obj=[Data] ('.' fqn=FQN_WITH_ARRAY_ACCESS)? ")" CMD_END
+                 CMD_START call=[Function] "(" obj=[Data] (fqn=FqnObj)? ")" CMD_END
             ;
+            FqnObj: '.' value=FQN_WITH_ARRAY_ACCESS;
             CMD_START: '{%';
             CMD_END: '%}';
             FQN_WITH_ARRAY_ACCESS: ID ('[' /\d+/ ']')? ('.' ID ('[' /\d+/ ']')?)*;
@@ -260,7 +261,7 @@ namespace {
             auto fun = std::get<textx::istrings::Obj2StrFun>(external_links[(*cmd)["call"]["name"].str()]);
             auto obj = get_obj( (*cmd)["obj"].obj() );
             if (!(*cmd)["fqn"].is_null()) {
-                obj = obj->fqn_attributes( (*cmd)["fqn"].str() ).obj();
+                obj = obj->fqn_attributes( (*cmd)["fqn"]["value"].str() ).obj();
             }
             std::string res = fun(obj);
             res = add_intend_after_newline(res, s.current_col());
