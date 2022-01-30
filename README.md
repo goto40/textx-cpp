@@ -46,6 +46,21 @@ It still has some small limitations (see below, [open points](#openpoints) and [
   CHECK( (*m)["shapes"][1]["center"]["x"].i() == 333 );
   CHECK( (*m)["shapes"][2].obj()->type == "Line" );
 ```
+## Meta model representation
+
+The meta model (`textx::Metamodel`) allows to access its grammar rules by name: `mm["Name"]`.
+Each rule (`textx::Rule`) holds the following information (see, e.g., `metamodel_with_obj_attributes_testing_multitype_info2_advanced_abstract_rules` in [test/metamodel.t.cpp](test/metamodel.t.cpp)):
+
+ * the `RuleType type()`: `RuleType::common`, `RuleType::abstract`, `RuleType::match` (see [textx-docu](http://textx.github.io/textX/stable/)),
+ * if it potentially results in a string (`bool maybe_str()`),
+ * all attributes (`operator[](std::string)` or for-each).
+
+Each Attribute can be queried:
+
+ * `is_str()`, `is_boolean()`, `is_obj()`: if it has a unique output type defined by the grammar (`type` indicates the type/rule-name of the object in case of `is_obj()`/`maybe_obj`).
+ * `maybe_str()`, `maybe_boolean()`, `may_obj()`: if it has a possible output type defined by the grammar.
+ * `is_multi_type()` indicatinf if it has More than one possible output type defined by the grammar. 
+
 ## Model representation
 
 The parsed model is represented as a `textx::Model` object. This model object allows
