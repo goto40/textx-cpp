@@ -498,7 +498,7 @@ TEST_CASE("model_with_obj_attributes_testing_multitype_info2_advanced_abstract_r
             P: '1'|'2'|'3';
         )";
         auto mm = textx::metamodel_from_str(grammar1);
-        CHECK((*mm)["A"].type() == textx::RuleType::common);
+        CHECK((*mm)["Model"].type() == textx::RuleType::common);
         CHECK((*mm)["C"].type() == textx::RuleType::match);
         CHECK((*mm)["D"].type() == textx::RuleType::match);
         CHECK((*mm)["E"].type() == textx::RuleType::match);
