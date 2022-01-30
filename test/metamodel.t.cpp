@@ -550,4 +550,20 @@ TEST_CASE("metamodel_with_cyclic_inh", "[textx/model]")
     )";
     CHECK_THROWS(textx::metamodel_from_str(grammar1));
 }
-// TODO: Example with "Base: Special1| (Special2 NotSpecial3)"
+
+TEST_CASE("metamodel_abstract_rules_with_sequences_of_rules_only_using_the_first_rule", "[textx/model]")
+{
+    // Example with "Base: Special1| (Special2 NotSpecial3)"
+    auto grammar1 = R"(
+        Model: 'value' x=Base;
+        Base: S1|(S2 NotS3); // only use first rule (S1) as possible instance for each choice-option
+        S1: name=ID;
+        S2: name=ID;
+        NotS3: name=ID;
+    )";
+    auto mm = textx::metamodel_from_str(grammar1);
+    CHECK( (*mm)["Base"].tx_inh_by().size()==2 );
+    CHECK( mm->is_instance("S1","Base") );
+    CHECK( mm->is_instance("S2","Base") );
+    CHECK( !mm->is_instance("NotS3","Base") );
+}
