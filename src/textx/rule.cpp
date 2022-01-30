@@ -502,7 +502,6 @@ namespace textx {
                 else {
                     for (auto &child: m.children) {
                         auto inner_ret = traverse(child,c);
-                        if (name=="a1" && inner_ret>0) std::cout << "inner_ret2b: " << name << ":" << inner_ret << "\n" << child;
                         ret += inner_ret;
                     }
                 }
