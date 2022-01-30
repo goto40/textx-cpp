@@ -57,7 +57,7 @@ Each rule (`textx::Rule`) holds the following information (see, e.g., `metamodel
 
 Each Attribute can be queried:
 
- * `is_str()`, `is_boolean()`, `is_obj()`: if it has a unique output type defined by the grammar (`type` indicates the type/rule-name of the object in case of `is_obj()`/`maybe_obj`).
+ * `is_str()`, `is_boolean()`, `is_obj()`: if it has a unique output type defined by the grammar (`type` indicates the type/rule-name of the object in case of `is_obj()`/`maybe_obj()`).
  * `maybe_str()`, `maybe_boolean()`, `may_obj()`: if it has a possible output type defined by the grammar.
  * `is_multi_type()` indicatinf if it has More than one possible output type defined by the grammar. 
 
