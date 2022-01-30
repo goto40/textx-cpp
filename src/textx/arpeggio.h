@@ -138,6 +138,11 @@ namespace textx
                 f(*this);
                 for (auto& c: children) c.traverse(f);
             }
+            template<class F>
+            void traverse(F f) const {
+                f(*this);
+                for (const auto& c: children) c.traverse(f);
+            }
 
             static std::unordered_map<MatchType, std::string> type2str;
             static std::unordered_map<MatchType, bool> is_terminal;

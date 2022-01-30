@@ -359,12 +359,7 @@ namespace {
             [](ParseState parsestate, METAMODEL &mm, RULE& rule, const ta::Match& match) -> ta::Pattern {
                 auto ref_rule_name = match.captured.value();
                 if (!parsestate.in_assignment) {
-                    // TODO: this is very simplified:
-                    // you only have to add the first non-match rule for each choice!
-                    // this should be done probably after all rules have been parsed...
-
                     //std::cout << "rule " << rule.tx_name() << " add_tx_inh_by+= " << ref_rule_name << "\n";
-                    rule.add_tx_inh_by(ref_rule_name);
                 }
                 return mm.ref(ref_rule_name);
             }
@@ -423,7 +418,7 @@ namespace {
 
 namespace textx {
 
-    Rule::Rule(textx::Metamodel& mm, std::string_view name, ta::Match rule_params, const ta::Match& rule_body) {
+    Rule::Rule(const textx::Metamodel& mm, std::string_view name, ta::Match rule_params, const ta::Match& rule_body) {
         // << rule_body << "\n";
         auto& rule = *this;
         rule.name = name;
@@ -526,34 +521,94 @@ namespace textx {
         }
     }
 
-    bool Rule::adjust_tx_inh_by(textx::Metamodel& mm) {
-        // TODO rewrite this
+    void Rule::determine_rule_type_and_adjust_inh_by(const textx::Metamodel& mm) {
         // (a) determine inh_by-list (use only first common rule ref)
         // (b) determine hint for "RuleType::abstract" in "determine_rule_type_and_adjust_inh_by"
-        // (c) assert? rule_type == illegal (order of initialization!)
         // (d) add hint that rule can produce a string (e.g. Rule: Common|Match or Rule: Common|'str')
-        auto me = mm.get_fqn_for_rule(name);
-        auto copy = tx_inh_by();
-        bool ret = false;
-        for(auto &c: copy) {
-            auto &other_rule = mm[c];
-            for(auto &t: other_rule.tx_inh_by()) {
-                if (tx_inh_by().count(t)==0) {
-                    ret = true;
-                    add_tx_inh_by(t);
+
+        // 1) nothing to for resolved cases or common rules
+        if (attribute_info.size()>0) {
+            m_type = RuleType::common;
+            return;
+        }
+        if (type()!=RuleType::illegal) return;
+        TEXTX_ASSERT(m_tx_inh_by.size()==0, "initially no classes should have been indentified (plausibility check)");
+        TEXTX_ASSERT(intern_arpeggio_rule_body != nullptr, "plausibiliy");
+
+        // 2) find inh-by list
+        bool found_non_match=false;
+        bool found_non_match_here=false;
+        bool found_illegal=false;
+        auto add_inh_by_rule = [&,this](const textx::arpeggio::Match &m0) {
+            found_non_match_here=false;
+            m0.traverse([&](const textx::arpeggio::Match &m) {
+                if (m.name_is("rule://rule_ref")) {
+                    std::string rule_name = m.captured.value();
+                    if (mm[rule_name].m_type==RuleType::illegal) {
+                        found_illegal=true;
+                    }
+                    if (!found_illegal && !found_non_match_here) {
+                        if (mm[rule_name].m_type!=RuleType::match) {
+                            m_tx_inh_by.insert(rule_name);
+                            found_non_match_here = true;
+                            found_non_match = true;
+                        }
+                    }
+                }
+            });
+        };
+        {
+            TEXTX_ASSERT(intern_arpeggio_rule_body->name_is("rule://textx_rule_body"), "plausibility");
+            // 2a) body -> (choice)
+            // add_rule("choice", 
+            //  0) ta::sequence({ref("sequence"), 
+            //  1) ta::zero_or_more(
+            //        ta::sequence({ta::str_match("|"),
+            //                      ref("sequence")}))}));
+            add_inh_by_rule(intern_arpeggio_rule_body->children[0].children[0]);
+            if (!found_non_match_here) { m_maybe_str=true; }
+            auto &zero_or_more = intern_arpeggio_rule_body->children[0].children[1];
+            for (auto &zero_or_more_child: zero_or_more.children) {
+                add_inh_by_rule(zero_or_more_child);
+                if (!found_non_match_here) { m_maybe_str=true; }
+            }
+        }
+
+        if (found_illegal) {
+            m_tx_inh_by.clear(); // retry later...
+            m_maybe_str = false;  // retry later...
+        }
+        else {
+            if (found_non_match) {
+                m_type = RuleType::abstract;
+            }
+            else {
+                m_type = RuleType::match;
+            }
+        }
+
+        // add all inh-by-classes also referenced by all referenced inh-by-classes
+        if (type()==RuleType::abstract) {
+            auto me = mm.get_fqn_for_rule(name);
+            auto copy = tx_inh_by();
+            for(auto &c: copy) {
+                auto &other_rule = mm[c];
+                for(auto &t: other_rule.tx_inh_by()) {
+                    if (tx_inh_by().count(t)==0) {
+                        m_tx_inh_by.insert(t);
+                    }
                 }
             }
         }
-        return ret;
     }
 
-    void Rule::adjust_attr_types(textx::Metamodel& mm) {
+    void Rule::adjust_attr_types(const textx::Metamodel& mm) {
         for (auto &[name,info]: attribute_info) {
             info.adjust_type(mm);
         }
     }
 
-    void AttributeInfo::adjust_type(textx::Metamodel& mm) {
+    void AttributeInfo::adjust_type(const textx::Metamodel& mm) {
         // remove all match types + adjust maybe_str
         auto rem_it = std::remove_if(
             types.begin(),
@@ -601,32 +656,6 @@ namespace textx {
                 TEXTX_ASSERT(type_set.size()>0); // ==1??
                 type = *type_set.begin();
             }
-        }
-    }
-
-    textx::RuleType Rule::determine_rule_type_and_adjust_inh_by(std::unordered_set<std::string> &recursion_stopper, const Metamodel& mm) const {
-        if (recursion_stopper.count(name)>0) {
-            throw std::runtime_error("detected circular abstract rule reference");
-        }
-        recursion_stopper.insert(name);
-        textx::OnExit onexit{ [&](){ recursion_stopper.erase(name); } };
-
-        //TODO cont = adjust_tx_inh_by(mm) && cont;
-
-        if (attribute_info.size()>0) {
-            return textx::RuleType::common;
-        }
-        else if (std::count_if(
-            tx_inh_by().begin(),
-            tx_inh_by().end(),
-            [&](auto &n){
-                return mm[n].determine_rule_type_and_adjust_inh_by(recursion_stopper, mm) != RuleType::match;
-            })>0) 
-        {
-            return textx::RuleType::abstract;
-        }
-        else {
-            return textx::RuleType::match;
         }
     }
 

@@ -539,3 +539,6 @@ TEST_CASE("model_with_obj_attributes_testing_multitype_info2_advanced_abstract_r
         CHECK((*mm)["Model"]["l"].is_obj());
     }
 }
+
+// TODO: cyclic inheritance shoud yield an error
+// TODO: Example with "Base: Special1| (Special2 NotSpecial3)"

@@ -100,20 +100,19 @@ namespace textx {
             get_all_types(all_types);
 
             bool all_rule_types_resolved = false;
-            size_t resolve_iteration_counter=0;
-            while(!all_rule_types_resolved) {
-                all_rule_types_resolved = true;
+            size_t unresolved_rules=grammar.size();
+            while(unresolved_rules>0) {
+                size_t unresolved_rules_new = 0;
                 for (auto&[name,r] : grammar) {
-                    std::unordered_set<std::string> recursion_stopper{};
-                    r.m_type = r.determine_rule_type_and_adjust_inh_by(recursion_stopper, *this);
+                    r.determine_rule_type_and_adjust_inh_by(*this);
                     if (r.m_type == RuleType::illegal) {
-                        all_rule_types_resolved = false;
+                        unresolved_rules_new++;
                     }
                 }
-                resolve_iteration_counter++;
-                if (resolve_iteration_counter>1000) {
-                    throw std::runtime_error("unexpected: rule types could not be resolved...");
+                if (unresolved_rules_new==unresolved_rules) {
+                    throw std::runtime_error("unexpected: rule types could not be resolved... (maybe cyclic inheritance detected)");
                 }
+                unresolved_rules = unresolved_rules_new;
             }
 
             for (auto&[name,r] : grammar) {

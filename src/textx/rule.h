@@ -53,7 +53,7 @@ namespace textx {
         bool maybe_obj() const { return m_maybe_obj; }
         bool maybe_boolean() const { return m_maybe_boolean; }
         bool is_multi_type() const { return static_cast<int>(m_maybe_boolean)+static_cast<int>(m_maybe_str)+static_cast<int>(m_maybe_obj)>1; }
-        void adjust_type(Metamodel& mm);
+        void adjust_type(const Metamodel& mm);
     };
 
     inline std::ostream& operator<<(std::ostream &o, const AttributeInfo& ai) {
@@ -97,13 +97,13 @@ namespace textx {
         RuleType m_type = RuleType::illegal;
         std::unordered_map<std::string,std::string> m_tx_params = {};
         const textx::arpeggio::Match* intern_arpeggio_rule_body=nullptr;
+        bool m_maybe_str=false;
 
-        Rule(textx::Metamodel& mm, std::string_view name, textx::arpeggio::Match rule_params, const textx::arpeggio::Match& rule_body);
+        Rule(const textx::Metamodel& mm, std::string_view name, textx::arpeggio::Match rule_params, const textx::arpeggio::Match& rule_body);
         void post_process_created_rule(textx::Metamodel& mm, std::string_view name, textx::arpeggio::Match rule_params, const textx::arpeggio::Match& rule_body);
         textx::AttributeCardinality get_attribute_cardinality(const textx::arpeggio::Match& match, std::string name);
-        bool adjust_tx_inh_by(textx::Metamodel& mm);
-        void adjust_attr_types(textx::Metamodel& mm);
-        textx::RuleType determine_rule_type_and_adjust_inh_by(std::unordered_set<std::string> &recursion_stopper, const Metamodel& mm) const;
+        void determine_rule_type_and_adjust_inh_by(const textx::Metamodel& mm);
+        void adjust_attr_types(const textx::Metamodel& mm);
 
         friend Metamodel;
     public:
@@ -120,6 +120,7 @@ namespace textx {
         void add_attribute_with_boolean_type(std::string name) {
             attribute_info[name].m_maybe_boolean = true;
         }
+        bool maybe_str() { return m_maybe_str; }
 
         const auto& tx_inh_by() const { return m_tx_inh_by; }
         const auto& tx_params() const { return m_tx_params; }
@@ -131,11 +132,6 @@ namespace textx {
             return p->second;
         }
         const std::string& tx_name() const { return name; }
-
-        void add_tx_inh_by(std::string name) {
-            //std::cout << this->name << " is inherited by " << name << "\n";
-            m_tx_inh_by.insert(name);
-        }
 
         std::optional<textx::arpeggio::Match> operator()(const textx::arpeggio::Config &config, textx::arpeggio::ParserState &text, textx::arpeggio::TextPosition pos) const {
             return pattern(config, text, pos);
