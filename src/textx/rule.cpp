@@ -533,7 +533,7 @@ namespace textx {
         // rewrite this
         // (a) determine inh_by-list (use only first common rule ref)
         // (b) determine hint for "RuleType::abstract" in "determine_rule_type"
-        // (c) assert? rule_type != illegal (order of initializaion)???
+        // (c) assert? rule_type != illegal (order of initialization)???
         auto me = mm.get_fqn_for_rule(name);
         auto copy = tx_inh_by();
         bool ret = false;
