@@ -271,7 +271,12 @@ namespace {
 
                 auto &choice = match.children[2].children[0];
                 std::ostringstream assignment_info;
-                assignment_info << "assignment://" << attribute_name;
+                if (assignment_op=="?=") {
+                    assignment_info << "boolean_assignment://" << attribute_name;
+                }
+                else {
+                    assignment_info << "assignment://" << attribute_name;
+                }
                 ta::Pattern assignment_rhs_content = ta::named(assignment_info.str(), ta::sequence({transform_match2pattern( parsestate, mm, rule, choice.children[0])})); 
 
                 // repeat modifiers
@@ -601,6 +606,12 @@ namespace textx {
     void Rule::adjust_attr_types(const textx::Metamodel& mm) {
         for (auto &[name,info]: attribute_info) {
             info.adjust_type(mm);
+        }
+        // final check for boolean attr. to be "alone"
+        for (auto &[name,info]: attribute_info) {
+            if (info.maybe_boolean()) {
+                TEXTX_ASSERT(info.is_boolean(), "boolean assignments must be alone and not mixed with other assignments for attr=",name)
+            }
         }
     }
 

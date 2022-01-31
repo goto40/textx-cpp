@@ -407,14 +407,15 @@ TEST_CASE("metamodel_boolean_assignment", "[textx/metamodel]")
     }
     {
         auto grammar1 = R"(
-            Model: 'value' a?='A'  | a='B';
+            Model: 'value' a='B';
         )";
         auto mm = textx::metamodel_from_str(grammar1);
         CHECK( (*mm)["Model"]["a"].cardinality == textx::AttributeCardinality::scalar );
-        CHECK( !(*mm)["Model"]["a"].is_boolean() );
-        CHECK( (*mm)["Model"]["a"].maybe_boolean() );
-        CHECK( !(*mm)["Model"]["a"].is_str() );
+        CHECK( (*mm)["Model"]["a"].is_str() );
         CHECK( (*mm)["Model"]["a"].maybe_str() );
+
+        CHECK( !(*mm)["Model"]["a"].is_boolean() );
+        CHECK( !(*mm)["Model"]["a"].maybe_boolean() );
         CHECK( !(*mm)["Model"]["a"].maybe_obj() );
     }
     {
@@ -434,11 +435,11 @@ TEST_CASE("metamodel_with_obj_attributes_testing_multitype_info1", "[textx/model
 {
     {
         auto grammar1 = R"(
-            Model: 'value' a?='A' | a='B' | a=C;
+            Model: 'value' a='B' | a=C;
             C: x='C';
         )";
         auto mm = textx::metamodel_from_str(grammar1);
-        CHECK((*mm)["Model"]["a"].maybe_boolean());
+        CHECK(!(*mm)["Model"]["a"].maybe_boolean());
         CHECK((*mm)["Model"]["a"].maybe_str());
         CHECK((*mm)["Model"]["a"].maybe_obj());
         CHECK((*mm)["Model"]["a"].is_multi_type());
@@ -450,32 +451,32 @@ TEST_CASE("metamodel_with_obj_attributes_testing_multitype_info1", "[textx/model
 
     {
         auto grammar1 = R"(
-            Model: 'value' a?='A' | a='B' | a=C;
+            Model: 'value' a='B' | a=C;
             C: 'C';
         )";
         auto mm = textx::metamodel_from_str(grammar1);
-        CHECK((*mm)["Model"]["a"].maybe_boolean());
         CHECK((*mm)["Model"]["a"].maybe_str());
-        CHECK((*mm)["Model"]["a"].is_multi_type());
+        CHECK((*mm)["Model"]["a"].is_str());
 
-        CHECK(!(*mm)["Model"]["a"].maybe_obj());  // !
+        CHECK(!(*mm)["Model"]["a"].maybe_boolean());
+        CHECK(!(*mm)["Model"]["a"].is_multi_type());
+        CHECK(!(*mm)["Model"]["a"].maybe_obj());
         CHECK(!(*mm)["Model"]["a"].is_boolean());
-        CHECK(!(*mm)["Model"]["a"].is_str());
         CHECK(!(*mm)["Model"]["a"].is_obj());
     }
 
     {
         auto grammar1 = R"(
-            Model: 'value' a?='A' | a='B';
+            Model: 'value' a='B';
         )";
         auto mm = textx::metamodel_from_str(grammar1);
-        CHECK((*mm)["Model"]["a"].maybe_boolean());
         CHECK((*mm)["Model"]["a"].maybe_str());
-        CHECK((*mm)["Model"]["a"].is_multi_type());
+        CHECK((*mm)["Model"]["a"].is_str());
 
+        CHECK(!(*mm)["Model"]["a"].maybe_boolean());
+        CHECK(!(*mm)["Model"]["a"].is_multi_type());
         CHECK(!(*mm)["Model"]["a"].maybe_obj());  // !
         CHECK(!(*mm)["Model"]["a"].is_boolean());
-        CHECK(!(*mm)["Model"]["a"].is_str());
         CHECK(!(*mm)["Model"]["a"].is_obj());
     }
 

@@ -60,7 +60,7 @@ Each Attribute represents either string, object or boolean values. Attributes ca
  * `is_str()`, `is_boolean()`, `is_obj()`: indicates if it has a *unique* output type defined by the grammar - this always implies `is_mulit_type()==false` (note: the member `type` of the `AttributeInfo` indicates the type/rule-name of the object in case of `is_obj()`/`maybe_obj()`).
  * `maybe_str()`, `maybe_boolean()`, `may_obj()`: indicates if it has a possible output type defined by the grammar.
  * `is_multi_type()` indicates if it has more than one possible output type defined by the grammar. 
- * the `cardinality` indicates if the attribute represents a `AttributeCardinality::scalar` or a ``AttributeCardinality::list`.
+ * the `cardinality` indicates if the attribute represents a `AttributeCardinality::scalar` or a `AttributeCardinality::list`.
 
 ## Model representation
 

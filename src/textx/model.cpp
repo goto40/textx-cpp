@@ -52,19 +52,19 @@ namespace textx {
             else if (info.cardinality == AttributeCardinality::scalar) {
                 obj->create_attribute_if_not_present(attr_name);
                 //std::cout << "create scalar " << attr_name << " from " << m0 <<   "\n";
-                if (info.is_str()) {
-                    std::string t="";
-                    if (info.type.has_value()) {
-                        t = info.type.value();
-                    }
-                    (*obj)[attr_name] = textx::object::AttributeValue{textx::object::Value{textx::object::MatchText{"",t},m0.start()}};
-                }
-                else if (info.is_boolean()) {
+                if (info.maybe_boolean()) {
                     std::string t="";
                     if (info.type.has_value()) {
                         t = info.type.value();
                     }
                     (*obj)[attr_name] = textx::object::AttributeValue{textx::object::Value{false,m0.start()}};
+                }
+                else if (info.maybe_str()) {
+                    std::string t="";
+                    if (info.type.has_value()) {
+                        t = info.type.value();
+                    }
+                    (*obj)[attr_name] = textx::object::AttributeValue{textx::object::Value{textx::object::MatchText{"",t},m0.start()}};
                 }
                 else {
                     (*obj)[attr_name] = textx::object::AttributeValue{textx::object::Value{std::shared_ptr<textx::object::Object>{}, m0.start()}};
@@ -81,6 +81,20 @@ namespace textx {
             if (m.name_starts_with("rule://") && !first) {
                 return;
             }
+            else if (m.name_starts_with("boolean_assignment://")) {
+                std::string attr_name = m.name.value().substr(8+13);
+                //std::cout << "*************** adding boolean attr " << m.name.value() << "\n"<< m << "\n";
+                auto& val = m.children[0];
+
+                // reference assignment
+                if (val.name_starts_with("obj_ref://")) {
+                    //TODO: why val.children.size()>0?
+                    (*obj)[attr_name].data = textx::object::Value{val.children.size()>0, val.start()};
+                }
+                else { // no reference
+                    (*obj)[attr_name].data = textx::object::Value{true, val.start()};
+                }
+            }
             else if (m.name_starts_with("assignment://")) {
                 std::string attr_name = m.name.value().substr(13);
                 //std::cout << "*************** adding attr " << m.name.value() << "\n"<< m << "\n";
@@ -92,10 +106,7 @@ namespace textx {
                     auto target_type = mm[rule_name][attr_name].type.value();
                     std::string ref_name = std::string{textx::arpeggio::get_str(text, val.children[0])};
 
-                    if (mm[rule_name][attr_name].maybe_boolean()) { // boolean
-                        (*obj)[attr_name].data = textx::object::Value{val.children.size()>0, val.start()};
-                    }
-                    else if (mm[rule_name][attr_name].cardinality==AttributeCardinality::scalar) {
+                    if (mm[rule_name][attr_name].cardinality==AttributeCardinality::scalar) {
                         (*obj)[attr_name].data = textx::object::Value{textx::object::ObjectRef{shared_from_this(), ref_name, rule_name, target_type, attr_name, obj}, val.start()};
                     }
                     else {
@@ -104,13 +115,7 @@ namespace textx {
                 }
                 else { // no reference
                     if (mm[rule_name][attr_name].cardinality==AttributeCardinality::scalar) {
-                        //std::cout << "create " << attr_name << " from " << val << "\n";
-                        if (mm[rule_name][attr_name].maybe_boolean()) { // boolean
-                            (*obj)[attr_name].data = textx::object::Value{true, val.start()};
-                        }
-                        else {
-                            (*obj)[attr_name].data = create_model(text, val, mm, obj);
-                        }
+                        (*obj)[attr_name].data = create_model(text, val, mm, obj);
                     }
                     else {
                         (*obj)[attr_name].append(create_model(text, val, mm, obj));

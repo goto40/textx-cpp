@@ -227,3 +227,32 @@ TEST_CASE("model_with_optional_parts", "[textx/model]")
     CHECK( (*m->fqn("b1"))["refs"][0].is_obj() );
     CHECK( (*m->fqn("b1"))["refs"][0].is_ref() );
 }
+
+
+TEST_CASE("model_boolean_assignment_with_alternatives", "[textx/model]")
+{
+    auto grammar1 = R"(
+        Model: 'value' ( a='A' | a=B | 'none');
+        B: x='B';
+    )";
+    auto mm = textx::metamodel_from_str(grammar1);
+    auto m1 = mm->model_from_str("value A");
+    auto m2 = mm->model_from_str("value B");
+    auto m3 = mm->model_from_str("value none");
+
+    CHECK( (*m1)["a"].is_str() )  ;
+    CHECK( (*m1)["a"].str() == "A" );  
+
+    CHECK( (*m2)["a"].is_obj() )  ;
+    CHECK( (*m2)["a"]["x"].str() == "B" );  
+    CHECK( !(*m2)["a"].is_null() );
+
+    CHECK( (*m3)["a"].is_str() );
+
+    auto grammar2 = R"(
+        Model: 'value' ( a='A' | a=B | a?='C');
+        B: x='B';
+    )";
+    CHECK_THROWS_WITH(textx::metamodel_from_str(grammar2), Catch::Matchers::Contains("boolean assignments must be alone"));
+
+}
