@@ -32,7 +32,12 @@ namespace mgrep {
                     }},
                     {"line", [line=line](std::shared_ptr<textx::object::Object> o) -> std::string {
                         return std::to_string(line);
-                    }}
+                    }},
+                    {"print", [](std::shared_ptr<textx::object::Object> o) -> std::string {
+                        std::ostringstream s;
+                        o->print(s, 0, true);
+                        return s.str();
+                    }},
                 }
             );
             line++;

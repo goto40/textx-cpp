@@ -44,6 +44,10 @@ int main(int ac, char** av){
             grep.set_transform_command(vm["transform"].as<std::string>());
             has_transform_model = true;
         }
+        else {
+            grep.set_transform_command("{% print(model) %}");
+            has_transform_model = true;
+        }
 
         if (vm.count("input-file")) {
             auto input_file = vm["input-file"].as<std::vector<std::string>>();

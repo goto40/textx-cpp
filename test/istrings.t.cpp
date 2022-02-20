@@ -7,8 +7,8 @@ namespace {
             Model: 'shapes' info=STRING ':' shapes+=Shape[','];
             Shape: Point|ComplexShape;
             ComplexShape: Circle|Line;
-            Point: type_name='Point' '(' x=NUMBER ',' y=NUMBER ')';
-            Circle: type_name='Circle' '(' center=Point ',' r=NUMBER ')';
+            Point: type_name="Point" '(' x=NUMBER ',' y=NUMBER ')';
+            Circle: type_name="Circle" '(' center=Point ',' r=NUMBER ')';
             Line: type_name='Line' '(' p1=Point ',' p2=Point ')';
         )#");
         auto m = mm->model_from_str(R"(
@@ -67,12 +67,12 @@ TEST_CASE("istrings_metamodel2_str", "[textx/istrings]")
 {
     auto model = get_example_model();
     auto res = textx::istrings::i(
-        R"(info='{% model.info %}')",
+        R"(info="{% model.info %}")",
         { {"model", model->val().obj()} }
     );
 
     CHECK( res.size()>0 );
-    CHECK( res == "info='My Shapes'");
+    CHECK( res == "info=\"My Shapes\"");
 
     // res = textx::istrings::i(
     //     R"(info='{% model.info %}\n123')",
@@ -80,7 +80,7 @@ TEST_CASE("istrings_metamodel2_str", "[textx/istrings]")
     // );
 
     // CHECK( res.size()>0 );
-    // CHECK( res == "info='My Shapes'\n123");
+    // CHECK( res == "info='My"Shapes"\n123");
 
 }
 
@@ -89,7 +89,7 @@ TEST_CASE("istrings_metamodel3_forloop", "[textx/istrings]")
     auto model = get_example_model();
     auto res = textx::istrings::i(
         R"(
-        info='{% model.info %}'
+        info="{% model.info %}"
         -0------
         {% FOR o: model.shapes %}
         inner_type: {% o.type_name %}
@@ -103,7 +103,7 @@ TEST_CASE("istrings_metamodel3_forloop", "[textx/istrings]")
     //std::cout << res << "\n";
     CHECK( res ==
 R"(
-info='My Shapes'
+info="My Shapes"
 -0------
 inner_type: Point
 inner_type: Circle
@@ -117,7 +117,7 @@ TEST_CASE("istrings_metamodel3_forloop_indent_removed", "[textx/istrings]")
     auto model = get_example_model();
     auto res = textx::istrings::i(
         R"(
-        info='{% model.info %}'
+        info="{% model.info %}"
         -1------
         {% FOR o: model.shapes %}
             inner_type: {% o.type_name %}
@@ -131,7 +131,7 @@ TEST_CASE("istrings_metamodel3_forloop_indent_removed", "[textx/istrings]")
     //std::cout << res << "\n";
     CHECK( res ==
 R"(
-info='My Shapes'
+info="My Shapes"
 -1------
 inner_type: Point
 inner_type: Circle
@@ -145,7 +145,7 @@ TEST_CASE("istrings_metamodel3_forloop_indent_active", "[textx/istrings]")
     auto model = get_example_model();
     auto res = textx::istrings::i(
         R"(
-        info='{% model.info %}'
+        info="{% model.info %}"
         -2------
             {% FOR o: model.shapes %}
             inner_type: {% o.type_name %}
@@ -159,7 +159,7 @@ TEST_CASE("istrings_metamodel3_forloop_indent_active", "[textx/istrings]")
     //std::cout << res << "\n";
     CHECK( res ==
 R"(
-info='My Shapes'
+info="My Shapes"
 -2------
     inner_type: Point
     inner_type: Circle
@@ -173,7 +173,7 @@ TEST_CASE("istrings_metamodel3_forloop_inline", "[textx/istrings]")
     auto model = get_example_model();
     auto res = textx::istrings::i(
         R"(
-        info='{% model.info %}'
+        info="{% model.info %}"
         -------
             inline:{% FOR o: model.shapes %} {% o.type_name %}{% ENDFOR %}
         -------
@@ -185,7 +185,7 @@ TEST_CASE("istrings_metamodel3_forloop_inline", "[textx/istrings]")
     //std::cout << res << "\n";
     CHECK( res ==
 R"(
-info='My Shapes'
+info="My Shapes"
 -------
     inline: Point Circle Line
 -------
@@ -197,7 +197,7 @@ TEST_CASE("istrings_metamodel4_functions", "[textx/istrings]")
     auto model = get_example_model();
     auto res = textx::istrings::i(
         R"(
-        info='{% model.info %}'
+        info="{% model.info %}"
         -------
             {% FOR o: model.shapes %}
             {% print(o) %}
@@ -217,51 +217,51 @@ TEST_CASE("istrings_metamodel4_functions", "[textx/istrings]")
     //std::cout << res << "\n";
     CHECK( res ==
 R"(
-info='My Shapes'
+info="My Shapes"
 -------
     Point{
       type_name=
-        'Point'
+        "Point"
       x=
-        '1'
+        "1"
       y=
-        '2'
+        "2"
     }
     Circle{
       type_name=
-        'Circle'
+        "Circle"
       center=
         Point{
           type_name=
-            'Point'
+            "Point"
           x=
-            '333'
+            "333"
           y=
-            '4.5'
+            "4.5"
         }
       r=
-        '9'
+        "9"
     }
     Line{
       type_name=
-        'Line'
+        "Line"
       p1=
         Point{
           type_name=
-            'Point'
+            "Point"
           x=
-            '0'
+            "0"
           y=
-            '0'
+            "0"
         }
       p2=
         Point{
           type_name=
-            'Point'
+            "Point"
           x=
-            '1'
+            "1"
           y=
-            '1'
+            "1"
         }
     }
 -------
@@ -273,7 +273,7 @@ TEST_CASE("istrings_metamodel4_functions_plus_newline", "[textx/istrings]")
     auto model = get_example_model();
     auto res = textx::istrings::i(
         R"(
-        info='{% model.info %}'
+        info="{% model.info %}"
         -------
             {% FOR o: model.shapes %}
                 {% print(o) %}
@@ -296,57 +296,57 @@ TEST_CASE("istrings_metamodel4_functions_plus_newline", "[textx/istrings]")
     //std::cout << res << "\n";
     CHECK( res ==
 R"(
-info='My Shapes'
+info="My Shapes"
 -------
     Point{
       type_name=
-        'Point'
+        "Point"
       x=
-        '1'
+        "1"
       y=
-        '2'
+        "2"
     }
 
       x
 
     Circle{
       type_name=
-        'Circle'
+        "Circle"
       center=
         Point{
           type_name=
-            'Point'
+            "Point"
           x=
-            '333'
+            "333"
           y=
-            '4.5'
+            "4.5"
         }
       r=
-        '9'
+        "9"
     }
 
       x
 
     Line{
       type_name=
-        'Line'
+        "Line"
       p1=
         Point{
           type_name=
-            'Point'
+            "Point"
           x=
-            '0'
+            "0"
           y=
-            '0'
+            "0"
         }
       p2=
         Point{
           type_name=
-            'Point'
+            "Point"
           x=
-            '1'
+            "1"
           y=
-            '1'
+            "1"
         }
     }
 
@@ -361,7 +361,7 @@ TEST_CASE("istrings_array_access", "[textx/istrings]")
     auto model = get_example_model();
     auto res = textx::istrings::i(
         R"(
-        shape[1]='{% model.shapes[1].type_name %}'
+        shape[1]="{% model.shapes[1].type_name %}"
         {% print(model.shapes[1]) %}
         )",
         {
@@ -375,21 +375,21 @@ TEST_CASE("istrings_array_access", "[textx/istrings]")
     );
     //std::cout << res;
     CHECK( res == R"#(
-shape[1]='Circle'
+shape[1]="Circle"
 Circle{
   type_name=
-    'Circle'
+    "Circle"
   center=
     Point{
       type_name=
-        'Point'
+        "Point"
       x=
-        '333'
+        "333"
       y=
-        '4.5'
+        "4.5"
     }
   r=
-    '9'
+    "9"
 }
 )#");
 }

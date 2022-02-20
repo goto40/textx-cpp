@@ -111,41 +111,55 @@ namespace textx::object {
         }
     }
 
-    void Value::print(std::ostream& o, size_t indent) const {
+    void Value::print(std::ostream& o, size_t indent, bool one_line) const {
         if (is_null()) {
-            o << std::string(indent,' ') << "nullptr" << "\n";
+            if (!one_line) o << std::string(indent,' ');
+            o << "nullptr";
+            if (!one_line) o << "\n";
         }
         else if (is_pure_obj()) {
-            obj()->print(o, indent);
+            obj()->print(o, indent, one_line);
         }
         else if (is_str()) {
-            o << std::string(indent,' ') << "'" << str() << "'\n";
+            if (!one_line) o << std::string(indent,' ');
+            o << "\"" << str() << "\"";
+            if (!one_line) o << "\n";
         }
         else if (is_ref()) {
-            o << std::string(indent,' ') << "-[ref]->" << ref().name << "(" << ref().obj.lock() << ")"<< "\n";
+            if (!one_line) o << std::string(indent,' ');
+            o << "-[ref]->" << ref().name << "(" << ref().obj.lock() << ")";
+            if (!one_line) o << "\n";
         }
         else if (is_boolean()) {
-            o << std::string(indent,' ') << "bool(" << boolean() << ")\n";
+            if (!one_line) o << std::string(indent,' ');
+            o << "bool(" << boolean() << ")";
+            if (!one_line) o << "\n";
         }
         else {
             throw std::runtime_error("unexpected, Value::print");
         }
     }
 
-    void Object::print(std::ostream& o, size_t indent) const {
-        o << std::string(indent,' ') << this->type << "{\n";
+    void Object::print(std::ostream& o, size_t indent, bool one_line) const {
+        if (!one_line) o << std::string(indent,' ');
+        o << this->type << "{";
+        if (!one_line) o << "\n";
         for(auto &[name,a]: attributes) {
-            o << std::string(indent+2,' ') << name << "=\n";
+            if (!one_line) o << std::string(indent+2,' ');
+            o << name << "=";
+            if (!one_line) o <<"\n";
             if (std::holds_alternative<Value>((*this)[name].data)) {
-                std::get<Value>((*this)[name].data).print(o,indent+4);
+                std::get<Value>((*this)[name].data).print(o,indent+4, one_line);
             }
             else { // array
                 for(size_t i=0;i<(*this)[name].size();i++) {
-                    (*this)[name][i].print(o,indent+4);
+                    (*this)[name][i].print(o,indent+4, one_line);
                 }
             }
         }
-        o << std::string(indent,' ') << "}\n";
+        if (!one_line) o << std::string(indent,' ');
+        o << "}";
+        if (!one_line) o << "\n";
     }
 
 }

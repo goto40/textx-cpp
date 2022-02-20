@@ -137,7 +137,7 @@ namespace textx::object {
         const AttributeValue& operator[](std::string name) const;
         AttributeValue& operator[](std::string name);
 
-        void print(std::ostream& o, size_t indent=0) const;
+        void print(std::ostream& o, size_t indent=0, bool one_line=false) const;
         friend std::ostream& operator<<(std::ostream& o, const Value&v) {
             v.print(o);
             return o;
@@ -294,7 +294,7 @@ namespace textx::object {
         void create_attribute_if_not_present(std::string name);
         bool is_instance(std::string base);
 
-        void print(std::ostream& o, size_t indent=0) const;
+        void print(std::ostream& o, size_t indent=0, bool one_line=false) const;
         AttributeValue fqn_attributes(std::string name) const;
     };
 

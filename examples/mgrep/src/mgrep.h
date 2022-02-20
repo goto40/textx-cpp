@@ -10,7 +10,7 @@ namespace mgrep {
     };
 
     class MGrep {
-        std::shared_ptr<textx::Workspace> workspace = textx::Workspace::create();;
+        std::shared_ptr<textx::Workspace> workspace = textx::Workspace::create();
         size_t line = 1;
         std::deque<MGrepMatch> m_matches = {};
         std::optional<std::string> m_transform_command;

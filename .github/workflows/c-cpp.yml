@@ -16,7 +16,7 @@ jobs:
             submodules: recursive
       - name: install
         run: |
-          sudo apt install -y cmake g++-10 libboost-regex-dev catch
+          sudo apt install -y cmake g++-10 libboost-regex-dev catch libboost-program-options-dev
           git clone https://github.com/andreasbuhr/cppcoro.git
           sudo cp -r cppcoro/include/cppcoro /usr/include 
       - name: build
@@ -27,3 +27,4 @@ jobs:
           make
           ./textx_unit_tests 
           ./itemlang_unit_tests 
+          ./mgrep_unit_tests 
