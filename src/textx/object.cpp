@@ -114,7 +114,7 @@ namespace textx::object {
     void Value::print(std::ostream& o, size_t indent, bool one_line) const {
         if (is_null()) {
             if (!one_line) o << std::string(indent,' ');
-            o << "nullptr";
+            o << "null";
             if (!one_line) o << "\n";
         }
         else if (is_pure_obj()) {
@@ -137,7 +137,7 @@ namespace textx::object {
         }
         else if (is_boolean()) {
             if (!one_line) o << std::string(indent,' ');
-            o << "bool(" << boolean() << ")";
+            o << boolean();
             if (!one_line) o << "\n";
         }
         else {
