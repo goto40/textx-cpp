@@ -29,7 +29,7 @@ find_path(CATCH_INCLUDE_PATH catch.hpp REQUIRED)
 message("CATCH_INCLUDE_PATH=${CATCH_INCLUDE_PATH}")
 add_definitions(-DCATCH_CONFIG_ENABLE_BENCHMARKING)
 
-FIND_PACKAGE( Boost COMPONENTS regex REQUIRED )
+FIND_PACKAGE( Boost COMPONENTS regex program_options REQUIRED )
 
 
 include(CTest)
@@ -82,7 +82,7 @@ foreach(CPPDIR ${EXAMPLE_DIRS})
     target_include_directories(${EXE_NAME} PRIVATE src)
     target_include_directories(${EXE_NAME} PRIVATE ${CPPDIR}/src)
     target_include_directories(${EXE_NAME} PRIVATE ${CPPCORO_INCLUDE_PATH})
-    target_link_libraries(${EXE_NAME} ${LIB_NAME} ${PROJECT_NAME})
+    target_link_libraries(${EXE_NAME} ${LIB_NAME} ${PROJECT_NAME} Boost::program_options)
 
     set(TEST_EXE_NAME ${EXE_NAME}_unit_tests)
     file(GLOB_RECURSE TEST_EXESRC ${CPPDIR}/test/*.cpp)    

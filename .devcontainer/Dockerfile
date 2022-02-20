@@ -14,5 +14,7 @@ RUN tar xvzf vscode_cache.tgz -C / || echo "no cache found."
 
 RUN chmod -R a+rx /root
 
+RUN apt install -y libboost-program-options-dev
+
 ENV DENO_INSTALL="/root/.deno"
 ENV PATH="${DENO_INSTALL}/bin:${PATH}"
