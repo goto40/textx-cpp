@@ -1,4 +1,5 @@
 #include "mgrep.h"
+#include <textx/istrings.h>
 
 namespace mgrep {
     MGrep::MGrep(std::string model) {
@@ -16,5 +17,18 @@ namespace mgrep {
             return false;
         }    
     }
-
+    std::optional<std::string> MGrep::parse_and_transform(std::string text) {
+        TEXTX_ASSERT(m_transform_command.has_value(), "you need a transform command (istring)");
+        try {
+            auto model = workspace->model_from_str(text);
+            auto res = textx::istrings::i(
+                m_transform_command.value(),
+                { {"model", model->val().obj()} }
+            );
+            return res;
+        }
+        catch(...) {
+            return std::nullopt;
+        }    
+    }
 }

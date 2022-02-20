@@ -4,6 +4,8 @@
 
 TEST_CASE("mgrep_simple1", "[mgrep]")
 {
+    auto cmd = "Point({% model.x[0] %},{% model.y[0] %})";
+    auto cmd_err = "Point({% model.x[1] %},{% model.y[0] %})";
     mgrep::MGrep grep(R"(Model: (('x' '=' x=NUMBER)|('y' '=' y=NUMBER)|/\S+/)*;)");
     CHECK( grep.parse_and_store("MyPoint with x=1 and y=2.1") );
     CHECK( grep.matches().size()==1 );
@@ -16,12 +18,12 @@ TEST_CASE("mgrep_simple1", "[mgrep]")
         CHECK( m["y"][0].str()=="2.1" );
 
         auto res = textx::istrings::i(
-            "Point({% model.x[0] %},{% model.y[0] %})",
+            cmd,
             { {"model", m.val().obj()} }
         );
 
         CHECK_THROWS_WITH( textx::istrings::i(
-                "Point({% model.x[1] %},{% model.y[0] %})",
+                cmd_err,
                 { {"model", m.val().obj()} }
             ),
             Catch::Matchers::Contains("index out of bounds")
@@ -29,4 +31,12 @@ TEST_CASE("mgrep_simple1", "[mgrep]")
 
         CHECK( res == "Point(1,2.1)" );
     }
+
+    CHECK_THROWS_WITH(
+        grep.parse_and_transform("x=2 y=3"),
+        Catch::Matchers::Contains("you need a transform command")
+    );
+
+    grep.set_transform_command(cmd);
+    CHECK( grep.parse_and_transform("x=2 y=3").value() == "Point(2,3)" );
 }
