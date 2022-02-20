@@ -5,12 +5,14 @@
 #include <boost/program_options.hpp>
 #include <exception>
 #include <vector>
+#include "mgrep.h"
 
 int main(int ac, char** av){
     namespace po = boost::program_options;
     po::options_description desc("Usage: mgrep [options] <model> <files>");
     desc.add_options()
         ("help", "produce help message")
+        ("transform", po::value<std::string>(), "transform model (istring)")
         ("parse-model", po::value<std::string>()->required(), "set parse model")
         ("input-file", po::value< std::vector<std::string> >()->required(), "input file")
     ;
@@ -24,20 +26,39 @@ int main(int ac, char** av){
     try {
 
         po::notify(vm);
+
         std::string parse_model={};
         if (vm.count("parse-model")) {
-            std::cout << "parse-model = "
-                << vm["parse-model"].as<std::string>() << ".\n";
+            // std::cout << "parse-model = "
+            //     << vm["parse-model"].as<std::string>() << ".\n";
             parse_model = vm["parse-model"].as<std::string>();
         }
         else {
             throw std::runtime_error("parse-model was not set.");
         }
 
+        mgrep::MGrep grep{parse_model};
+        bool has_transform_model = false;
+
+        if (vm.count("transform")) {
+            grep.set_transform_command(vm["transform"].as<std::string>());
+            has_transform_model = true;
+        }
+
         if (vm.count("input-file")) {
             auto input_file = vm["input-file"].as<std::vector<std::string>>();
             for (const auto& file: input_file) {
-                //std::cout << "file: " << file << "\n";
+                std::ifstream input( file );                
+                grep.reset();
+                for( std::string line; getline( input, line ); )
+                {
+                    if (has_transform_model) {
+                        auto res = grep.parse_and_transform(line, file);
+                        if (res) {
+                            std::cout << res.value() << "\n";
+                        }
+                    }
+                }
             }
         }
         else {

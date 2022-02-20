@@ -21,6 +21,7 @@ namespace textx {
         size_t resolve_references();
         friend textx::Metamodel;
     public:
+        void set_filename_info(std::string f) { model_filename=f; }
         std::shared_ptr<textx::Metamodel> tx_metamodel() const { return weak_mm.lock(); }
         textx::object::Value& val() { 
             return root;

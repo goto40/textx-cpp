@@ -18,7 +18,10 @@ namespace mgrep {
         MGrep(std::string model);
         void set_transform_command(std::string c) { m_transform_command=c; }
         bool parse_and_store(std::string text);
-        std::optional<std::string> parse_and_transform(std::string text);
+        std::optional<std::string> parse_and_transform(std::string text, std::string filename="");
         const auto &matches() { return m_matches; }
+        void reset() {
+            m_matches.clear(); line=1;
+        }
     };
 }
