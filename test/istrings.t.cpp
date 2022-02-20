@@ -223,9 +223,9 @@ info="My Shapes"
       type_name=
         "Point"
       x=
-        "1"
+        1
       y=
-        "2"
+        2
     }
     Circle{
       type_name=
@@ -235,12 +235,12 @@ info="My Shapes"
           type_name=
             "Point"
           x=
-            "333"
+            333
           y=
-            "4.5"
+            4.5
         }
       r=
-        "9"
+        9
     }
     Line{
       type_name=
@@ -250,18 +250,18 @@ info="My Shapes"
           type_name=
             "Point"
           x=
-            "0"
+            0
           y=
-            "0"
+            0
         }
       p2=
         Point{
           type_name=
             "Point"
           x=
-            "1"
+            1
           y=
-            "1"
+            1
         }
     }
 -------
@@ -302,9 +302,9 @@ info="My Shapes"
       type_name=
         "Point"
       x=
-        "1"
+        1
       y=
-        "2"
+        2
     }
 
       x
@@ -317,12 +317,12 @@ info="My Shapes"
           type_name=
             "Point"
           x=
-            "333"
+            333
           y=
-            "4.5"
+            4.5
         }
       r=
-        "9"
+        9
     }
 
       x
@@ -335,18 +335,18 @@ info="My Shapes"
           type_name=
             "Point"
           x=
-            "0"
+            0
           y=
-            "0"
+            0
         }
       p2=
         Point{
           type_name=
             "Point"
           x=
-            "1"
+            1
           y=
-            "1"
+            1
         }
     }
 
@@ -384,12 +384,12 @@ Circle{
       type_name=
         "Point"
       x=
-        "333"
+        333
       y=
-        "4.5"
+        4.5
     }
   r=
-    "9"
+    9
 }
 )#");
 }

@@ -120,6 +120,11 @@ namespace textx::object {
         else if (is_pure_obj()) {
             obj()->print(o, indent, one_line);
         }
+        else if (is_number()) {
+            if (!one_line) o << std::string(indent,' ');
+            o << f();
+            if (!one_line) o << "\n";
+        }
         else if (is_str()) {
             if (!one_line) o << std::string(indent,' ');
             o << "\"" << str() << "\"";

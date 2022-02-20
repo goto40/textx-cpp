@@ -73,6 +73,10 @@ namespace textx::object {
         bool is_str() const {
             return std::holds_alternative<MatchText>(data);
         }
+        bool is_number() const {
+            return std::holds_alternative<MatchText>(data) && 
+            (std::get<MatchText>(data).second=="NUMBER" || std::get<MatchText>(data).second=="INT" || std::get<MatchText>(data).second=="FLOAT" || std::get<MatchText>(data).second=="STRICTFLOAT");
+        }
 
         bool boolean() const {
             TEXTX_ASSERT(std::holds_alternative<bool>(data), "no boolean");
@@ -196,6 +200,13 @@ namespace textx::object {
             }
             auto &value = std::get<Value>(data);
             return std::holds_alternative<MatchText>(value.data);
+        }
+        bool is_number() const {
+            if (!std::holds_alternative<Value>(data)) {
+                return false;
+            }
+            auto &value = std::get<Value>(data);
+            return value.is_number();
         }
         bool is_list() const {
             return std::holds_alternative<std::vector<Value>>(data);
