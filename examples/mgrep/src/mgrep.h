@@ -12,7 +12,8 @@ namespace mgrep {
 
     class MGrep {
         std::shared_ptr<textx::Workspace> workspace = textx::Workspace::create();
-        std::shared_ptr<textx::Model> istr_cmd={}, istr_data={};
+        std::shared_ptr<textx::Workspace> istr_workspace = textx::istrings::get_new_istrings_metamodel_workspace();
+        std::shared_ptr<textx::Model> istr_cmd={};
         std::unordered_map<std::string,textx::istrings::ExternalLink> external_links={};
         size_t line = 1;
         std::deque<MGrepMatch> m_matches = {};
@@ -21,9 +22,9 @@ namespace mgrep {
         MGrep(std::string model);
         void set_transform_command(std::string c) { 
             m_transform_command = c; 
-            auto mm = textx::istrings::get_istrings_metamodel_workspace();
+            auto mm = istr_workspace;
             istr_cmd = mm->model_from_str(c);
-        }
+       }
         bool parse_and_store(std::string text);
         std::optional<std::string> parse_and_transform(std::string text, std::string filename="");
         const auto &matches() { return m_matches; }

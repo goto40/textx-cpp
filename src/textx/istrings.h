@@ -12,6 +12,7 @@ namespace textx::istrings {
     using ExternalLink = std::variant<Obj2StrFun, std::shared_ptr<textx::object::Object>>;
 
     std::shared_ptr<textx::Workspace> get_istrings_metamodel_workspace();
+    std::shared_ptr<textx::Workspace> get_new_istrings_metamodel_workspace();
 
     /**
      * @brief format an indented string

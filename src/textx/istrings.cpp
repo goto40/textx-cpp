@@ -48,6 +48,12 @@ namespace {
 using namespace textx::istrings::internal;
 
 namespace textx::istrings {
+    std::shared_ptr<textx::Workspace> get_new_istrings_metamodel_workspace() {
+        std::shared_ptr<textx::Workspace> istrings_workspace = private_get_istrings_metamodel_workspace();
+        istrings_workspace->get_metamodel_by_shortcut("ISTRINGS")->clear_builtin_models();
+        return istrings_workspace;
+    }
+
     std::shared_ptr<textx::Workspace> get_istrings_metamodel_workspace() {
         thread_local std::shared_ptr<textx::Workspace> istrings_workspace = private_get_istrings_metamodel_workspace();
         istrings_workspace->get_metamodel_by_shortcut("ISTRINGS")->clear_builtin_models();

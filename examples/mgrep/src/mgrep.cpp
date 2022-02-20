@@ -33,7 +33,7 @@ namespace mgrep {
                 throw std::runtime_error("unexpected: unknown external link type");
             }
         }
-        auto mm = textx::istrings::get_istrings_metamodel_workspace();
+        auto mm = istr_workspace;
         mm->get_metamodel_by_shortcut("ISTRINGS")->add_builtin_model(
             mm->model_from_str("EXTERNAL_LINKAGE",s.str())
         );
@@ -65,7 +65,7 @@ namespace mgrep {
         external_links["model"] = model->val().obj();
         textx::istrings::internal::FormatterStream s;
         textx::istrings::internal::Formatter f{s, external_links};
-                f.format_obj(model->val().obj());
+                f.format_obj(istr_cmd->val().obj());
 
         line++;
         return s.str();
