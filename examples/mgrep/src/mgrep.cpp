@@ -20,32 +20,34 @@ namespace mgrep {
     }
     std::optional<std::string> MGrep::parse_and_transform(std::string text, std::string filename) {
         TEXTX_ASSERT(m_transform_command.has_value(), "you need a transform command (istring)");
+        std::shared_ptr<textx::Model> model={};
         try {
-            auto model = workspace->model_from_str(text);
+            model = workspace->model_from_str(text);
             model->set_filename_info(filename);
-            auto res = textx::istrings::i(
-                m_transform_command.value(),
-                { 
-                    {"model", model->val().obj()},
-                    {"filename", [](std::shared_ptr<textx::object::Object> o) -> std::string {
-                        return o->tx_model()->tx_filename();
-                    }},
-                    {"line", [line=line](std::shared_ptr<textx::object::Object> o) -> std::string {
-                        return std::to_string(line);
-                    }},
-                    {"print", [](std::shared_ptr<textx::object::Object> o) -> std::string {
-                        std::ostringstream s;
-                        o->print(s, 0, true);
-                        return s.str();
-                    }},
-                }
-            );
-            line++;
-            return res;
         }
         catch(...) {
             line++;
             return std::nullopt;
         }    
+
+        auto res = textx::istrings::i(
+            m_transform_command.value(),
+            { 
+                {"model", model->val().obj()},
+                {"filename", [](std::shared_ptr<textx::object::Object> o) -> std::string {
+                    return o->tx_model()->tx_filename();
+                }},
+                {"line", [line=line](std::shared_ptr<textx::object::Object> o) -> std::string {
+                    return std::to_string(line);
+                }},
+                {"print", [](std::shared_ptr<textx::object::Object> o) -> std::string {
+                    std::ostringstream s;
+                    o->print(s, 0, true);
+                    return s.str();
+                }},
+            }
+        );
+        line++;
+        return res;
     }
 }
