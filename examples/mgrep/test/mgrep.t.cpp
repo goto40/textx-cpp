@@ -20,6 +20,13 @@ TEST_CASE("mgrep_simple1", "[mgrep]")
             { {"model", m.val().obj()} }
         );
 
+        CHECK_THROWS_WITH( textx::istrings::i(
+                "Point({% model.x[1] %},{% model.y[0] %})",
+                { {"model", m.val().obj()} }
+            ),
+            Catch::Matchers::Contains("index out of bounds")
+        );
+
         CHECK( res == "Point(1,2.1)" );
     }
 }

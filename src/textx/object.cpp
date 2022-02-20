@@ -19,11 +19,15 @@ namespace textx::object {
 
     const Value& AttributeValue::operator[](size_t idx) const {
         TEXTX_ASSERT(std::holds_alternative<std::vector<Value>>(data));
-        return std::get<std::vector<Value>>(data)[idx];
+        auto &v = std::get<std::vector<Value>>(data);
+        TEXTX_ASSERT(idx<v.size(), "index out of bounds: index ", idx, " must be <", v.size());
+        return v[idx];
     }
     Value& AttributeValue::operator[](size_t idx) {
         TEXTX_ASSERT(std::holds_alternative<std::vector<Value>>(data));
-        return std::get<std::vector<Value>>(data)[idx];
+        auto &v = std::get<std::vector<Value>>(data);
+        TEXTX_ASSERT(idx<v.size(), "index out of bounds: index ", idx, " must be <", v.size());
+        return v[idx];
     }
     std::vector<Value>::iterator AttributeValue::begin() {
         TEXTX_ASSERT(std::holds_alternative<std::vector<Value>>(data));
