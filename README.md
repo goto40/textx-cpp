@@ -156,6 +156,11 @@ auto fn = std::filesystem::path(__FILE__).parent_path().append("multi_metamodel/
 auto m = workspace->model_from_file(fn);
 ```
 
+## Examples
+
+In the [examples folder](examples) you find examples (some of them with unit tests).
+E.g. have a look at [mgrep](examples/mgrep/README.md), a model driven version of grep.
+
 ## Implementation Details
 
  * arpeggio.h

@@ -1,5 +1,5 @@
 # mgrep (model grep)
-A grep-like command whoch uses a metamodel for each line to parse it...
+A grep-like command which uses a meta model for each line to parse it...
 
 Special functions: 
   * `filename(model)`: filename of processed line
