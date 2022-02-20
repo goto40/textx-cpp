@@ -6,11 +6,13 @@
 #include <exception>
 #include <vector>
 #include "mgrep.h"
+#include "textx/version.h"
 
 int main(int ac, char** av){
     namespace po = boost::program_options;
     po::options_description desc("Usage: mgrep [options] <model> <files>");
     desc.add_options()
+        ("version", "version info")
         ("help", "produce help message")
         ("transform", po::value<std::string>(), "transform model (istring)")
         ("parse-model", po::value<std::string>()->required(), "set parse model")
@@ -70,6 +72,10 @@ int main(int ac, char** av){
         }
     }
     catch(std::exception& e) {
+        if (vm.count("version")) {
+            std::cout << textx::VERSION << "\n";
+            return EXIT_SUCCESS;
+        }
         if (vm.count("help")) {
             std::cout << desc << "\n";
             return EXIT_SUCCESS;
