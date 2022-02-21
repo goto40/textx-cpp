@@ -1,9 +1,14 @@
 #pragma once
+
+//#define USE_CPP_CORO
+
 #include "textx/arpeggio.h"
 #include "textx/object.h"
 #include "textx/scoping.h"
 #include "textx/utils.h"
+#ifdef USE_CPP_CORO
 #include <cppcoro/generator.hpp>
+#endif
 #include <string>
 #include <memory>
 #include <vector>
@@ -12,8 +17,11 @@
 
 namespace textx::rrel {
 
-    //template<class T> using rrel_generator = textx::utils::Generator<T>;
+#ifdef USE_CPP_CORO
     template<class T> using rrel_generator = cppcoro::generator<T>;
+#else
+    template<class T> using rrel_generator = textx::utils::Generator<T>;
+#endif
 
     using MatchedPath = textx::scoping::MatchedPath;
     namespace py {
