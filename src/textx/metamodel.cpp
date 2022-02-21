@@ -1,6 +1,7 @@
 #include "textx/metamodel.h"
 #include "textx/rule.h"
 #include "textx/workspace.h"
+#include "textx/arpeggio.h"
 #include <cassert>
 #include <unordered_set>
 
@@ -244,6 +245,7 @@ namespace textx {
     }
 
     std::shared_ptr<Metamodel> Metamodel::get_basic_metamodel() {
+        #ifdef ARPEGGIO_USE_BOOST_FOR_REGEX
         static std::shared_ptr<Metamodel> mm{new Metamodel{R"(
             ID: /[^\d\W]\w*\b/;
             BOOL: /(True|true|False|false|0|1)\b/;
@@ -254,6 +256,19 @@ namespace textx {
             NUMBER: STRICTFLOAT|INT;
             BASETYPE: NUMBER|FLOAT|BOOL|ID|STRING;
         )", false, "BUILTIN.tx"}};
+        #else
+        //TODO fixme
+        static std::shared_ptr<Metamodel> mm{new Metamodel{R"(
+            ID: /[^\d\W]\w*\b/;
+            BOOL: /(True|true|False|false|0|1)\b/;
+            INT: /[-+]?[0-9]+\b/;
+            FLOAT: /[+-]?(\d+(\.\d*)?|\.\d+)([eE][+-]?\d+)?(?<=[\w\.])(?![\w\.])/;
+            STRICTFLOAT: /[+-]?(((\d+\.(\d*)?|\.\d+)([eE][+-]?\d+)?)|((\d+)([eE][+-]?\d+)))(?<=[\w\.])(?![\w\.])/;
+            STRING: /("(\\"|[^"])*")|('(\\'|[^'])*')/;
+            NUMBER: STRICTFLOAT|INT;
+            BASETYPE: NUMBER|FLOAT|BOOL|ID|STRING;
+        )", false, "BUILTIN.tx"}};
+        #endif
         return mm;
     }
 

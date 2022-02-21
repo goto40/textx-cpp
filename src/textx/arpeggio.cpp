@@ -1,5 +1,4 @@
 // C++ regex seem to have problems with some regular expressions, e.g. in "FLOAT: ..."
-#define ARPEGGIO_USE_BOOST_FOR_REGEX
 
 #include "textx/arpeggio.h"
 #ifdef ARPEGGIO_USE_BOOST_FOR_REGEX
