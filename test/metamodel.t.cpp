@@ -574,14 +574,23 @@ TEST_CASE("metamodel_abstract_rules_with_sequences_of_rules_only_using_the_first
     // "If there are multiple common rules than the first will be used as a result and the rest only for parsing" from
     auto grammar1 = R"(
         Model: 'value' x=Base;
-        Base: S1|(S2 NotS3); // only use first rule (S2) as possible instance for each choice-option
+        Base: S1 | S2 NotS3 // only use first rule (S2) as
+                            // possible instance for each choice-option
+            | (S4 | S5) S6; // Both S4 and S5 should be inheriting classes
+                            // but not S6 as it comes second in sequence.
         S1: name=ID;
         S2: name=ID;
         NotS3: name=ID;
+        S4: name=ID;
+        S5: name=ID;
+        S6: name=ID;
     )";
     auto mm = textx::metamodel_from_str(grammar1);
-    CHECK( (*mm)["Base"].tx_inh_by().size()==2 );
     CHECK( mm->is_instance("S1","Base") );
     CHECK( mm->is_instance("S2","Base") );
+    CHECK( mm->is_instance("S4","Base") );
+    CHECK( mm->is_instance("S5","Base") );
     CHECK( !mm->is_instance("NotS3","Base") );
+    CHECK( !mm->is_instance("S6","Base") );
+    CHECK( (*mm)["Base"].tx_inh_by().size()==4 );
 }
