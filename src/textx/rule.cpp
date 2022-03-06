@@ -537,43 +537,49 @@ namespace textx {
         TEXTX_ASSERT(intern_arpeggio_rule_body != nullptr, "plausibiliy");
 
         // 2) find inh-by list
-        bool found_non_match=false;
-        bool found_non_match_here=false;
         bool found_illegal=false;
-        auto add_inh_by_rule = [&,this](const textx::arpeggio::Match &m0) {
-            found_non_match_here=false;
-            m0.traverse([&](const textx::arpeggio::Match &m) {
-                if (m.name_is("rule://rule_ref")) {
-                    std::string rule_name = m.captured.value();
+        std::function<bool(const textx::arpeggio::Match&)> add_inh_by_rule;
+        add_inh_by_rule = [&,this](const textx::arpeggio::Match& node) -> bool {
+            bool found_non_match_here=false;
+            if(node.name_is("rule://choice")) {
+                // 2a) body -> (choice)
+                // add_rule("choice", 
+                //  0) ta::sequence({ref("sequence"), 
+                //  1) ta::zero_or_more(
+                //        ta::sequence({ta::str_match("|"),
+                //                      ref("sequence")}))}));
+                found_non_match_here = add_inh_by_rule(node.children[0]);
+                if (!found_non_match_here) { m_maybe_str=true; }
+                auto &zero_or_more = node.children[1];
+                for (auto &zero_or_more_child: zero_or_more.children) {
+                    bool f = add_inh_by_rule(zero_or_more_child);
+                    if (!f) { m_maybe_str=true; }
+                    found_non_match_here = f || found_non_match_here;
+                }
+            }
+            else {
+                if (node.name_is("rule://rule_ref")) {
+                    std::string rule_name = node.captured.value();
                     if (mm[rule_name].m_type==RuleType::illegal) {
                         found_illegal=true;
                     }
-                    if (!found_illegal && !found_non_match_here) {
+                    if (!found_illegal) {
                         if (mm[rule_name].m_type!=RuleType::match) {
                             m_tx_inh_by.insert(rule_name);
                             found_non_match_here = true;
-                            found_non_match = true;
                         }
                     }
                 }
-            });
-        };
-        {
-            TEXTX_ASSERT(intern_arpeggio_rule_body->name_is("rule://textx_rule_body"), "plausibility");
-            // 2a) body -> (choice)
-            // add_rule("choice", 
-            //  0) ta::sequence({ref("sequence"), 
-            //  1) ta::zero_or_more(
-            //        ta::sequence({ta::str_match("|"),
-            //                      ref("sequence")}))}));
-            add_inh_by_rule(intern_arpeggio_rule_body->children[0].children[0]);
-            if (!found_non_match_here) { m_maybe_str=true; }
-            auto &zero_or_more = intern_arpeggio_rule_body->children[0].children[1];
-            for (auto &zero_or_more_child: zero_or_more.children) {
-                add_inh_by_rule(zero_or_more_child);
-                if (!found_non_match_here) { m_maybe_str=true; }
+                else {
+                    for (auto &c: node.children) {
+                        found_non_match_here = add_inh_by_rule(c) || found_non_match_here;
+                        if (found_non_match_here) break;
+                    }
+                }
             }
-        }
+            return found_non_match_here;
+        };
+        bool found_non_match=add_inh_by_rule(*intern_arpeggio_rule_body);
 
         if (found_illegal) {
             m_tx_inh_by.clear(); // retry later...
