@@ -13,6 +13,7 @@
 #include <tuple>
 #include <compare>
 #include <functional>
+#include <variant>
 
 #define DBG_TEXTX_ARPEGGIO(x)
 #define DBG_TEXTX_ARPEGGIO_FOUND(x) DBG_TEXTX_ARPEGGIO(x)
@@ -154,6 +155,28 @@ namespace textx
                 match.print(o);
                 return o;
             }
+        };
+
+        struct TxErrorEntry {
+            TextPosition pos;
+            std::string error;
+            std::string filename;
+            std::function<std::vector<std::string>(void)> getPossibleText;
+        };
+
+        struct TxErrors {
+            std::vector<TxErrorEntry> errors;
+        };
+
+        struct ParserResult {
+            std::variant<Match, TxErrors> payload;
+            ParserResult(Match &&m): payload{m} {}
+            ParserResult(TxErrors &&e): payload{e} {}
+            operator bool() {return std::holds_alternative<Match>(payload); }
+            Match& match() { return std::get<Match>(payload); }
+            const Match& match() const { return std::get<Match>(payload); }
+            TxErrors& Txerrors() { return std::get<TxErrors>(payload); }
+            const TxErrors& Txerrors() const { return std::get<TxErrors>(payload); }
         };
 
         inline std::ostream& operator<<(std::ostream& o, MatchType t) {
