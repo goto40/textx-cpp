@@ -16,7 +16,7 @@ TEST_CASE("adapted_from_python_textx_tests_test_rrel_basic_parser1", "[textx/rre
                     }));
     parser.set_main_rule("rrel_expression_standalone");
  
-    std::optional<textx::arpeggio::Match> m;
+    textx::arpeggio::ParserResult m;
     m = parser.parse_or_throw("^pkg*.cls");
     m = parser.parse_or_throw("obj.ref.~extension *.methods");
     m = parser.parse_or_throw("instance.(type.vals)*");

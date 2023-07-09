@@ -1,4 +1,5 @@
 #pragma once
+#include "textx/arpeggio.h"
 #include "textx/lang.h"
 #include "textx/grammar.h"
 #include "textx/rule.h"
@@ -16,7 +17,7 @@ namespace textx {
     class Metamodel : public std::enable_shared_from_this<Metamodel> {
         textx::lang::TextxGrammar textx_grammar={};
         textx::Grammar<textx::Rule> grammar={};
-        std::optional<textx::arpeggio::Match> grammar_root = {};
+        arpeggio::ParserResult grammar_root = {};
         //textx::parsetree::TextxGrammarParsetree textx_grammar_parsetree;
         static std::shared_ptr<Metamodel> get_basic_metamodel();
         std::unique_ptr<textx::scoping::RefResolver> default_resolver = std::make_unique<textx::scoping::PlainNameRefResolver>();
@@ -113,7 +114,7 @@ namespace textx {
             resolver.insert({dot_separated_rule_attr_with_asterix, std::move(r)});
         }
 
-        std::optional<textx::arpeggio::Match> parsetree_from_str(std::string_view model_txt) { return grammar.parse_or_throw(model_txt); }
+        arpeggio::ParserResult parsetree_from_str(std::string_view model_txt) { return grammar.parse_or_throw(model_txt); }
         inline friend std::ostream& operator<<(std::ostream &o, const Metamodel& mm) {
             for(auto& [k,v]: mm.grammar.get_rules()) {
                 //o << "RULE[\"" << k << "\"]:\n";

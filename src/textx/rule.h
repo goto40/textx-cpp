@@ -132,7 +132,7 @@ namespace textx {
         }
         const std::string& tx_name() const { return name; }
 
-        std::optional<textx::arpeggio::Match> operator()(const textx::arpeggio::Config &config, textx::arpeggio::ParserState &text, textx::arpeggio::TextPosition pos) const {
+        arpeggio::ParserResult operator()(const textx::arpeggio::Config &config, textx::arpeggio::ParserState &text, textx::arpeggio::TextPosition pos) const {
             return pattern(config, text, pos);
         }
 

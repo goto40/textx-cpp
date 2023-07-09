@@ -273,7 +273,7 @@ namespace textx {
     }
 
     textx::arpeggio::Pattern Metamodel::ref(std::string name) {
-        return [this,name](const textx::arpeggio::Config &config, textx::arpeggio::ParserState &text, textx::arpeggio::TextPosition pos) -> std::optional<textx::arpeggio::Match>
+        return [this,name](const textx::arpeggio::Config &config, textx::arpeggio::ParserState &text, textx::arpeggio::TextPosition pos) -> arpeggio::ParserResult
         {
             return find_rule(name, false)(config, text, pos);
         };

@@ -6,7 +6,7 @@
 
 template<class F, class C>
 auto test_parse(F f, const C& config, std::string_view s, textx::arpeggio::TextPosition pos={}) {
-    textx::arpeggio::ParserState ps{s};
+    textx::arpeggio::ParserState ps{s, "test-filename.txt"};
     return f(config, ps, pos);
 }
 
@@ -15,7 +15,7 @@ TEST_CASE("str_match", "[arpeggio]")
     using namespace textx::arpeggio;
     Config config{.skip_text = skip_text_functions::nothing()};
 
-    ParserState text = {"hello world"};
+    ParserState text = {"hello world", "test-filename.txt"};
     auto hello_pattern = str_match("hello");
     auto world_pattern = str_match("world");
     CHECK(hello_pattern(config, text, {}));
@@ -33,7 +33,7 @@ TEST_CASE("named", "[arpeggio]")
     using namespace textx::arpeggio;
     Config config{.skip_text = skip_text_functions::nothing()};
 
-    ParserState text = {"hello world"};
+    ParserState text = {"hello world", "test-filename.txt"};
     auto hello_pattern = str_match("hello");
     auto named_hello_pattern = named("hello", str_match("hello"));
     auto match = hello_pattern(config, text, {}).value();
@@ -55,7 +55,7 @@ TEST_CASE("captured", "[arpeggio]")
     using namespace textx::arpeggio;
     Config config{.skip_text = skip_text_functions::nothing()};
 
-    ParserState text = {"hello world"};
+    ParserState text = {"hello world", "test-filename.txt"};
     auto hello_pattern = capture(str_match("hello"));
     auto named_hello_pattern = capture(named("hello", str_match("hello")));
     auto match = hello_pattern(config, text, {}).value();
@@ -78,7 +78,7 @@ TEST_CASE("regex_match", "[arpeggio]")
     Config config{.skip_text = skip_text_functions::nothing()};
     Config config_skipws{.skip_text = skip_text_functions::skipws()};
 
-    ParserState text = {"hello123 world"};
+    ParserState text = {"hello123 world", "test-filename.txt"};
     auto word_pattern = capture(regex_match(R"(\w+)"));
     {
         CHECK(!test_parse(word_pattern, config, " space and a word", {}));
@@ -113,7 +113,7 @@ TEST_CASE("sequence", "[arpeggio]")
     using namespace textx::arpeggio;
     Config config{};
 
-    ParserState text = {"hello123 world"};
+    ParserState text = {"hello123 world", "test-filename.txt"};
     auto two_word_pattern = sequence({capture(regex_match(R"(\w+)")),
                                       capture(regex_match(R"(\w+)"))});
     {
@@ -139,7 +139,7 @@ TEST_CASE("ordered_choice", "[arpeggio]")
     using namespace textx::arpeggio;
     Config config{};
 
-    ParserState text = {"hello123 world"};
+    ParserState text = {"hello123 world", "test-filename.txt"};
     auto choice_pattern = ordered_choice({capture(str_match("hello")),
                                           capture(str_match("hello123")),
                                           capture(str_match("world"))});
@@ -171,7 +171,7 @@ TEST_CASE("one_or_more", "[arpeggio]")
     using namespace textx::arpeggio;
     Config config{};
 
-    ParserState text = {"a b c d e f g"};
+    ParserState text = {"a b c d e f g", "test-filename.txt"};
     auto words_pattern = one_or_more(regex_match(R"(\w+)"));
     {
         auto match = words_pattern(config, text, {});
@@ -192,7 +192,7 @@ TEST_CASE("zero_or_more", "[arpeggio]")
     Config config{};
 
     {
-        ParserState text = {"a b c d e f g"};
+        ParserState text = {"a b c d e f g", "test-filename.txt"};
         auto words_pattern = zero_or_more(regex_match(R"(\w+)"));
         {
             auto match = words_pattern(config, text, {});
@@ -207,7 +207,7 @@ TEST_CASE("zero_or_more", "[arpeggio]")
         }
     }
     {
-        ParserState text = {""};
+        ParserState text = {"","test-filename.txt"};
         auto words_pattern = zero_or_more(regex_match(R"(\w+)"));
         {
             auto match = words_pattern(config, text, {});
@@ -224,7 +224,7 @@ TEST_CASE("optional", "[arpeggio]")
     Config config{};
 
     {
-        ParserState text = {"hello"};
+        ParserState text = {"hello", "test-filename.txt"};
         auto p1 = optional(str_match("hello"));
         auto p2 = optional(str_match("world"));
         {

@@ -11,7 +11,7 @@ namespace textx
     {
         std::string main_rule_name = "main";
         textx::arpeggio::Config config = {};
-        textx::arpeggio::ParserState state = {""};
+        textx::arpeggio::ParserState state = {"","(unnamed file)"};
         bool ok = true;
         std::unordered_map<std::string, R> rules = {};
         bool default_skipws = true;
@@ -25,7 +25,7 @@ namespace textx
         auto ref(std::string name)
         {
             std::string rname = std::string("rule://")+name;
-            return textx::arpeggio::rule(textx::arpeggio::named(rname, [this,name](const textx::arpeggio::Config &config, textx::arpeggio::ParserState &text, textx::arpeggio::TextPosition pos) -> std::optional<textx::arpeggio::Match>
+            return textx::arpeggio::rule(textx::arpeggio::named(rname, [this,name](const textx::arpeggio::Config &config, textx::arpeggio::ParserState &text, textx::arpeggio::TextPosition pos) -> arpeggio::ParserResult
             {
                 if (rules.find(name)==rules.end()) {
                     throw std::runtime_error(std::string("cannot find ref(\"")+name+"\");");
@@ -37,7 +37,7 @@ namespace textx
         auto copy(std::string name)
         {
             std::string rname = std::string("rule://")+name;
-            return textx::arpeggio::rule(textx::arpeggio::named(rname, [this,name](const textx::arpeggio::Config &config, textx::arpeggio::ParserState &text, textx::arpeggio::TextPosition pos) -> std::optional<textx::arpeggio::Match>
+            return textx::arpeggio::rule(textx::arpeggio::named(rname, [this,name](const textx::arpeggio::Config &config, textx::arpeggio::ParserState &text, textx::arpeggio::TextPosition pos) -> arpeggio::ParserResult
             {
                 if (rules.find(name)==rules.end()) {
                     throw std::runtime_error(std::string("cannot find ref(\"")+name+"\");");
@@ -95,7 +95,7 @@ namespace textx
             }
         }
 
-        std::optional<textx::arpeggio::Match> parse(std::string_view text)
+        arpeggio::ParserResult parse(std::string_view text)
         {
             if (rules.count(main_rule_name)!=1)
             {
@@ -114,18 +114,18 @@ namespace textx
             else {
                 main = textx::arpeggio::skipws(main);
             }
-            state = textx::arpeggio::ParserState{text};
+            state = textx::arpeggio::ParserState{text, "(unnamed grammar)"};
             auto res = main(config, state, {});
             ok = res.has_value();
             if (ok) {
                 return res.value().children[0];
             }
             else {
-                return std::nullopt;
+                return res;
             }
         }
 
-        std::optional<textx::arpeggio::Match> parse_or_throw(std::string_view text)
+        arpeggio::ParserResult parse_or_throw(std::string_view text)
         {
             auto res = parse(text);
             if (!res) {

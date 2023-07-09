@@ -14,6 +14,7 @@
 #include <compare>
 #include <functional>
 #include <variant>
+#include "assert.h"
 
 #define DBG_TEXTX_ARPEGGIO(x)
 #define DBG_TEXTX_ARPEGGIO_FOUND(x) DBG_TEXTX_ARPEGGIO(x)
@@ -25,6 +26,7 @@ namespace textx
         enum class MatchType
         {
             undefined,
+            nomatch,
             end_of_file,
             str_match,
             regex_match,
@@ -109,11 +111,14 @@ namespace textx
         {
             TextPosition m_start, m_end;
             MatchType m_type;
+            bool m_has_error;
 
         public:
             std::vector<Match> children = {};
             std::optional<std::string> name = std::nullopt;
             std::optional<std::string> captured = std::nullopt;
+            bool has_error() { return m_has_error; }
+            void set_error() { m_has_error = true; }
 
             Match(TextPosition s, TextPosition e, MatchType t, std::vector<Match> c = {}) : m_start{s}, m_end{e}, m_type{t}, children{c}
             {
@@ -157,28 +162,47 @@ namespace textx
             }
         };
 
+        inline Match noMatch(TextPosition pos) {
+            Match m{pos, pos, MatchType::nomatch,{}};
+            m.set_error();
+            return m;
+        }
+
         struct TxErrorEntry {
             TextPosition pos;
             size_t length;
             std::string error;
             std::string filename;
-            std::function<std::vector<std::string>(void)> getPossibleText;
+            std::function<std::vector<std::string>(void)> getPossibleText={};
         };
 
         struct TxErrors {
+            std::optional<Match> match;                        
             std::vector<TxErrorEntry> errors;
         };
 
         struct ParserResult {
             std::variant<Match, TxErrors> payload;
+            ParserResult(const Match &m): payload{m} {}
             ParserResult(Match &&m): payload{m} {}
             ParserResult(TxErrors &&e): payload{e} {}
-            operator bool() {return std::holds_alternative<Match>(payload); }
+            ParserResult(): payload{TxErrors{{},{{{},0,"unexpected","()"}}}} {}
+            
+            ParserResult(const ParserResult&) = default;
+            ParserResult(ParserResult&&) = default;
+            ParserResult& operator=(const ParserResult&) = default;
+            ParserResult& operator=(ParserResult&&) = default;
+            
+            bool has_value() const { return std::holds_alternative<Match>(payload); }
+            operator bool() const { return has_value(); }
             Match& value() { return std::get<Match>(payload); }
             const Match& value() const { return std::get<Match>(payload); }
-            TxErrors& Txerrors() { return std::get<TxErrors>(payload); }
-            const TxErrors& Txerrors() const { return std::get<TxErrors>(payload); }
-            // -> etc.
+            TxErrors& errors() { return std::get<TxErrors>(payload); }
+            const TxErrors& errors() const { return std::get<TxErrors>(payload); }
+            auto& operator*() { return value(); }
+            const auto& operator*() const { return value(); }
+            auto* operator->() { return &value(); }
+            const auto* operator->() const { return &value(); }
         };
 
         inline std::ostream& operator<<(std::ostream& o, MatchType t) {
@@ -208,6 +232,7 @@ namespace textx
             std::string_view source;
             static size_t cache_reset_indicator_source;
             size_t cache_reset_indicator = {cache_reset_indicator_source++};
+            std::string m_filename;
 
         public:
             bool eolterm = false;
@@ -217,13 +242,51 @@ namespace textx
             AnnotatedTextPosition farthest_position = {};
 
             size_t get_cache_reset_indicator() { return cache_reset_indicator; }
-            ParserState(std::string_view s) : source(s) {}
+            ParserState(std::string_view s, std::string filename) : source(s), m_filename{filename} {}
             operator std::string_view() { return source; }
             size_t length() { return source.length(); }
             char operator[](size_t p) { return source[p]; }
             void update_farthest_position(TextPosition pos, MatchType type, std::string_view info);
             std::string_view str() { return source; }
+            const std::string& filename() { return m_filename; }
         };
+
+        inline TxErrors txError(const char* why, ParserState& text, TextPosition pos, const Match& match) {
+            return TxErrors{
+                match,
+                {{pos, 0, why, text.filename()}}
+            };
+        }
+        template<class F>
+        inline TxErrors txError(const char* why, ParserState& text, TextPosition pos, const Match& match, F f) {
+            return TxErrors{
+                match,
+                {{pos, 0, why, text.filename(), f}}
+            };
+        }
+
+        inline ParserResult& txForwardErrorAndUpdateMatch(ParserResult& result, const Match& match) {
+            TEXTX_ASSERT(!result, "you can only forward errors");
+            result.errors().match = match; // update match in error
+            result.errors().match->set_error();
+            return result; // forward error
+        }
+
+        inline void txUpdateError(ParserResult& error, const ParserResult &newError) {
+            TEXTX_ASSERT(!error, "you can update errors");
+            TEXTX_ASSERT(!newError, "you can update errors");
+            TEXTX_ASSERT(newError.errors().errors.size()>0, "you need a non-empty error list!");
+            if (error.errors().errors.size()==0 || error.errors().errors[0].pos<newError.errors().errors[0].pos) {
+                error.errors().errors = newError.errors().errors;
+            }
+            else if (error.errors().errors[0].pos==newError.errors().errors[0].pos) {
+                error.errors().errors.insert(
+                    error.errors().errors.end(),
+                    newError.errors().errors.begin(),
+                    newError.errors().errors.end()
+                );
+            }
+        }
 
         using SkipTextFun = std::function<TextPosition(ParserState &text, TextPosition pos)>;
 
@@ -316,7 +379,7 @@ namespace textx
          */
         inline Pattern rule(Pattern pattern)
         {
-            return {[=, cache = std::unordered_map<size_t, std::optional<Match>>{}, chached_state = static_cast<size_t>(0)](const Config &config, ParserState &text, TextPosition pos) mutable -> std::optional<Match>
+            return {[=, cache = std::unordered_map<size_t, ParserResult>{}, chached_state = static_cast<size_t>(0)](const Config &config, ParserState &text, TextPosition pos) mutable -> ParserResult
             {
                 // basic checks:
                 if (pos > text.length())
@@ -341,7 +404,7 @@ namespace textx
                 else
                 {
                     text.cache_misses++;
-                    cache[pos.pos] = std::nullopt; // recursion breaker
+                    cache[pos.pos] = txError("recursion breaker (internal)", text, pos, noMatch(pos)); // recursion breaker
 
                     auto match = pattern(config, text, pos);
 
@@ -363,7 +426,7 @@ namespace textx
         // decorator
         inline Pattern named(std::string name, Pattern pattern)
         {
-            return {[=](const Config &config, ParserState &text, TextPosition pos) -> std::optional<Match>
+            return {[=](const Config &config, ParserState &text, TextPosition pos) -> ParserResult
             {
                 //std::cout << "NAMED RULE " << name << "\n";
                 auto match = pattern(config, text, pos);
@@ -382,7 +445,7 @@ namespace textx
         // decorator
         inline Pattern capture(Pattern pattern)
         {
-            return {[=](const Config &config, ParserState &text, TextPosition pos) -> std::optional<Match>
+            return {[=](const Config &config, ParserState &text, TextPosition pos) -> ParserResult
             {
                 auto match = pattern(config, text, pos);
                 if (match.has_value())
@@ -395,7 +458,7 @@ namespace textx
 
         inline Pattern modify_parser_state(std::function<void(ParserState &)> modifier, Pattern pattern)
         {
-            return {[=](const Config &config, ParserState &text, TextPosition pos) -> std::optional<Match>
+            return {[=](const Config &config, ParserState &text, TextPosition pos) -> ParserResult
                         {
                 auto copy = text;
                 modifier(text);
