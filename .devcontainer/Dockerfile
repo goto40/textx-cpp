@@ -1,4 +1,4 @@
-FROM mcr.microsoft.com/vscode/devcontainers/cpp:0-ubuntu-21.04
+FROM mcr.microsoft.com/vscode/devcontainers/cpp:0-ubuntu-22.04
 
 RUN apt update -y
 RUN apt install -y catch
