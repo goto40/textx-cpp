@@ -159,6 +159,7 @@ namespace textx
 
         struct TxErrorEntry {
             TextPosition pos;
+            size_t length;
             std::string error;
             std::string filename;
             std::function<std::vector<std::string>(void)> getPossibleText;
@@ -173,10 +174,11 @@ namespace textx
             ParserResult(Match &&m): payload{m} {}
             ParserResult(TxErrors &&e): payload{e} {}
             operator bool() {return std::holds_alternative<Match>(payload); }
-            Match& match() { return std::get<Match>(payload); }
-            const Match& match() const { return std::get<Match>(payload); }
+            Match& value() { return std::get<Match>(payload); }
+            const Match& value() const { return std::get<Match>(payload); }
             TxErrors& Txerrors() { return std::get<TxErrors>(payload); }
             const TxErrors& Txerrors() const { return std::get<TxErrors>(payload); }
+            // -> etc.
         };
 
         inline std::ostream& operator<<(std::ostream& o, MatchType t) {
@@ -278,7 +280,7 @@ namespace textx
             SkipTextFun skip_text = skip_text_functions::skipws();
         };
 
-        using PatternFunc = std::function<std::optional<Match>(const Config &config, ParserState &text, TextPosition pos)>;
+        using PatternFunc = std::function<ParserResult(const Config &config, ParserState &text, TextPosition pos)>;
         class Pattern {
             PatternFunc patternfunc;
             MatchType type_value;
@@ -286,7 +288,7 @@ namespace textx
             Pattern() : patternfunc{}, type_value{MatchType::undefined} {}
             template<class Func>
             Pattern(Func f, MatchType t=MatchType::custom) : patternfunc{f}, type_value{t} {}
-            std::optional<textx::arpeggio::Match> operator()(const textx::arpeggio::Config &config, textx::arpeggio::ParserState &text, textx::arpeggio::TextPosition pos) const {
+            ParserResult operator()(const textx::arpeggio::Config &config, textx::arpeggio::ParserState &text, textx::arpeggio::TextPosition pos) const {
                 return patternfunc(config, text, pos);
             }
             MatchType type() { return type_value; }
