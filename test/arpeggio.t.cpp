@@ -337,6 +337,7 @@ TEST_CASE("end_of_file", "[arpeggio]")
     CHECK(partly->children[0].type()==MatchType::zero_or_more);
     CHECK(partly->children[0].children.size()==2);
     
+    TODO get state and check completion info
 
     CHECK(!grammar.parse("C C"));
     {

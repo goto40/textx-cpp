@@ -245,7 +245,7 @@ namespace textx
             static size_t cache_reset_indicator_source;
             size_t cache_reset_indicator = {cache_reset_indicator_source++};
             std::string m_filename;
-            std::unordered_map<size_t, std::vector<CompletionInfo>> completionInfo;
+            std::unordered_map<size_t, std::vector<CompletionInfo>> completionInfo;            
 
         public:
             bool eolterm = false;
@@ -263,6 +263,12 @@ namespace textx
             std::string_view str() { return source; }
             const std::string& filename() { return m_filename; }
             void add_completion_info(TextPosition pos, std::function<std::vector<std::string>()> f);
+            bool has_completion_info(size_t pos) { return completionInfo.contains(pos); }
+            auto& get_completion_info(size_t pos) const {
+                auto it = completionInfo.find(pos);
+                TEXTX_ASSERT(it!=completionInfo.end());
+                return *it;
+            }
         };
 
         using SkipTextFun = std::function<TextPosition(ParserState &text, TextPosition pos)>;
