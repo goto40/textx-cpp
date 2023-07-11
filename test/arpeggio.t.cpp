@@ -327,15 +327,15 @@ TEST_CASE("end_of_file", "[arpeggio]")
         CHECK_THAT(err_text, Catch::Matchers::Contains("str_match,B"));
         CHECK_THAT(err_text, Catch::Matchers::Contains("str_match,C"));
     }
-    CHECK(!partly.has_value());
+    CHECK(!partly.ok());
     // partly.err().match->print(std::cout);
     // for(auto e: partly.err().errors) {
     //     std::cout << e.error << "@" << e.pos.pos << ":\n";
     // }
-    CHECK(partly.err().match->type()==MatchType::sequence);
-    CHECK(partly.err().match->children.size()>0);
-    CHECK(partly.err().match->children[0].type()==MatchType::zero_or_more);
-    CHECK(partly.err().match->children[0].children.size()==2);
+    CHECK(partly->type()==MatchType::sequence);
+    CHECK(partly->children.size()>0);
+    CHECK(partly->children[0].type()==MatchType::zero_or_more);
+    CHECK(partly->children[0].children.size()==2);
     
 
     CHECK(!grammar.parse("C C"));

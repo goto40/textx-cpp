@@ -162,46 +162,54 @@ namespace textx
             }
         };
 
-        inline Match noMatch(TextPosition pos) {
+        inline Match no_match(TextPosition pos) {
             Match m{pos, pos, MatchType::nomatch,{}};
             m.set_error();
             return m;
         }
 
-        struct TxErrorEntry {
+        struct TextxErrorEntry {
             TextPosition pos;
             size_t length;
             std::string error;
-            std::string filename;
         };
 
-        struct TxErrors {
-            std::optional<Match> match;                        
-            std::vector<TxErrorEntry> errors;
-        };
+        class ParserResult {
+            Match match;
+            std::vector<TextxErrorEntry> m_errors;
 
-        struct ParserResult {
-            std::variant<Match, TxErrors> payload;
-            ParserResult(const Match &m): payload{m} {}
-            ParserResult(Match &&m): payload{m} {}
-            ParserResult(TxErrors &&e): payload{e} {}
-            ParserResult(): payload{TxErrors{{},{{{},0,"unexpected","()"}}}} {}
-            
-            ParserResult(const ParserResult&) = default;
-            ParserResult(ParserResult&&) = default;
-            ParserResult& operator=(const ParserResult&) = default;
-            ParserResult& operator=(ParserResult&&) = default;
-            
-            bool has_value() const { return std::holds_alternative<Match>(payload); }
-            operator bool() const { return has_value(); }
-            Match& value() { TEXTX_ASSERT(has_value()); return std::get<Match>(payload); }
-            const Match& value() const { TEXTX_ASSERT(has_value()); return std::get<Match>(payload); }
-            TxErrors& err() { TEXTX_ASSERT(!has_value()); return std::get<TxErrors>(payload); }
-            const TxErrors& err() const { TEXTX_ASSERT(!has_value()); return std::get<TxErrors>(payload); }
+        public:
+            ParserResult(): match{no_match({})} {}
+            ParserResult(const Match &m): match{m} {}
+            ParserResult(Match &&m): match{m} {}
+            static ParserResult error(std::string text, Match m) {
+                ParserResult r{m};
+                r.add_error({m.start(), m.end()-m.start(), text});
+                return r;
+            }
+            static ParserResult error(std::string text, TextPosition pos) {
+                return error(text, no_match(pos));
+            }
+
+            bool ok() const { return m_errors.size()==0; }
+            operator bool() const { return ok(); }
+            Match& value() { return match; }
+            const Match& value() const { return match; }
             auto& operator*() { return value(); }
             const auto& operator*() const { return value(); }
             auto* operator->() { return &value(); }
             const auto* operator->() const { return &value(); }
+
+            auto& errors() { return m_errors; }
+            const auto& errors() const { return m_errors; }
+            void add_error(TextxErrorEntry e) { m_errors.push_back(e); }
+            void add_errors(const std::vector<TextxErrorEntry> e) { for(auto &x: e) m_errors.push_back(x); }
+
+            inline ParserResult& update_match(Match m) {
+                match = m;
+                return *this; // forward error
+            }
+
         };
 
         inline std::ostream& operator<<(std::ostream& o, MatchType t) {
@@ -256,38 +264,6 @@ namespace textx
             const std::string& filename() { return m_filename; }
             void add_completion_info(TextPosition pos, std::function<std::vector<std::string>()> f);
         };
-
-        inline TxErrors txError(const char* why, ParserState& text, TextPosition pos, const Match& match) {
-            return TxErrors{
-                match,
-                {{pos, 0, why, text.filename()}}
-            };
-        }
-
-        inline ParserResult& txForwardErrorAndUpdateMatch(ParserResult& result, const Match& match) {
-            TEXTX_ASSERT(!result, "you can only forward errors");
-            result.err().match = match; // update match in error
-            result.err().match->set_error();
-            return result; // forward error
-        }
-
-        inline void txUpdateError(ParserResult& error, const ParserResult &newError) {
-            TEXTX_ASSERT(!error, "you can update errors");
-            TEXTX_ASSERT(!newError, "you can update errors");
-            TEXTX_ASSERT(newError.err().errors.size()>0, "you need a non-empty error list!");
-            TEXTX_ASSERT(newError.err().match.has_value(), "new error requires a match");
-            error.err().match = newError.err().match;
-            if (error.err().errors.size()==0 || error.err().errors[0].pos<newError.err().errors[0].pos) {
-                error.err().errors = newError.err().errors;
-            }
-            else if (error.err().errors[0].pos==newError.err().errors[0].pos) {
-                error.err().errors.insert(
-                    error.err().errors.end(),
-                    newError.err().errors.begin(),
-                    newError.err().errors.end()
-                );
-            }
-        }
 
         using SkipTextFun = std::function<TextPosition(ParserState &text, TextPosition pos)>;
 
@@ -405,7 +381,7 @@ namespace textx
                 else
                 {
                     text.cache_misses++;
-                    cache[pos.pos] = txError("recursion breaker (internal)", text, pos, noMatch(pos)); // recursion breaker
+                    cache[pos.pos] = ParserResult::error("recursion breaker (internal)", no_match(pos)); // recursion breaker
 
                     auto match = pattern(config, text, pos);
 
@@ -430,17 +406,17 @@ namespace textx
             return {[=](const Config &config, ParserState &text, TextPosition pos) -> ParserResult
             {
                 //std::cout << "NAMED RULE " << name << "\n";
-                auto match = pattern(config, text, pos);
-                if (match.has_value())
+                auto parseResult = pattern(config, text, pos);
+                if (parseResult.ok())
                 {
-                    match.value().name = name;
-                    DBG_TEXTX_ARPEGGIO_FOUND(std::cout << "TEXTX DBG found name:" << name << " @" << match.value().start() << "\n";)
+                    parseResult.value().name = name;
+                    DBG_TEXTX_ARPEGGIO_FOUND(std::cout << "TEXTX DBG found name:" << name << " @" << parseResult.value().start() << "\n";)
                 }
                 else
                 {
                     text.update_farthest_position(pos,MatchType::str_match,std::string("rule-name="+name)+(text.eolterm?"+eolterm":""));
                 }
-                return match; }, pattern.type()};
+                return parseResult; }, pattern.type()};
         }
 
         // decorator
@@ -448,13 +424,13 @@ namespace textx
         {
             return {[=](const Config &config, ParserState &text, TextPosition pos) -> ParserResult
             {
-                auto match = pattern(config, text, pos);
-                if (match.has_value())
+                auto parseResult = pattern(config, text, pos);
+                if (parseResult.ok())
                 {
-                    match.value().captured = get_str(text, match.value());
-                    DBG_TEXTX_ARPEGGIO_FOUND(std::cout << "TEXTX DBG found captured:" << match.value().captured.value() << " @" << match.value().start() << "\n";)
+                    parseResult.value().captured = get_str(text, parseResult.value());
+                    DBG_TEXTX_ARPEGGIO_FOUND(std::cout << "TEXTX DBG found captured:" << parseResult.value().captured.value() << " @" << parseResult.value().start() << "\n";)
                 }
-                return match; }, pattern.type()};
+                return parseResult; }, pattern.type()};
         }
 
         inline Pattern modify_parser_state(std::function<void(ParserState &)> modifier, Pattern pattern)
@@ -463,11 +439,11 @@ namespace textx
                         {
                 auto copy = text;
                 modifier(text);
-                auto match = pattern(config, text, pos);
+                auto parseResult = pattern(config, text, pos);
                 // preserve error infos:
                 copy.farthest_position = text.farthest_position;
                 text = copy;
-                return match;
+                return parseResult;
                         }, pattern.type()};
         }
 

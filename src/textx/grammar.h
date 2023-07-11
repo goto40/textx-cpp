@@ -1,5 +1,6 @@
 #pragma once
 #include "arpeggio.h"
+#include "textx/assert.h"
 #include <unordered_map>
 #include <string>
 #include <concepts>
@@ -42,17 +43,17 @@ namespace textx
                 if (rules.find(name)==rules.end()) {
                     throw std::runtime_error(std::string("cannot find ref(\"")+name+"\");");
                 }
-                auto res = rules.at(name)(config, text, pos);
-                if (res.has_value()) {
+                auto parseResult = rules.at(name)(config, text, pos);
+                if (parseResult.ok()) {
                     return textx::arpeggio::Match{
-                        res.value().start(),
-                        res.value().end(),
+                        parseResult.value().start(),
+                        parseResult.value().end(),
                         textx::arpeggio::MatchType::custom,
-                        {res.value()}
+                        {parseResult.value()}
                     };
                 }
                 else {
-                    return res;
+                    return parseResult;
                 }
             }));
         }
@@ -115,15 +116,15 @@ namespace textx
                 main = textx::arpeggio::skipws(main);
             }
             state = textx::arpeggio::ParserState{text, "(unnamed grammar)"};
-            auto res = main(config, state, {});
-            ok = res.has_value();
+            auto parseResult = main(config, state, {});
+            ok = parseResult.ok();
             if (ok) {
-                return res.value().children[0];
+                parseResult.update_match(parseResult.value().children[0]);
             }
-            else {
-                res.err().match = res.err().match.value().children[0];
-                return res;
+            else if (parseResult.value().children.size()>0) {
+                parseResult.update_match(parseResult.value().children[0]);
             }
+            return parseResult;
         }
 
         arpeggio::ParserResult parse_or_throw(std::string_view text)

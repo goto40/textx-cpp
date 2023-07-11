@@ -17,7 +17,7 @@ namespace textx {
     class Metamodel : public std::enable_shared_from_this<Metamodel> {
         textx::lang::TextxGrammar textx_grammar={};
         textx::Grammar<textx::Rule> grammar={};
-        arpeggio::ParserResult grammar_root = {};
+        arpeggio::ParserResult grammar_root = arpeggio::ParserResult::error("np root", arpeggio::no_match(arpeggio::TextPosition{}));
         //textx::parsetree::TextxGrammarParsetree textx_grammar_parsetree;
         static std::shared_ptr<Metamodel> get_basic_metamodel();
         std::unique_ptr<textx::scoping::RefResolver> default_resolver = std::make_unique<textx::scoping::PlainNameRefResolver>();
