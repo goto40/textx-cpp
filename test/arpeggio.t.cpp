@@ -331,9 +331,6 @@ TEST_CASE("end_of_file", "[arpeggio]")
     // partly.err().match->print(std::cout);
     // for(auto e: partly.err().errors) {
     //     std::cout << e.error << "@" << e.pos.pos << ":\n";
-    //     for(auto ce: e.getPossibleText()) {
-    //         std::cout << "-"<< ce << "\n";
-    //     }
     // }
     CHECK(partly.err().match->type()==MatchType::sequence);
     CHECK(partly.err().match->children.size()>0);

@@ -173,7 +173,6 @@ namespace textx
             size_t length;
             std::string error;
             std::string filename;
-            std::function<std::vector<std::string>(void)> getPossibleText={};
         };
 
         struct TxErrors {
@@ -227,12 +226,18 @@ namespace textx
             }
         };
 
+        struct CompletionInfo {
+            TextPosition pos;
+            std::function<std::vector<std::string>()> info;
+        };
+
         class ParserState
         {
             std::string_view source;
             static size_t cache_reset_indicator_source;
             size_t cache_reset_indicator = {cache_reset_indicator_source++};
             std::string m_filename;
+            std::unordered_map<size_t, std::vector<CompletionInfo>> completionInfo;
 
         public:
             bool eolterm = false;
@@ -249,19 +254,13 @@ namespace textx
             void update_farthest_position(TextPosition pos, MatchType type, std::string_view info);
             std::string_view str() { return source; }
             const std::string& filename() { return m_filename; }
+            void add_completion_info(TextPosition pos, std::function<std::vector<std::string>()> f);
         };
 
         inline TxErrors txError(const char* why, ParserState& text, TextPosition pos, const Match& match) {
             return TxErrors{
                 match,
                 {{pos, 0, why, text.filename()}}
-            };
-        }
-        template<class F>
-        inline TxErrors txError(const char* why, ParserState& text, TextPosition pos, const Match& match, F f) {
-            return TxErrors{
-                match,
-                {{pos, 0, why, text.filename(), f}}
             };
         }
 

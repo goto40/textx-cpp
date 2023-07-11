@@ -62,6 +62,10 @@ namespace textx
             }
         }
 
+        void ParserState::add_completion_info(TextPosition pos, std::function<std::vector<std::string>()> f) {
+            completionInfo[pos.pos].push_back({pos, f});
+        }
+
         namespace skip_text_functions
         {
             textx::arpeggio::SkipTextFun skip_pattern(Pattern p)
@@ -165,10 +169,8 @@ namespace textx
                 else
                 {
                     text.update_farthest_position(pos,MatchType::str_match,s);
-                    return txError(
-                        "str_match failure", text, pos, noMatch(pos),
-                        [s](){return std::vector{s};}
-                    );
+                    text.add_completion_info(pos, [s](){return std::vector{s};});
+                    return txError("str_match failure", text, pos, noMatch(pos));
                 } }, MatchType::str_match});
         }
 
