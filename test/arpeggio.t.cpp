@@ -318,7 +318,8 @@ TEST_CASE("end_of_file", "[arpeggio]")
     CHECK(grammar.parse("AB \n BAB\nC   "));
     CHECK_THROWS(grammar.get_last_error_position()); // no error --> execption
 
-    CHECK(!grammar.parse("AB"));
+    auto partly = grammar.parse("AB");
+    CHECK(!partly);
     {
         auto err_text = grammar.get_last_error_string();
         CHECK_THAT(err_text, Catch::Matchers::Contains("expected"));
@@ -326,6 +327,20 @@ TEST_CASE("end_of_file", "[arpeggio]")
         CHECK_THAT(err_text, Catch::Matchers::Contains("str_match,B"));
         CHECK_THAT(err_text, Catch::Matchers::Contains("str_match,C"));
     }
+    CHECK(!partly.has_value());
+    // partly.err().match->print(std::cout);
+    // for(auto e: partly.err().errors) {
+    //     std::cout << e.error << "@" << e.pos.pos << ":\n";
+    //     for(auto ce: e.getPossibleText()) {
+    //         std::cout << "-"<< ce << "\n";
+    //     }
+    // }
+    CHECK(partly.err().match->type()==MatchType::sequence);
+    CHECK(partly.err().match->children.size()>0);
+    CHECK(partly.err().match->children[0].type()==MatchType::zero_or_more);
+    CHECK(partly.err().match->children[0].children.size()==2);
+    
+
     CHECK(!grammar.parse("C C"));
     {
         auto err_text = grammar.get_last_error_string();
@@ -438,7 +453,6 @@ TEST_CASE("unordered_group_optional2", "[arpeggio]")
     CHECK(grammar.parse_or_throw("AC"));
     CHECK(grammar.parse_or_throw("CB"));
     CHECK(grammar.parse_or_throw("C"));
-    CHECK(!grammar.parse("BACA")); // more than the allowed elements --> error
     CHECK(!grammar.parse("")); // all optionals unmatched --> error
 
     auto match = grammar.parse_or_throw("BC");

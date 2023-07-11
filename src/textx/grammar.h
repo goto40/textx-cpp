@@ -121,6 +121,7 @@ namespace textx
                 return res.value().children[0];
             }
             else {
+                res.err().match = res.err().match.value().children[0];
                 return res;
             }
         }

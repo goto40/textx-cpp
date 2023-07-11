@@ -195,10 +195,10 @@ namespace textx
             
             bool has_value() const { return std::holds_alternative<Match>(payload); }
             operator bool() const { return has_value(); }
-            Match& value() { return std::get<Match>(payload); }
-            const Match& value() const { return std::get<Match>(payload); }
-            TxErrors& errors() { return std::get<TxErrors>(payload); }
-            const TxErrors& errors() const { return std::get<TxErrors>(payload); }
+            Match& value() { TEXTX_ASSERT(has_value()); return std::get<Match>(payload); }
+            const Match& value() const { TEXTX_ASSERT(has_value()); return std::get<Match>(payload); }
+            TxErrors& err() { TEXTX_ASSERT(!has_value()); return std::get<TxErrors>(payload); }
+            const TxErrors& err() const { TEXTX_ASSERT(!has_value()); return std::get<TxErrors>(payload); }
             auto& operator*() { return value(); }
             const auto& operator*() const { return value(); }
             auto* operator->() { return &value(); }
@@ -267,23 +267,25 @@ namespace textx
 
         inline ParserResult& txForwardErrorAndUpdateMatch(ParserResult& result, const Match& match) {
             TEXTX_ASSERT(!result, "you can only forward errors");
-            result.errors().match = match; // update match in error
-            result.errors().match->set_error();
+            result.err().match = match; // update match in error
+            result.err().match->set_error();
             return result; // forward error
         }
 
         inline void txUpdateError(ParserResult& error, const ParserResult &newError) {
             TEXTX_ASSERT(!error, "you can update errors");
             TEXTX_ASSERT(!newError, "you can update errors");
-            TEXTX_ASSERT(newError.errors().errors.size()>0, "you need a non-empty error list!");
-            if (error.errors().errors.size()==0 || error.errors().errors[0].pos<newError.errors().errors[0].pos) {
-                error.errors().errors = newError.errors().errors;
+            TEXTX_ASSERT(newError.err().errors.size()>0, "you need a non-empty error list!");
+            TEXTX_ASSERT(newError.err().match.has_value(), "new error requires a match");
+            error.err().match = newError.err().match;
+            if (error.err().errors.size()==0 || error.err().errors[0].pos<newError.err().errors[0].pos) {
+                error.err().errors = newError.err().errors;
             }
-            else if (error.errors().errors[0].pos==newError.errors().errors[0].pos) {
-                error.errors().errors.insert(
-                    error.errors().errors.end(),
-                    newError.errors().errors.begin(),
-                    newError.errors().errors.end()
+            else if (error.err().errors[0].pos==newError.err().errors[0].pos) {
+                error.err().errors.insert(
+                    error.err().errors.end(),
+                    newError.err().errors.begin(),
+                    newError.err().errors.end()
                 );
             }
         }

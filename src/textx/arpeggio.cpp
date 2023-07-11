@@ -14,6 +14,7 @@ namespace textx
     {
         std::unordered_map<MatchType, std::string> Match::type2str = {
             {MatchType::undefined, "undefined"},
+            {MatchType::nomatch, "nomatch"},
             {MatchType::str_match, "str_match"},
             {MatchType::regex_match, "regex_match"},
             {MatchType::sequence, "sequence"},
@@ -218,6 +219,10 @@ namespace textx
                     }
                     else
                     {
+                        TEXTX_ASSERT(sub_match.err().match.has_value());
+                        pos = sub_match.err().match.value().end();
+                        match.update_end(pos);
+                        match.children.push_back(sub_match.err().match.value());
                         return txForwardErrorAndUpdateMatch(sub_match, match);
                     }
                 }
@@ -240,7 +245,7 @@ namespace textx
                         txUpdateError(error, match);
                     }
                 }
-                TEXTX_ASSERT(error.errors().errors.size()>0, "unexpected");
+                TEXTX_ASSERT(error.err().errors.size()>0, "unexpected");
                 return error; },MatchType::ordered_choice});
         }
 
