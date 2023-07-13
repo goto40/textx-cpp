@@ -19,7 +19,7 @@ namespace textx {
             auto &rule = mm[rule_name];
             if (rule.type() == RuleType::match) {
                 //std::cout << "match -*- " << m << "\n";
-                return {textx::object::MatchText{textx::arpeggio::get_str(text, m),rule_name},m.start()};
+                return {textx::object::MatchText{textx::arpeggio::get_str(text, m),rule_name},&m};
             }
             if (rule.type() == RuleType::common) {
                 return create_model_from_common_rule(rule_name, text, m, mm, parent);
@@ -29,7 +29,7 @@ namespace textx {
             }
         }
         if (textx::arpeggio::is_terminal(m)) { // also a match
-            return {textx::object::MatchText{textx::arpeggio::get_str(text, m), "?"},m.start()};
+            return {textx::object::MatchText{textx::arpeggio::get_str(text, m), "?"},&m};
         }
         else {
             textx::arpeggio::raise(m.start(), "unexpected, no rule result found here to create object data...\n", m);
@@ -57,17 +57,17 @@ namespace textx {
                     if (info.type.has_value()) {
                         t = info.type.value();
                     }
-                    (*obj)[attr_name] = textx::object::AttributeValue{textx::object::Value{false,m0.start()}};
+                    (*obj)[attr_name] = textx::object::AttributeValue{textx::object::Value{false,&m0}};
                 }
                 else if (info.maybe_str()) {
                     std::string t="";
                     if (info.type.has_value()) {
                         t = info.type.value();
                     }
-                    (*obj)[attr_name] = textx::object::AttributeValue{textx::object::Value{textx::object::MatchText{"",t},m0.start()}};
+                    (*obj)[attr_name] = textx::object::AttributeValue{textx::object::Value{textx::object::MatchText{"",t},&m0}};
                 }
                 else {
-                    (*obj)[attr_name] = textx::object::AttributeValue{textx::object::Value{std::shared_ptr<textx::object::Object>{}, m0.start()}};
+                    (*obj)[attr_name] = textx::object::AttributeValue{textx::object::Value{std::shared_ptr<textx::object::Object>{}, &m0}};
                 }
             }
             else {
@@ -89,10 +89,10 @@ namespace textx {
                 // reference assignment
                 if (val.name_starts_with("obj_ref://")) {
                     //TODO: why val.children.size()>0?
-                    (*obj)[attr_name].data = textx::object::Value{val.children.size()>0, val.start()};
+                    (*obj)[attr_name].data = textx::object::Value{val.children.size()>0, &val};
                 }
                 else { // no reference
-                    (*obj)[attr_name].data = textx::object::Value{true, val.start()};
+                    (*obj)[attr_name].data = textx::object::Value{true, &val};
                 }
             }
             else if (m.name_starts_with("assignment://")) {
@@ -107,10 +107,10 @@ namespace textx {
                     std::string ref_name = std::string{textx::arpeggio::get_str(text, val.children[0])};
 
                     if (mm[rule_name][attr_name].cardinality==AttributeCardinality::scalar) {
-                        (*obj)[attr_name].data = textx::object::Value{textx::object::ObjectRef{shared_from_this(), ref_name, rule_name, target_type, attr_name, obj}, val.start()};
+                        (*obj)[attr_name].data = textx::object::Value{textx::object::ObjectRef{shared_from_this(), ref_name, rule_name, target_type, attr_name, obj}, &val};
                     }
                     else {
-                        (*obj)[attr_name].append(textx::object::Value{textx::object::ObjectRef{shared_from_this(), ref_name, rule_name, target_type, attr_name, obj}, val.start()});
+                        (*obj)[attr_name].append(textx::object::Value{textx::object::ObjectRef{shared_from_this(), ref_name, rule_name, target_type, attr_name, obj}, &val});
                     }
                 }
                 else { // no reference
@@ -131,7 +131,7 @@ namespace textx {
         traverse(m0,true);
 
         //std::cout << m0 << "\n";
-        return {obj, m0.start()};
+        return {obj, &m0};
     }
 
     textx::object::Value Model::create_model_from_abstract_rule(const std::string& rule_name, const std::string_view text, const textx::arpeggio::Match &m0, textx::Metamodel &mm, std::shared_ptr<textx::object::Object> parent) {
@@ -152,7 +152,7 @@ namespace textx {
         auto &r = traverse(m0,true);
         if(&r == &m0) {
             //std::cout << "abstract rule --> match -*- " << m << "\n";
-            return {textx::object::MatchText{textx::arpeggio::get_str(text, m0), rule_name},m0.start()};            
+            return {textx::object::MatchText{textx::arpeggio::get_str(text, m0), rule_name},&m0};            
         }
         return create_model(text, r, mm, parent);
     }

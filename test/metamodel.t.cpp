@@ -11,8 +11,8 @@ TEST_CASE("metamodel_simple_expression1", "[textx/metamodel]")
         )";
 
         textx::Metamodel mm{grammar1};
-        CHECK(mm.parsetree_from_str("simple model"));
-        CHECK_THROWS(mm.parsetree_from_str("no model"));
+        CHECK(mm.parsetree_from_str("simple model").first);
+        CHECK(!mm.parsetree_from_str("no model").first);
     }
 }
 
@@ -24,9 +24,9 @@ TEST_CASE("metamodel_simple_expression2", "[textx/metamodel]")
         )";
 
         textx::Metamodel mm{grammar1};
-        CHECK(mm.parsetree_from_str("ACCC"));
-        CHECK(mm.parsetree_from_str("ABBBC"));
-        CHECK_THROWS(mm.parsetree_from_str("A"));
+        CHECK(mm.parsetree_from_str("ACCC").first);
+        CHECK(mm.parsetree_from_str("ABBBC").first);
+        CHECK(!mm.parsetree_from_str("A").first);
     }
 }
 
@@ -38,12 +38,12 @@ TEST_CASE("metamodel_simple_expression3", "[textx/metamodel]")
         )";
 
         textx::Metamodel mm{grammar1};
-        CHECK(mm.parsetree_from_str("ACCC"));
-        CHECK(mm.parsetree_from_str("AABBBC"));
-        CHECK(mm.parsetree_from_str("BAC"));
-        CHECK(mm.parsetree_from_str("C"));
-        CHECK_THROWS(mm.parsetree_from_str("ABBACA"));
-        CHECK_THROWS(mm.parsetree_from_str(""));
+        CHECK(mm.parsetree_from_str("ACCC").first);
+        CHECK(mm.parsetree_from_str("AABBBC").first);
+        CHECK(mm.parsetree_from_str("BAC").first);
+        CHECK(mm.parsetree_from_str("C").first);
+        CHECK(!mm.parsetree_from_str("ABBACA").first);
+        CHECK(!mm.parsetree_from_str("").first);
     }
 }
 
@@ -55,12 +55,12 @@ TEST_CASE("metamodel_simple_expression4", "[textx/metamodel]")
         )";
 
         textx::Metamodel mm{grammar1};
-        CHECK(mm.parsetree_from_str("ABC"));
-        CHECK(mm.parsetree_from_str("CAB"));
-        CHECK(mm.parsetree_from_str("CBA"));
-        CHECK(mm.parsetree_from_str("BAC"));
-        CHECK_THROWS(mm.parsetree_from_str("AAB"));
-        CHECK_THROWS(mm.parsetree_from_str("C"));
+        CHECK(mm.parsetree_from_str("ABC").first);
+        CHECK(mm.parsetree_from_str("CAB").first);
+        CHECK(mm.parsetree_from_str("CBA").first);
+        CHECK(mm.parsetree_from_str("BAC").first);
+        CHECK(!mm.parsetree_from_str("AAB").first);
+        CHECK(!mm.parsetree_from_str("C").first);
     }
 }
 
@@ -72,9 +72,9 @@ TEST_CASE("metamodel_simple_expression5_regex", "[textx/metamodel]")
         )";
 
         textx::Metamodel mm{grammar1};
-        CHECK(mm.parsetree_from_str("[hello]"));
-        CHECK_THROWS(mm.parsetree_from_str("[hello world]"));
-        CHECK_THROWS(mm.parsetree_from_str("[]"));
+        CHECK(mm.parsetree_from_str("[hello]").first);
+        CHECK(!mm.parsetree_from_str("[hello world]").first);
+        CHECK(!mm.parsetree_from_str("[]").first);
     }
 }
 
@@ -86,8 +86,8 @@ TEST_CASE("metamodel_simple_expression6_neg_lookahead", "[textx/metamodel]")
         )";
 
         textx::Metamodel mm{grammar1};
-        CHECK(mm.parsetree_from_str("[hello]"));
-        CHECK_THROWS(mm.parsetree_from_str("[key]"));
+        CHECK(mm.parsetree_from_str("[hello]").first);
+        CHECK(!mm.parsetree_from_str("[key]").first);
     }
 }
 
@@ -99,11 +99,11 @@ TEST_CASE("metamodel_simple_expression6_pos_lookahead", "[textx/metamodel]")
         )";
 
         textx::Metamodel mm{grammar1};
-        CHECK(mm.parsetree_from_str("[a]"));
-        CHECK(mm.parsetree_from_str("[best]"));
-        CHECK(mm.parsetree_from_str("[extra]"));
-        CHECK(mm.parsetree_from_str("[extra123]"));
-        CHECK_THROWS(mm.parsetree_from_str("[xyz]"));
+        CHECK(mm.parsetree_from_str("[a]").first);
+        CHECK(mm.parsetree_from_str("[best]").first);
+        CHECK(mm.parsetree_from_str("[extra]").first);
+        CHECK(mm.parsetree_from_str("[extra123]").first);
+        CHECK(!mm.parsetree_from_str("[xyz]").first);
     }
 }
 
@@ -115,9 +115,9 @@ TEST_CASE("metamodel_simple_assignment1", "[textx/metamodel]")
         )";
 
         textx::Metamodel mm{grammar1};
-        CHECK_THROWS(mm.parsetree_from_str("value="));
-        CHECK(mm.parsetree_from_str("value=Hello"));
-        CHECK_THROWS(mm.parsetree_from_str("value=Hello World"));
+        CHECK(!mm.parsetree_from_str("value=").first);
+        CHECK(mm.parsetree_from_str("value=Hello").first);
+        CHECK(!mm.parsetree_from_str("value=Hello World").first);
 
         CHECK(mm["Model"]["value"].cardinality == textx::AttributeCardinality::scalar);
         //std::cout << mm << "\n";
@@ -132,9 +132,9 @@ TEST_CASE("metamodel_simple_assignment1_repeated", "[textx/metamodel]")
         )";
 
         textx::Metamodel mm{grammar1};
-        CHECK(mm.parsetree_from_str("value="));
-        CHECK(mm.parsetree_from_str("value=Hello"));
-        CHECK(mm.parsetree_from_str("value=Hello World"));
+        CHECK(mm.parsetree_from_str("value=").first);
+        CHECK(mm.parsetree_from_str("value=Hello").first);
+        CHECK(mm.parsetree_from_str("value=Hello World").first);
 
         CHECK(mm["Model"]["value"].cardinality == textx::AttributeCardinality::list);
         //std::cout << mm << "\n";
@@ -149,9 +149,9 @@ TEST_CASE("metamodel_simple_assignment2", "[textx/metamodel]")
         )";
 
         textx::Metamodel mm{grammar1};
-        CHECK_THROWS(mm.parsetree_from_str("value="));
-        CHECK(mm.parsetree_from_str("value=Hello"));
-        CHECK(mm.parsetree_from_str("value=Hello World"));
+        CHECK(!mm.parsetree_from_str("value=").first);
+        CHECK(mm.parsetree_from_str("value=Hello").first);
+        CHECK(mm.parsetree_from_str("value=Hello World").first);
 
         //std::cout << mm << "\n";
         CHECK(mm["Model"]["value"].cardinality == textx::AttributeCardinality::list);
@@ -167,10 +167,10 @@ TEST_CASE("metamodel_simple_assignment3", "[textx/metamodel]")
 
         textx::Metamodel mm{grammar1};
 
-        CHECK_THROWS(mm.parsetree_from_str("value="));
-        CHECK(mm.parsetree_from_str("value=Hello"));
-        CHECK(mm.parsetree_from_str("value=Hello, World"));
-        CHECK_THROWS(mm.parsetree_from_str("value=Hello World"));
+        CHECK(!mm.parsetree_from_str("value=").first);
+        CHECK(mm.parsetree_from_str("value=Hello").first);
+        CHECK(mm.parsetree_from_str("value=Hello, World").first);
+        CHECK(!mm.parsetree_from_str("value=Hello World").first);
 
         CHECK(mm["Model"]["value"].cardinality == textx::AttributeCardinality::list);
     }
@@ -181,10 +181,10 @@ TEST_CASE("metamodel_simple_assignment3", "[textx/metamodel]")
 
         textx::Metamodel mm{grammar1};
 
-        CHECK(mm.parsetree_from_str("value="));
-        CHECK(mm.parsetree_from_str("value=Hello"));
-        CHECK(mm.parsetree_from_str("value=Hello, World"));
-        CHECK_THROWS(mm.parsetree_from_str("value=Hello World"));
+        CHECK(mm.parsetree_from_str("value=").first);
+        CHECK(mm.parsetree_from_str("value=Hello").first);
+        CHECK(mm.parsetree_from_str("value=Hello, World").first);
+        CHECK(!mm.parsetree_from_str("value=Hello World").first);
 
         CHECK(mm["Model"]["value"].cardinality == textx::AttributeCardinality::list);
     }
@@ -199,11 +199,11 @@ TEST_CASE("metamodel_simple_unordered_group_test1", "[textx/metamodel]")
 
         textx::Metamodel mm{grammar1};
 
-        CHECK_THROWS(mm.parsetree_from_str("AB"));
-        CHECK(mm.parsetree_from_str("ABC"));
-        CHECK(mm.parsetree_from_str("BCA"));
-        CHECK(mm.parsetree_from_str("C B A"));
-        CHECK_THROWS(mm.parsetree_from_str("A,B,C"));
+        CHECK(!mm.parsetree_from_str("AB").first);
+        CHECK(mm.parsetree_from_str("ABC").first);
+        CHECK(mm.parsetree_from_str("BCA").first);
+        CHECK(mm.parsetree_from_str("C B A").first);
+        CHECK(!mm.parsetree_from_str("A,B,C").first);
     }
 }
 
@@ -216,12 +216,12 @@ TEST_CASE("metamodel_simple_unordered_group_test2", "[textx/metamodel]")
 
         textx::Metamodel mm{grammar1};
         
-        CHECK_THROWS(mm.parsetree_from_str("A,B"));
-        CHECK_THROWS(mm.parsetree_from_str("ABC"));
-        CHECK(mm.parsetree_from_str("A,B,C"));
-        CHECK(mm.parsetree_from_str("B,C,A"));
-        CHECK(mm.parsetree_from_str("C,B,A"));
-        CHECK_THROWS(mm.parsetree_from_str("A,B,"));
+        CHECK(!mm.parsetree_from_str("A,B").first);
+        CHECK(!mm.parsetree_from_str("ABC").first);
+        CHECK(mm.parsetree_from_str("A,B,C").first);
+        CHECK(mm.parsetree_from_str("B,C,A").first);
+        CHECK(mm.parsetree_from_str("C,B,A").first);
+        CHECK(!mm.parsetree_from_str("A,B,").first);
     }
 }
 
@@ -234,12 +234,12 @@ TEST_CASE("metamodel_simple_unordered_group_test3", "[textx/metamodel]")
 
         textx::Metamodel mm{grammar1};
         
-        CHECK_THROWS(mm.parsetree_from_str("A1B"));
-        CHECK(mm.parsetree_from_str("ABC"));
-        CHECK(mm.parsetree_from_str("A1B2C"));
-        CHECK(mm.parsetree_from_str("B3C123A"));
-        CHECK(mm.parsetree_from_str("CB1A"));
-        CHECK_THROWS(mm.parsetree_from_str("A1B2"));
+        CHECK(!mm.parsetree_from_str("A1B").first);
+        CHECK(mm.parsetree_from_str("ABC").first);
+        CHECK(mm.parsetree_from_str("A1B2C").first);
+        CHECK(mm.parsetree_from_str("B3C123A").first);
+        CHECK(mm.parsetree_from_str("CB1A").first);
+        CHECK(!mm.parsetree_from_str("A1B2").first);
     }
 }
 
@@ -255,9 +255,9 @@ TEST_CASE("metamodel_simple_rule_ref", "[textx/metamodel]")
 
         textx::Metamodel mm{grammar1};
         
-        CHECK_THROWS(mm.parsetree_from_str("ac"));
-        CHECK(mm.parsetree_from_str("abc"));
-        CHECK(mm.parsetree_from_str("abbc"));
+        CHECK(!mm.parsetree_from_str("ac").first);
+        CHECK(mm.parsetree_from_str("abc").first);
+        CHECK(mm.parsetree_from_str("abbc").first);
     }
 }
 
@@ -270,10 +270,10 @@ TEST_CASE("metamodel_simple_assignment_and_rule_ref1", "[textx/metamodel]")
         )";
 
         textx::Metamodel mm{grammar1};
-        CHECK_THROWS(mm.parsetree_from_str("value="));
-        CHECK(mm.parsetree_from_str("value=Hello123"));
-        CHECK_THROWS(mm.parsetree_from_str("value=Hello World"));
-        CHECK_THROWS(mm.parsetree_from_str("value=123Hello"));
+        CHECK(!mm.parsetree_from_str("value=").first);
+        CHECK(mm.parsetree_from_str("value=Hello123").first);
+        CHECK(!mm.parsetree_from_str("value=Hello World").first);
+        CHECK(!mm.parsetree_from_str("value=123Hello").first);
 
         CHECK(mm["Model"]["value"].cardinality == textx::AttributeCardinality::scalar);
         CHECK(mm["MYID"].type() == textx::RuleType::match);
@@ -292,9 +292,9 @@ TEST_CASE("metamodel_simple_abstract_rule1", "[textx/metamodel]")
         )";
 
         textx::Metamodel mm{grammar1};
-        CHECK_THROWS(mm.parsetree_from_str("value="));
-        CHECK(mm.parsetree_from_str("value=a1"));
-        CHECK(mm.parsetree_from_str("value=a2"));
+        CHECK(!mm.parsetree_from_str("value=").first);
+        CHECK(mm.parsetree_from_str("value=a1").first);
+        CHECK(mm.parsetree_from_str("value=a2").first);
 
         CHECK(mm["Model"]["value"].cardinality == textx::AttributeCardinality::scalar);
         CHECK(mm["A1"].type() == textx::RuleType::common);
@@ -317,9 +317,9 @@ TEST_CASE("metamodel_simple_abstract_rule2", "[textx/metamodel]")
         )";
 
         textx::Metamodel mm{grammar1};
-        CHECK_THROWS(mm.parsetree_from_str("value="));
-        CHECK(mm.parsetree_from_str("value=a1 a1 a2"));
-        CHECK(mm.parsetree_from_str("value=a2 a1 a2"));
+        CHECK(!mm.parsetree_from_str("value=").first);
+        CHECK(mm.parsetree_from_str("value=a1 a1 a2").first);
+        CHECK(mm.parsetree_from_str("value=a2 a1 a2").first);
 
         CHECK(mm["Model"]["a"].cardinality == textx::AttributeCardinality::scalar);
         CHECK(mm["A1"].type() == textx::RuleType::common);
@@ -373,12 +373,12 @@ TEST_CASE("metamodel_simple_obj_ref1", "[textx/metamodel]")
         )";
 
         textx::Metamodel mm{grammar1};
-        CHECK_THROWS(mm.parsetree_from_str("value="));
-        CHECK(mm.parsetree_from_str("value=t1 t1 2"));
-        CHECK(mm.parsetree_from_str("value=t2 t1 2 3 4"));
-        CHECK(mm.parsetree_from_str("value=t1 t1"));
-        CHECK_THROWS(mm.parsetree_from_str("value=1 t1 2"));
-        CHECK_THROWS(mm.parsetree_from_str("value=t1 t1 t2"));
+        CHECK(!mm.parsetree_from_str("value=").first);
+        CHECK(mm.parsetree_from_str("value=t1 t1 2").first);
+        CHECK(mm.parsetree_from_str("value=t2 t1 2 3 4").first);
+        CHECK(mm.parsetree_from_str("value=t1 t1").first);
+        CHECK(!mm.parsetree_from_str("value=1 t1 2").first);
+        CHECK(!mm.parsetree_from_str("value=t1 t1 t2").first);
 
         CHECK(mm["Model"]["a"].cardinality == textx::AttributeCardinality::scalar);
         CHECK(mm["Model"]["a1"].cardinality == textx::AttributeCardinality::scalar);

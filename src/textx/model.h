@@ -1,4 +1,5 @@
 #pragma once
+#include "textx/arpeggio.h"
 #include "textx/object.h"
 #include "textx/rule.h"
 #include <memory>
@@ -16,11 +17,17 @@ namespace textx {
         std::vector<std::weak_ptr<textx::Model>> weak_imported_models;
         std::string model_text={};
         std::string model_filename={};
+        arpeggio::ParserResult parsetree={};
+        arpeggio::ParserState parsestate={};
+        std::unordered_map<size_t, std::vector<arpeggio::CompletionInfo>> m_completionInfo;
+        std::vector<arpeggio::TextxErrorEntry> m_errors;
         
         /** return the number of unresolved refs */
         size_t resolve_references();
         friend textx::Metamodel;
     public:
+        bool ok() { return m_errors.size()==0; }
+        void add_error(arpeggio::TextxErrorEntry e) { m_errors.push_back(e); }
         void set_filename_info(std::string f) { model_filename=f; }
         std::shared_ptr<textx::Metamodel> tx_metamodel() const { return weak_mm.lock(); }
         textx::object::Value& val() { 

@@ -114,7 +114,7 @@ namespace textx {
             resolver.insert({dot_separated_rule_attr_with_asterix, std::move(r)});
         }
 
-        arpeggio::ParserResult parsetree_from_str(std::string_view model_txt) { return grammar.parse_or_throw(model_txt); }
+        auto parsetree_from_str(std::string_view model_txt) { return grammar.parse(model_txt); }
         inline friend std::ostream& operator<<(std::ostream &o, const Metamodel& mm) {
             for(auto& [k,v]: mm.grammar.get_rules()) {
                 //o << "RULE[\"" << k << "\"]:\n";

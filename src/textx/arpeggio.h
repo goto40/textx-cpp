@@ -237,6 +237,7 @@ namespace textx
         struct CompletionInfo {
             TextPosition pos;
             std::function<std::vector<std::string>()> info;
+            size_t length=0; // in case a part of the model needs to be replaced
         };
 
         struct ParserConfig {
@@ -260,6 +261,7 @@ namespace textx
 
             size_t get_cache_reset_indicator() { return cache_reset_indicator; }
             ParserState(std::string_view s, std::string filename) : source(s), m_filename{filename} {}
+            ParserState() = default;
             operator std::string_view() { return source; }
             size_t length() { return source.length(); }
             char operator[](size_t p) { return source[p]; }

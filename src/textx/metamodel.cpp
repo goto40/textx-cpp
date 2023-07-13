@@ -410,10 +410,14 @@ namespace textx {
                 return workspace->get_model(filename); // cached model
             }
 
-            auto parsetree = parsetree_from_str(text);
             auto ret=std::shared_ptr<textx::Model>{new textx::Model()}; // call private constructor (new)
+            auto [result, state] = parsetree_from_str(text);
+            ret->parsetree = result;
+            ret->parsestate = state;
+            ret->m_completionInfo = ret->parsestate.get_completion_info();
+            ret->m_errors = ret->parsetree.errors();
             //std::cout << parsetree.value() << "\n";
-            ret->init(filename, text, *parsetree, shared_from_this());
+            ret->init(filename, text, *(ret->parsetree), shared_from_this());
 
             if (filename.size()>0) {
                 workspace->add_known_model(filename, ret); // owning...
@@ -431,9 +435,12 @@ namespace textx {
                     }
                     if (!std::filesystem::exists(p)) {
                         textx::arpeggio::raise(v.obj()->pos, import_filename+" not found.");
+                        //TODO ret->add_error({v["importURI"].,import_filename+" not found."});
                     }
-                    auto m = workspace->model_from_file(p, false); // unresolved refs
-                    ret->add_imported_model(m);
+                    else {
+                        auto m = workspace->model_from_file(p, false); // unresolved refs
+                        ret->add_imported_model(m);
+                    }
                 }
             });
  

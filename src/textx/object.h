@@ -38,11 +38,12 @@ namespace textx::object {
     using MatchText = std::pair<std::string, std::string>; /// first: text, second: rule-type
     struct Value {
         std::variant<MatchText, std::shared_ptr<Object>, ObjectRef, bool> data;
-        textx::arpeggio::TextPosition pos;
-        Value(MatchText x,textx::arpeggio::TextPosition pos) : data{x},pos{pos} {}
-        Value(std::shared_ptr<Object> x,textx::arpeggio::TextPosition pos) : data{x},pos{pos} {}
-        Value(ObjectRef x,textx::arpeggio::TextPosition pos) : data{std::move(x)},pos{pos} {}
-        Value(bool x,textx::arpeggio::TextPosition pos) : data{x},pos{pos} {}
+        arpeggio::TextPosition pos;
+        const textx::arpeggio::Match *unsafe_match;
+        Value(MatchText x,const textx::arpeggio::Match *m) : data{x},unsafe_match{m},pos(m->start()) {}
+        Value(std::shared_ptr<Object> x,const textx::arpeggio::Match *m) : data{x},unsafe_match{m},pos((m!=nullptr)?m->start():0) {}
+        Value(ObjectRef x,const textx::arpeggio::Match *m) : data{std::move(x)},unsafe_match{m},pos(m->start()) {}
+        Value(bool x,const textx::arpeggio::Match *m) : data{x},unsafe_match{m},pos(m->start()) {}
 
         bool is_boolean() const {
             return std::holds_alternative<bool>(data);
