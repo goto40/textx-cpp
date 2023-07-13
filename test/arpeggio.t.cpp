@@ -311,17 +311,16 @@ TEST_CASE("end_of_file", "[arpeggio]")
         end_of_file(),
     }))};
 
-    CHECK(grammar.parse("ABBABC"));
-    CHECK(grammar.parse("C"));
-    CHECK(grammar.parse("C "));
-    CHECK(grammar.parse("AB BAB C   "));
-    CHECK(grammar.parse("AB \n BAB\nC   "));
-    CHECK_THROWS(grammar.get_last_error_position()); // no error --> execption
+    CHECK(grammar.parse("ABBABC").first);
+    CHECK(grammar.parse("C").first);
+    CHECK(grammar.parse("C ").first);
+    CHECK(grammar.parse("AB BAB C   ").first);
+    CHECK(grammar.parse("AB \n BAB\nC   ").first);
 
-    auto partly = grammar.parse("AB");
+    auto [partly,state] = grammar.parse("AB");
     CHECK(!partly);
     {
-        auto err_text = grammar.get_last_error_string();
+        auto err_text = state.get_last_error_string();
         CHECK_THAT(err_text, Catch::Matchers::Contains("expected"));
         CHECK_THAT(err_text, Catch::Matchers::Contains("str_match,A"));
         CHECK_THAT(err_text, Catch::Matchers::Contains("str_match,B"));
@@ -337,11 +336,12 @@ TEST_CASE("end_of_file", "[arpeggio]")
     CHECK(partly->children[0].type()==MatchType::zero_or_more);
     CHECK(partly->children[0].children.size()==2);
     
-    TODO get state and check completion info
+    //TODO get state and check completion info
 
-    CHECK(!grammar.parse("C C"));
+    auto res = grammar.parse("C C");
+    CHECK(!res.first);
     {
-        auto err_text = grammar.get_last_error_string();
+        auto err_text = res.second.get_last_error_string();
         CHECK_THAT(err_text, Catch::Matchers::Contains("end_of_file,"));
     }
 }
@@ -366,18 +366,18 @@ TEST_CASE("comments", "[arpeggio]")
     }))};
     grammar.get_config().skip_text = textx::arpeggio::skip_text_functions::skip_cpp_style();
 
-    CHECK(grammar.parse("A BB ABC "));
-    CHECK(grammar.parse("A BB ABC // comment!"));
-    CHECK(grammar.parse("A BB AB // comment!\n C"));
-    CHECK(grammar.parse("A BB AB // comment!\n ABC"));
-    CHECK(grammar.parse("A BB ABC /* comment! */"));
-    CHECK(grammar.parse("A BB AB /* comment! */ C"));
-    CHECK(grammar.parse("C"));
-    CHECK(grammar.parse("C "));
-    CHECK(grammar.parse("ABB\nAB// comment!\n C"));
-    CHECK(grammar.parse("A\nBBAB\n // comment!\n C"));
-    CHECK(grammar.parse("ABBAB \n// comment!\n C"));
-    CHECK(grammar.parse("ABBAB\n// comment!\n C"));
+    CHECK(grammar.parse("A BB ABC ").first);
+    CHECK(grammar.parse("A BB ABC // comment!").first);
+    CHECK(grammar.parse("A BB AB // comment!\n C").first);
+    CHECK(grammar.parse("A BB AB // comment!\n ABC").first);
+    CHECK(grammar.parse("A BB ABC /* comment! */").first);
+    CHECK(grammar.parse("A BB AB /* comment! */ C").first);
+    CHECK(grammar.parse("C").first);
+    CHECK(grammar.parse("C ").first);
+    CHECK(grammar.parse("ABB\nAB// comment!\n C").first);
+    CHECK(grammar.parse("A\nBBAB\n // comment!\n C").first);
+    CHECK(grammar.parse("ABBAB \n// comment!\n C").first);
+    CHECK(grammar.parse("ABBAB\n// comment!\n C").first);
 }
 
 TEST_CASE("unordered_group", "[arpeggio]")
@@ -398,10 +398,10 @@ TEST_CASE("unordered_group", "[arpeggio]")
     CHECK(grammar.parse_or_throw("BCA"));
     CHECK(grammar.parse_or_throw("BCA"));
     CHECK(grammar.parse_or_throw("BAC"));
-    CHECK(!grammar.parse("BAA"));
-    CHECK(!grammar.parse("BACA"));
+    CHECK(!grammar.parse("BAA").first);
+    CHECK(!grammar.parse("BACA").first);
 
-    auto match = grammar.parse("CAB");
+    auto [match, state] = grammar.parse("CAB");
     REQUIRE(match);
     CHECK(match.value().children[0].children[0].captured.value() == "C");
     CHECK(match.value().children[0].children[1].captured.value() == "A");
@@ -425,8 +425,8 @@ TEST_CASE("unordered_group_optional1", "[arpeggio]")
     CHECK(grammar.parse_or_throw("BA"));
     CHECK(grammar.parse_or_throw("A"));
     CHECK(grammar.parse_or_throw("B"));
-    CHECK(!grammar.parse("BAA")); // more than the allowed elements --> error
-    CHECK(grammar.parse("")); // all optionals unmatched --> ok
+    CHECK(!grammar.parse("BAA").first); // more than the allowed elements --> error
+    CHECK(grammar.parse("").first); // all optionals unmatched --> ok
 
     auto match = grammar.parse_or_throw("B");
     CHECK(match.value().children[0].children.size()==1);
@@ -451,7 +451,7 @@ TEST_CASE("unordered_group_optional2", "[arpeggio]")
     CHECK(grammar.parse_or_throw("AC"));
     CHECK(grammar.parse_or_throw("CB"));
     CHECK(grammar.parse_or_throw("C"));
-    CHECK(!grammar.parse("")); // all optionals unmatched --> error
+    CHECK(!grammar.parse("").first); // all optionals unmatched --> error
 
     auto match = grammar.parse_or_throw("BC");
     CHECK(match.value().children[0].children.size()==2);

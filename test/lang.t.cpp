@@ -24,7 +24,7 @@ TEST_CASE("simple0", "[textx/lang]")
     )";
 
     MyGrammar g;
-    CHECK(g.parse(grammar0));
+    CHECK(g.parse(grammar0).first);
 }
 
 
@@ -42,7 +42,7 @@ TEST_CASE("simple1", "[textx/lang]")
 
         textx::lang::TextxGrammar textx_grammar;
         CHECK(textx_grammar.parse_or_throw(grammar1));
-        CHECK(!textx_grammar.parse(grammar1_error));
+        CHECK(!textx_grammar.parse(grammar1_error).first);
     }
 }
 
@@ -93,7 +93,7 @@ TEST_CASE("rrel1", "[textx/lang]")
             ^(package,packages)*.items.enum_entries           
         )"));
 
-        CHECK(!textx_grammar.parse("a.b.c."));
-        CHECK(!textx_grammar.parse(""));
+        CHECK(!textx_grammar.parse("a.b.c.").first);
+        CHECK(!textx_grammar.parse("").first);
     }
 }

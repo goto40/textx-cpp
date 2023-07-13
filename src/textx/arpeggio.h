@@ -269,6 +269,16 @@ namespace textx
                 TEXTX_ASSERT(it!=completionInfo.end());
                 return *it;
             }
+            std::string get_last_error_string(std::optional<std::string_view> text = std::nullopt)
+            {
+                std::ostringstream s;
+                // if (text) {
+                //     textx::arpeggio::print_error_position(s, text.value(), pos.text_position);
+                // }
+                s << farthest_position.text_position.line << ":" << farthest_position.text_position.col << ":"
+                << "expected\n" << farthest_position;
+                return s.str();
+            }
         };
 
         using SkipTextFun = std::function<TextPosition(ParserState &text, TextPosition pos)>;

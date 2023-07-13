@@ -4,6 +4,7 @@
 #include <unordered_map>
 #include <string>
 #include <concepts>
+#include <utility>
 
 namespace textx
 {
@@ -12,8 +13,6 @@ namespace textx
     {
         std::string main_rule_name = "main";
         textx::arpeggio::Config config = {};
-        textx::arpeggio::ParserState state = {"","(unnamed file)"};
-        bool ok = true;
         std::unordered_map<std::string, R> rules = {};
         bool default_skipws = true;
 
@@ -96,7 +95,7 @@ namespace textx
             }
         }
 
-        arpeggio::ParserResult parse(std::string_view text)
+        std::pair<arpeggio::ParserResult, arpeggio::ParserState> parse(std::string_view text)
         {
             if (rules.count(main_rule_name)!=1)
             {
@@ -115,34 +114,24 @@ namespace textx
             else {
                 main = textx::arpeggio::skipws(main);
             }
-            state = textx::arpeggio::ParserState{text, "(unnamed grammar)"};
+            auto state = textx::arpeggio::ParserState{text, "(unnamed grammar)"};
             auto parseResult = main(config, state, {});
-            ok = parseResult.ok();
-            if (ok) {
+            if (parseResult.ok()) {
                 parseResult.update_match(parseResult.value().children[0]);
             }
             else if (parseResult.value().children.size()>0) {
                 parseResult.update_match(parseResult.value().children[0]);
             }
-            return parseResult;
+            return {parseResult, state};
         }
 
         arpeggio::ParserResult parse_or_throw(std::string_view text)
         {
-            auto res = parse(text);
+            auto [res, state] = parse(text);
             if (!res) {
-                textx::arpeggio::raise( state.farthest_position.text_position, get_last_error_string(text) );
+                textx::arpeggio::raise( state.farthest_position.text_position, state.get_last_error_string(text) );
             }
             return res;
-        }
-
-        textx::arpeggio::AnnotatedTextPosition get_last_error_position()
-        {
-            if (ok)
-            {
-                throw std::runtime_error("unexpected: called get_last_error_position() w/o error.");
-            }
-            return state.farthest_position;
         }
 
         void set_main_rule(std::string_view name="main")
@@ -152,18 +141,6 @@ namespace textx
         std::string get_main_rule_name()
         {
             return main_rule_name;
-        }
-
-        std::string get_last_error_string(std::optional<std::string_view> text = std::nullopt)
-        {
-            std::ostringstream s;
-            auto pos = get_last_error_position();
-            // if (text) {
-            //     textx::arpeggio::print_error_position(s, text.value(), pos.text_position);
-            // }
-            s << pos.text_position.line << ":" << pos.text_position.col << ":"
-              << "expected\n" << pos;
-            return s.str();
         }
 
         auto& get_config() {
