@@ -239,6 +239,11 @@ namespace textx
             std::function<std::vector<std::string>()> info;
         };
 
+        struct ParserConfig {
+            bool eolterm = false;
+            bool skipws = true;
+        };
+
         class ParserState
         {
             std::string_view source;
@@ -248,8 +253,7 @@ namespace textx
             std::unordered_map<size_t, std::vector<CompletionInfo>> completionInfo;            
 
         public:
-            bool eolterm = false;
-            bool skipws = true;
+            ParserConfig config;
             size_t cache_hits = {0};
             size_t cache_misses = {0};
             AnnotatedTextPosition farthest_position = {};
@@ -265,10 +269,18 @@ namespace textx
             void add_completion_info(TextPosition pos, std::function<std::vector<std::string>()> f);
             bool has_completion_info(size_t pos) { return completionInfo.contains(pos); }
             const auto& get_completion_info() const { return completionInfo; }
-            auto& get_completion_info(size_t pos) const {
+            void reset_completion_info(size_t pos) { completionInfo.erase(pos); }
+            std::vector<std::string> get_completion_info(size_t pos) const {
+                std::vector<std::string> res;
                 auto it = completionInfo.find(pos);
-                TEXTX_ASSERT(it!=completionInfo.end());
-                return *it;
+                if(it!=completionInfo.end()) {
+                    for(auto &i: it->second) {
+                        for(auto c: i.info()) {
+                            res.push_back(c);
+                        }
+                    }
+                }
+                return res;
             }
             std::string get_last_error_string(std::optional<std::string_view> text = std::nullopt)
             {
@@ -297,9 +309,9 @@ namespace textx
             {
                 return [=](ParserState &text, TextPosition pos) -> TextPosition
                 {
-                    if (text.skipws) {
+                    if (text.config.skipws) {
                         auto isspace = [&](char c) -> bool {
-                            if (!text.eolterm) return std::isspace(c);
+                            if (!text.config.eolterm) return std::isspace(c);
                             else return std::isspace(text[pos]) && c!='\n' && c!='\r';
                         };
                         while (pos < text.length() && isspace(text[pos]))
@@ -410,6 +422,7 @@ namespace textx
                             s << "unexpected, found undefined result = " << match.value();
                             raise(match->start(), s.str());
                         }
+                        text.reset_completion_info(pos.pos);
                     }
                     cache[pos.pos] = match;
                     return match;
@@ -431,7 +444,7 @@ namespace textx
                 }
                 else
                 {
-                    text.update_farthest_position(pos,MatchType::str_match,std::string("rule-name="+name)+(text.eolterm?"+eolterm":""));
+                    text.update_farthest_position(pos,MatchType::str_match,std::string("rule-name="+name)+(text.config.eolterm?"+eolterm":""));
                 }
                 return parseResult; }, pattern.type()};
         }
@@ -450,38 +463,37 @@ namespace textx
                 return parseResult; }, pattern.type()};
         }
 
-        inline Pattern modify_parser_state(std::function<void(ParserState &)> modifier, Pattern pattern)
+        inline Pattern modify_parser_config(std::function<void(ParserState &)> modifier, Pattern pattern)
         {
             return {[=](const Config &config, ParserState &text, TextPosition pos) -> ParserResult
                         {
-                auto copy = text;
+                auto copy = text.config;
                 modifier(text);
                 auto parseResult = pattern(config, text, pos);
                 // preserve error infos:
-                copy.farthest_position = text.farthest_position;
-                text = copy;
+                text.config = copy;
                 return parseResult;
                         }, pattern.type()};
         }
 
         inline auto eolterm(Pattern pattern)
         {
-            return modify_parser_state([](ParserState &s){
-                s.eolterm = true;
+            return modify_parser_config([](ParserState &s){
+                s.config.eolterm = true;
             }, pattern);
         }
 
         inline auto skipws(Pattern pattern)
         {
-            return modify_parser_state([](ParserState &s){
-                s.skipws = true;
+            return modify_parser_config([](ParserState &s){
+                s.config.skipws = true;
             }, pattern);
         }
 
         inline auto noskipws(Pattern pattern)
         {
-            return modify_parser_state([](ParserState &s){
-                s.skipws = false;
+            return modify_parser_config([](ParserState &s){
+                s.config.skipws = false;
             }, pattern);
         }
 

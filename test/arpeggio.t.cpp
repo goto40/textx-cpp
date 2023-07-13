@@ -1,6 +1,9 @@
 #include "catch.hpp"
+#include <bits/ranges_algo.h>
 #include <iostream>
+#include <numeric>
 #include <sstream>
+#include <algorithm>
 #include "textx/arpeggio.h"
 #include "textx/grammar.h"
 
@@ -317,7 +320,6 @@ TEST_CASE("end_of_file", "[arpeggio]")
     CHECK(grammar.parse("AB BAB C   ").first);
     CHECK(grammar.parse("AB \n BAB\nC   ").first);
 
-    std::cout<< "--------\n";
     auto [partly,state] = grammar.parse("AB");
     CHECK(!partly);
     {
@@ -337,8 +339,25 @@ TEST_CASE("end_of_file", "[arpeggio]")
     CHECK(partly->children[0].type()==MatchType::zero_or_more);
     CHECK(partly->children[0].children.size()==2);
     
+    // for(auto&[pos, completition]: state.get_completion_info()) {
+    //     std::cout << "pos: " << pos << ":";
+    //     for(auto i: completition) {
+    //         std::cout << " " << i.pos << ":";
+    //         for(auto c: i.info()) {
+    //            std::cout << " [" << c << "]";
+    //         }
+    //     }
+    //     std::cout << "\n";
+    // }
+
     // get state and check completion info
     CHECK(state.get_completion_info().size()==1);
+    // get state and check completion info
+    auto completionInfo = state.get_completion_info(2);
+    CHECK(completionInfo.size()==3);
+    std::sort(completionInfo.begin(), completionInfo.end());
+    auto sortedCompletionInfo = std::reduce(completionInfo.begin(), completionInfo.end(), std::string(""), [](auto &a, auto &b){return a+","+b;});
+    CHECK(sortedCompletionInfo==",A,B,C");
 
     auto res = grammar.parse("C C");
     CHECK(!res.first);
