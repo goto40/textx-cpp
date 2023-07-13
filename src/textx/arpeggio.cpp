@@ -170,6 +170,7 @@ namespace textx
                 {
                     text.update_farthest_position(pos,MatchType::str_match,s);
                     text.add_completion_info(pos, [s](){return std::vector{s};});
+                    std::cout << "added just now: " << text.get_completion_info().size() << "\n";
                     return ParserResult::error("str_match failure", no_match(pos));
                 } }, MatchType::str_match});
         }

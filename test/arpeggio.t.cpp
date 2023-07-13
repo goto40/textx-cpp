@@ -317,6 +317,7 @@ TEST_CASE("end_of_file", "[arpeggio]")
     CHECK(grammar.parse("AB BAB C   ").first);
     CHECK(grammar.parse("AB \n BAB\nC   ").first);
 
+    std::cout<< "--------\n";
     auto [partly,state] = grammar.parse("AB");
     CHECK(!partly);
     {
@@ -336,7 +337,8 @@ TEST_CASE("end_of_file", "[arpeggio]")
     CHECK(partly->children[0].type()==MatchType::zero_or_more);
     CHECK(partly->children[0].children.size()==2);
     
-    //TODO get state and check completion info
+    // get state and check completion info
+    CHECK(state.get_completion_info().size()==1);
 
     auto res = grammar.parse("C C");
     CHECK(!res.first);

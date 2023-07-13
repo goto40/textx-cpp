@@ -264,6 +264,7 @@ namespace textx
             const std::string& filename() { return m_filename; }
             void add_completion_info(TextPosition pos, std::function<std::vector<std::string>()> f);
             bool has_completion_info(size_t pos) { return completionInfo.contains(pos); }
+            const auto& get_completion_info() const { return completionInfo; }
             auto& get_completion_info(size_t pos) const {
                 auto it = completionInfo.find(pos);
                 TEXTX_ASSERT(it!=completionInfo.end());
