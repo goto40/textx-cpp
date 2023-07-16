@@ -100,13 +100,13 @@ namespace textx
 
         }
 
-        const Match* Match::search(std::string name) const {
+        std::shared_ptr<const Match> Match::search(std::string name) const {
             if (name_is(name)) {
-                return this;
+                return this->shared_from_this();
             }
             else {
                 for (auto &c: children) {
-                    auto ret = c.search(name);
+                    auto ret = c->search(name);
                     if (ret!=nullptr) { return ret; }
                 }
             }
@@ -129,7 +129,7 @@ namespace textx
             o << ">(\n";
             for (auto &child : match.children)
             {
-                child.print(o, indent+2);
+                child->print(o, indent+2);
             }
             o << istr << ")\n";
         }
@@ -150,10 +150,10 @@ namespace textx
                     auto parserResult = pattern(config, text, pos);
                     if (parserResult.ok())
                     {
-                        return Match{parserResult.value().start(), parserResult.value().end(), MatchType::optional, {parserResult.value()}};
+                        return Match::create(parserResult.value().start(), parserResult.value().end(), MatchType::optional, {parserResult.ptr()});
                     }
                     else {
-                        return Match{pos, pos, MatchType::optional, {}};
+                        return Match::create(pos, pos, MatchType::optional, {});
                     }
                 }, MatchType::optional});
         }
@@ -164,7 +164,7 @@ namespace textx
                         {
                 if (text.str().substr(pos).starts_with(s))
                 {
-                    return Match{pos, pos.add(text, s.length()), MatchType::str_match};
+                    return Match::create(pos, pos.add(text, s.length()), MatchType::str_match);
                 }
                 else
                 {
@@ -195,7 +195,7 @@ namespace textx
                 if (regex_search(text.str().begin() + pos, text.str().end(), smatch, r))
                 {
                     if (smatch.position() == 0) {
-                        auto res = Match{pos, pos.add(text,smatch.length()), MatchType::regex_match};
+                        auto res = Match::create(pos, pos.add(text,smatch.length()), MatchType::regex_match);
                         return res;
                     }
                 }
@@ -209,21 +209,21 @@ namespace textx
         {
             return rule({[=](const Config &config, ParserState &text, TextPosition pos) -> ParserResult
                         {
-                Match match{pos, pos, MatchType::sequence};
+                auto match = Match::create(pos, pos, MatchType::sequence);
                 for (auto pattern : patterns)
                 {
                     auto sub_result = pattern(config, text, pos);
                     if (sub_result)
                     {
                         pos = sub_result.value().end();
-                        match.update_end(pos);
-                        match.children.push_back(sub_result.value());
+                        match->update_end(pos);
+                        match->children.push_back(sub_result.ptr());
                     }
                     else
                     {
                         pos = sub_result.value().end();
-                        match.update_end(pos);
-                        match.children.push_back(sub_result.value());
+                        match->update_end(pos);
+                        match->children.push_back(sub_result.ptr());
                         ParserResult err{match};
                         err.add_errors(sub_result.errors());
                         return err;
@@ -242,7 +242,7 @@ namespace textx
                     auto parserResult = pattern(config, text, pos);
                     if (parserResult)
                     {
-                        return Match{parserResult.value().start(),parserResult.value().end(),MatchType::ordered_choice, {parserResult.value()}};
+                        return Match::create(parserResult.value().start(),parserResult.value().end(),MatchType::ordered_choice, {parserResult.ptr()});
                     }
                     else {
                         err.add_errors(parserResult.errors());
@@ -271,7 +271,7 @@ namespace textx
 
             return rule({[=](const Config &config, ParserState &text, TextPosition pos) -> ParserResult
                         {
-                Match result{pos,pos,MatchType::unordered_group, {}};
+                auto result = Match::create(pos,pos,MatchType::unordered_group, {});
                 std::vector<bool> used(patterns.size());
                 std::fill(used.begin(), used.end(), false);
                 size_t n_req = 0;
@@ -295,11 +295,11 @@ namespace textx
                             if (ok) {
                                 auto parserResult = patterns[i](config, text, npos);
                                 if (parserResult && is_optional[i] && parserResult->start()==parserResult->end()) {
-                                    parserResult = ParserResult::error("empty optional match", parserResult.value()); // empty optional match
+                                    parserResult = ParserResult::error("empty optional match", parserResult.ptr()); // empty optional match
                                 }
                                 if (parserResult)
                                 {
-                                    result.children.emplace_back(parserResult.value());
+                                    result->children.emplace_back(parserResult.ptr());
                                     pos = parserResult.value().end();
                                     used[i] = true;
                                     n++;
@@ -310,7 +310,7 @@ namespace textx
                         }
                     }
                 }
-                result.update_end(pos);
+                result->update_end(pos);
                 
                 /* TODO remove comments below...
 
@@ -339,7 +339,7 @@ namespace textx
                 auto match = pattern(config, text, pos);
                 if (!match)
                 {
-                    return Match{pos, pos,MatchType::negative_lookahead};
+                    return Match::create(pos, pos,MatchType::negative_lookahead);
                 }
                 else
                 {
@@ -354,7 +354,7 @@ namespace textx
                 auto match = pattern(config, text, pos);
                 if (match)
                 {
-                    return Match{pos, pos, MatchType::positive_lookahead, {match.value()}};
+                    return Match::create(pos, pos, MatchType::positive_lookahead, {match.ptr()});
                 }
                 else
                 {
@@ -374,13 +374,13 @@ namespace textx
                 }
                 else
                 {
-                    auto match = Match{sub_result.value().start(), sub_result.value().end(), MatchType::one_or_more, {sub_result.value()}};
-                    pos = match.end();
+                    auto match = Match::create(sub_result.value().start(), sub_result.value().end(), MatchType::one_or_more, {sub_result.ptr()});
+                    pos = match->end();
                     while (auto next_match = pattern(config, text, pos))
                     {
-                        match.children.push_back(next_match.value());
+                        match->children.push_back(next_match.ptr());
                         pos = next_match.value().end();
-                        match.update_end(pos);
+                        match->update_end(pos);
                     }
                     return match;
                 } },MatchType::one_or_more});
@@ -390,12 +390,12 @@ namespace textx
         {
             return rule({[=](const Config &config, ParserState &text, TextPosition pos) -> ParserResult
                         {
-                auto match = Match{pos, pos,MatchType::zero_or_more, {}};
+                auto match = Match::create(pos, pos,MatchType::zero_or_more, {});
                 while (auto next_match = pattern(config, text, pos))
                 {
-                    match.children.push_back(next_match.value());
+                    match->children.push_back(next_match.ptr());
                     pos = next_match.value().end();
-                    match.update_end(pos);
+                    match->update_end(pos);
                 }
                 return match; },MatchType::zero_or_more});
         }
@@ -405,7 +405,7 @@ namespace textx
             return rule({[=](const Config &config, ParserState &text, TextPosition pos) -> ParserResult
                         {
                 if (pos==text.length()) {
-                    return Match{pos,pos,MatchType::end_of_file};
+                    return Match::create(pos,pos,MatchType::end_of_file);
                 }
                 else {
                     text.update_farthest_position(pos,MatchType::end_of_file,"");

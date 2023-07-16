@@ -44,12 +44,12 @@ namespace textx
                 }
                 auto parseResult = rules.at(name)(config, text, pos);
                 if (parseResult.ok()) {
-                    return textx::arpeggio::Match{
+                    return textx::arpeggio::Match::create(
                         parseResult.value().start(),
                         parseResult.value().end(),
                         textx::arpeggio::MatchType::custom,
-                        {parseResult.value()}
-                    };
+                        {parseResult.ptr()}
+                    );
                 }
                 else {
                     return parseResult;

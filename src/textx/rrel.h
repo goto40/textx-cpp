@@ -215,7 +215,7 @@ namespace textx::rrel {
         ) const;
     };
 
-    std::unique_ptr<RRELExpression> create_RREL_expression(const textx::arpeggio::Match& m);
+    std::unique_ptr<RRELExpression> create_RREL_expression(std::shared_ptr<const textx::arpeggio::Match> m);
     std::unique_ptr<RRELExpression> create_RREL_expression(std::string rrel_expression_string);
 
     py::RRELResult find_object_with_path(std::shared_ptr<textx::object::Object> obj, std::vector<std::string> lookup, textx::rrel::RRELExpression& rrel_tree, std::string obj_cls="");
@@ -285,7 +285,7 @@ namespace textx::rrel {
         std::unique_ptr<RRELExpression> rrel_expression;
         std::string split_string;
     public:
-        RRELScopeProvider(const textx::arpeggio::Match& m,std::string split_string=".") : rrel_expression{create_RREL_expression(m)}, split_string{split_string} {}
+        RRELScopeProvider(std::shared_ptr<const textx::arpeggio::Match> m,std::string split_string=".") : rrel_expression{create_RREL_expression(m)}, split_string{split_string} {}
         RRELScopeProvider(std::string rrel_string,std::string split_string=".") : rrel_expression{create_RREL_expression(rrel_string)}, split_string{split_string} {}
         std::tuple<std::shared_ptr<textx::object::Object>, MatchedPath> resolve(std::shared_ptr<textx::object::Object> origin, std::string obj_name, std::optional<std::string> target_type) const override;
     };

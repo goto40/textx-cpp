@@ -9,11 +9,11 @@ namespace textx {
     class Model : public std::enable_shared_from_this<Model> {
         std::weak_ptr<Metamodel> weak_mm;
         textx::object::Value root={std::shared_ptr<textx::object::Object>{},{}}; // nullptr
-        textx::object::Value create_model(const std::string_view text, const textx::arpeggio::Match &m, textx::Metamodel &mm, std::shared_ptr<textx::object::Object> parent);
-        textx::object::Value create_model_from_common_rule(const std::string& rule_name, const std::string_view text, const textx::arpeggio::Match &m0, textx::Metamodel &mm, std::shared_ptr<textx::object::Object> parent);
-        textx::object::Value create_model_from_abstract_rule(const std::string& rule_name, const std::string_view text, const textx::arpeggio::Match &m0, textx::Metamodel &mm, std::shared_ptr<textx::object::Object> parent);
+        textx::object::Value create_model(const std::string_view text, std::shared_ptr<const textx::arpeggio::Match> m, textx::Metamodel &mm, std::shared_ptr<textx::object::Object> parent);
+        textx::object::Value create_model_from_common_rule(const std::string& rule_name, const std::string_view text, std::shared_ptr<const textx::arpeggio::Match> m0, textx::Metamodel &mm, std::shared_ptr<textx::object::Object> parent);
+        textx::object::Value create_model_from_abstract_rule(const std::string& rule_name, const std::string_view text, std::shared_ptr<const textx::arpeggio::Match> m0, textx::Metamodel &mm, std::shared_ptr<textx::object::Object> parent);
         Model() = default;
-        void init(const std::string_view filename, const std::string_view text, const textx::arpeggio::Match &parsetree, std::shared_ptr<Metamodel> mm);
+        void init(const std::string_view filename, const std::string_view text, std::shared_ptr<const textx::arpeggio::Match> parsetree, std::shared_ptr<Metamodel> mm);
         std::vector<std::weak_ptr<textx::Model>> weak_imported_models;
         std::string model_text={};
         std::string model_filename={};

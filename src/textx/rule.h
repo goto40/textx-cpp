@@ -95,12 +95,12 @@ namespace textx {
         std::unordered_set<std::string> m_tx_inh_by = {}; // for abstract rules 
         RuleType m_type = RuleType::illegal;
         std::unordered_map<std::string,std::string> m_tx_params = {};
-        const textx::arpeggio::Match* intern_arpeggio_rule_body=nullptr;
+        std::shared_ptr<const textx::arpeggio::Match> intern_arpeggio_rule_body=nullptr;
         bool m_maybe_str=false;
 
-        Rule(const textx::Metamodel& mm, std::string_view name, textx::arpeggio::Match rule_params, const textx::arpeggio::Match& rule_body);
-        void post_process_created_rule(textx::Metamodel& mm, std::string_view name, textx::arpeggio::Match rule_params, const textx::arpeggio::Match& rule_body);
-        textx::AttributeCardinality get_attribute_cardinality(const textx::arpeggio::Match& match, std::string name);
+        Rule(const textx::Metamodel& mm, std::string_view name, std::shared_ptr<const textx::arpeggio::Match> rule_params, std::shared_ptr<const textx::arpeggio::Match> rule_body);
+        void post_process_created_rule(textx::Metamodel& mm, std::string_view name, std::shared_ptr<const textx::arpeggio::Match> rule_params, std::shared_ptr<const textx::arpeggio::Match> rule_body);
+        textx::AttributeCardinality get_attribute_cardinality(std::shared_ptr<const textx::arpeggio::Match> match, std::string name);
         void determine_rule_type_and_adjust_inh_by(const textx::Metamodel& mm);
         void adjust_attr_types(const textx::Metamodel& mm);
 

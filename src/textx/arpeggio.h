@@ -1,5 +1,6 @@
 #pragma once
 
+#include <memory>
 #define ARPEGGIO_USE_BOOST_FOR_REGEX
 
 #include <cstdlib>
@@ -107,20 +108,13 @@ namespace textx
             raise("", "", pos, params...);
         }
 
-        class Match
+        class Match : public std::enable_shared_from_this<Match>
         {
             TextPosition m_start, m_end;
             MatchType m_type;
             bool m_has_error;
 
-        public:
-            std::vector<Match> children = {};
-            std::optional<std::string> name = std::nullopt;
-            std::optional<std::string> captured = std::nullopt;
-            bool has_error() { return m_has_error; }
-            void set_error() { m_has_error = true; }
-
-            Match(TextPosition s, TextPosition e, MatchType t, std::vector<Match> c = {}) : m_start{s}, m_end{e}, m_type{t}, children{c}
+            Match(TextPosition s, TextPosition e, MatchType t, std::vector<std::shared_ptr<Match>> c = {}) : m_start{s}, m_end{e}, m_type{t}, children{c}
             {
                 if (m_type == MatchType::undefined)
                 {
@@ -128,7 +122,21 @@ namespace textx
                 }
             }
 
-            const Match* search(std::string name) const;
+        public:
+            std::vector<std::shared_ptr<Match>> children = {};
+            std::optional<std::string> name = std::nullopt;
+            std::optional<std::string> captured = std::nullopt;
+            bool has_error() { return m_has_error; }
+            void set_error() { m_has_error = true; }
+
+            [[nodiscard]] static std::shared_ptr<Match> create(TextPosition s, TextPosition e, MatchType t, std::vector<std::shared_ptr<Match>> c = {}) {
+                return std::shared_ptr<Match>{new Match(s,e,t,c)};
+            }
+
+            Match(const Match&) = delete;
+            Match& operator=(const Match&) = delete;
+            
+            std::shared_ptr<const Match> search(std::string name) const;
 
             bool name_starts_with(const std::string_view p) const {
                 return name.has_value() && name.value().starts_with(p);
@@ -144,12 +152,12 @@ namespace textx
             template<class F>
             void traverse(F f) {
                 f(*this);
-                for (auto& c: children) c.traverse(f);
+                for (auto& c: children) c->traverse(f);
             }
             template<class F>
             void traverse(F f) const {
                 f(*this);
-                for (const auto& c: children) c.traverse(f);
+                for (const auto& c: children) c->traverse(f);
             }
 
             static std::unordered_map<MatchType, std::string> type2str;
@@ -160,11 +168,16 @@ namespace textx
                 match.print(o);
                 return o;
             }
+            friend inline std::ostream &operator<<(std::ostream &o, std::shared_ptr<const Match> match)
+            {
+                match->print(o);
+                return o;
+            }
         };
 
-        inline Match no_match(TextPosition pos) {
-            Match m{pos, pos, MatchType::nomatch,{}};
-            m.set_error();
+        inline std::shared_ptr<Match> no_match(TextPosition pos) {
+            auto m = Match::create(pos, pos, MatchType::nomatch);
+            m->set_error();
             return m;
         }
 
@@ -175,16 +188,15 @@ namespace textx
         };
 
         class ParserResult {
-            Match match;
+            std::shared_ptr<Match> match;
             std::vector<TextxErrorEntry> m_errors;
 
         public:
             ParserResult(): match{no_match({})} {}
-            ParserResult(const Match &m): match{m} {}
-            ParserResult(Match &&m): match{m} {}
-            static ParserResult error(std::string text, Match m) {
+            ParserResult(std::shared_ptr<Match> m) : match{m} {}
+            static ParserResult error(std::string text, std::shared_ptr<Match> m) {
                 ParserResult r{m};
-                r.add_error({m.start(), m.end()-m.start(), text});
+                r.add_error({m->start(), m->end()-m->start(), text});
                 return r;
             }
             static ParserResult error(std::string text, TextPosition pos) {
@@ -193,8 +205,10 @@ namespace textx
 
             bool ok() const { return m_errors.size()==0; }
             operator bool() const { return ok(); }
-            Match& value() { return match; }
-            const Match& value() const { return match; }
+            std::shared_ptr<Match> ptr() { return match; }
+            std::shared_ptr<const Match> ptr() const { return match; }
+            Match& value() { return *match; }
+            const Match& value() const { return *match; }
             auto& operator*() { return value(); }
             const auto& operator*() const { return value(); }
             auto* operator->() { return &value(); }
@@ -205,7 +219,7 @@ namespace textx
             void add_error(TextxErrorEntry e) { m_errors.push_back(e); }
             void add_errors(const std::vector<TextxErrorEntry> e) { for(auto &x: e) m_errors.push_back(x); }
 
-            inline ParserResult& update_match(Match m) {
+            inline ParserResult& update_match(std::shared_ptr<Match> m) {
                 match = m;
                 return *this; // forward error
             }
@@ -365,7 +379,7 @@ namespace textx
             MatchType type() { return type_value; }
         };
 
-        inline std::string_view get_str(std::string_view text, Match match)
+        inline std::string_view get_str(std::string_view text, const Match& match)
         {
             return text.substr(match.start(), match.end() - match.start());
         }

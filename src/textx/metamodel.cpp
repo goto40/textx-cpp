@@ -26,11 +26,11 @@ namespace textx {
             auto &rules = root.children[1];
             //std::cout << "children: " << rules.children.size() << "\n";
 
-            for (auto&r : rules.children) {
-                auto &rule_name = r.children[0].captured.value();
+            for (auto&r : rules->children) {
+                auto &rule_name = r->children[0]->captured.value();
                 //std::cout << "r: " << rule_name << "\n";
-                auto &rule_params = r.children[1];
-                auto &rule_body = r.children[3];
+                auto &rule_params = r->children[1];
+                auto &rule_body = r->children[3];
                 auto new_rule = Rule(*this, rule_name, rule_params, rule_body);
                 grammar.add_rule(rule_name, new_rule);
             }
@@ -41,10 +41,10 @@ namespace textx {
                 //textx_grammar_parsetree.copy_rule_infos_from("", get_basic_metamodel()->textx_grammar_parsetree);
             }
             auto &imports_or_refs = root.children[0];
-            for(auto &i: imports_or_refs.children) {
-                auto import = i.search("rule://import_stm");
+            for(auto &i: imports_or_refs->children) {
+                auto import = i->search("rule://import_stm");
                 if (import) {
-                    std::string name = import->children[1].captured.value();
+                    std::string name = import->children[1]->captured.value();
                     auto imported_mm = workspace->get_metamodel_by_shortcut(name);
                     if (imported_mm==nullptr) {
                         TEXTX_ASSERT(filename.size()>0);
@@ -58,31 +58,31 @@ namespace textx {
                             p = basedir0/import_filename;
                         }
                         if (!std::filesystem::exists(p)) {
-                            textx::arpeggio::raise(import->children[1].start(), import_filename+" not found.");
+                            textx::arpeggio::raise(import->children[1]->start(), import_filename+" not found.");
                         }
                         imported_mm = workspace->metamodel_from_file(p);
                     }
                     imported_models.push_back(imported_mm);
                     imported_models_by_name[name]=imported_mm;
                 }
-                auto ref = i.search("rule://reference_stm");
+                auto ref = i->search("rule://reference_stm");
                 if (ref) {
-                    std::string name = ref->children[1].captured.value();
+                    std::string name = ref->children[1]->captured.value();
                     auto referenced_mm = workspace->get_metamodel_by_shortcut(name);
                     TEXTX_ASSERT(referenced_mm!=nullptr, "unexpected, language not found: ", name);
                     //std::cout << "ref. " << name << " " << referenced_mm << "\n";
                     referenced_models.push_back(referenced_mm);
                     referenced_models_by_name[name]=referenced_mm;
-                    TEXTX_ASSERT(ref->children[2].children.size()==0, "no alias allowed for referenced languages (not implemented)");
+                    TEXTX_ASSERT(ref->children[2]->children.size()==0, "no alias allowed for referenced languages (not implemented)");
                 }
             } 
 
             // two phase creation: we need rules defined late for RREL scope providers:
             bool first = true;
-            for (auto&r : rules.children) {
-                auto &rule_name = r.children[0].captured.value();
-                auto &rule_params = r.children[1];
-                auto &rule_body = r.children[3];
+            for (auto&r : rules->children) {
+                auto &rule_name = r->children[0]->captured.value();
+                auto rule_params = r->children[1];
+                auto rule_body = r->children[3];
                 auto &new_rule = grammar[rule_name];
                 if (first) {
                     grammar.set_main_rule(rule_name);
@@ -417,7 +417,7 @@ namespace textx {
             ret->m_completionInfo = ret->parsestate.get_completion_info();
             ret->m_errors = ret->parsetree.errors();
             //std::cout << parsetree.value() << "\n";
-            ret->init(filename, text, *(ret->parsetree), shared_from_this());
+            ret->init(filename, text, ret->parsetree.ptr(), shared_from_this());
 
             if (filename.size()>0) {
                 workspace->add_known_model(filename, ret); // owning...

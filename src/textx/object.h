@@ -39,11 +39,11 @@ namespace textx::object {
     struct Value {
         std::variant<MatchText, std::shared_ptr<Object>, ObjectRef, bool> data;
         arpeggio::TextPosition pos;
-        const textx::arpeggio::Match *unsafe_match;
-        Value(MatchText x,const textx::arpeggio::Match *m) : data{x},unsafe_match{m},pos(m->start()) {}
-        Value(std::shared_ptr<Object> x,const textx::arpeggio::Match *m) : data{x},unsafe_match{m},pos((m!=nullptr)?m->start():0) {}
-        Value(ObjectRef x,const textx::arpeggio::Match *m) : data{std::move(x)},unsafe_match{m},pos(m->start()) {}
-        Value(bool x,const textx::arpeggio::Match *m) : data{x},unsafe_match{m},pos(m->start()) {}
+        std::shared_ptr<const textx::arpeggio::Match> match; // from here, you get the text position 
+        Value(MatchText x,std::shared_ptr<const textx::arpeggio::Match> m) : data{x},match{m},pos(m->start()) {}
+        Value(std::shared_ptr<Object> x,std::shared_ptr<const textx::arpeggio::Match> m) : data{x},match{m},pos((m!=nullptr)?m->start():0) {}
+        Value(ObjectRef x,std::shared_ptr<const textx::arpeggio::Match> m) : data{std::move(x)},match{m},pos(m->start()) {}
+        Value(bool x,std::shared_ptr<const textx::arpeggio::Match> m) : data{x},match{m},pos(m->start()) {}
 
         bool is_boolean() const {
             return std::holds_alternative<bool>(data);

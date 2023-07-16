@@ -13,8 +13,8 @@
 namespace ta=textx::arpeggio;
 namespace tr=textx::rrel;
 namespace {
-    std::unique_ptr<tr::RRELPathElement> rrel_path_element(const ta::Match& choice);
-    std::unique_ptr<tr::RRELSequence> rrel_sequence(const ta::Match& m);
+    std::unique_ptr<tr::RRELPathElement> rrel_path_element(std::shared_ptr<const ta::Match> choice);
+    std::unique_ptr<tr::RRELSequence> rrel_sequence(std::shared_ptr<const ta::Match> m);
 
     std::unique_ptr<tr::RRELZeroOrMore> create_circumflex() {
         std::vector<std::unique_ptr<tr::RRELPathElement>> path_elements{};
@@ -30,33 +30,33 @@ namespace {
         );
     }
 
-    void process_start_of_path(const ta::Match& choice, std::vector<std::unique_ptr<tr::RRELPathElement>> &path_elements) {
-        TEXTX_ASSERT(choice.type() == ta::MatchType::ordered_choice, "unexpected (process_start_of_path) ");
-        TEXTX_ASSERT(choice.children.size()==1, " unexpected, expected choice (process_start_of_path) ", choice);
-        if (choice.children[0].type()==ta::MatchType::str_match && choice.children[0].captured.value() == "^") {
+    void process_start_of_path(std::shared_ptr<const ta::Match> choice, std::vector<std::unique_ptr<tr::RRELPathElement>> &path_elements) {
+        TEXTX_ASSERT(choice->type() == ta::MatchType::ordered_choice, "unexpected (process_start_of_path) ");
+        TEXTX_ASSERT(choice->children.size()==1, " unexpected, expected choice (process_start_of_path) ", choice);
+        if (choice->children[0]->type()==ta::MatchType::str_match && choice->children[0]->captured.value() == "^") {
             path_elements.push_back(create_circumflex());
         }
-        else if (choice.children[0].name_is("rule://rrel_dots")) {
-            path_elements.push_back(std::make_unique<tr::RRELDots>(choice.children[0].captured.value().size()));
+        else if (choice->children[0]->name_is("rule://rrel_dots")) {
+            path_elements.push_back(std::make_unique<tr::RRELDots>(choice->children[0]->captured.value().size()));
         }
         else {
-            ta::raise(choice.children[0].start(), "unexpected match found (process_start_of_path) ", choice.children[0]);
+            ta::raise(choice->children[0]->start(), "unexpected match found (process_start_of_path) ", choice->children[0]);
         }
     }
 
-    std::unique_ptr<tr::RRELZeroOrMore> rrel_zero_or_more(const ta::Match& m) {
-        TEXTX_ASSERT(m.name_is("rule://rrel_zero_or_more"), " unexpected: ", m);
-        TEXTX_ASSERT(m.children.size()==2, " unexpected, expected seq with '*' at the end ", m);
-        if (m.children[0].name_is("rule://rrel_brackets")) {
-            return std::make_unique<tr::RRELZeroOrMore>(rrel_path_element(m.children[0]));
+    std::unique_ptr<tr::RRELZeroOrMore> rrel_zero_or_more(std::shared_ptr<const ta::Match> m) {
+        TEXTX_ASSERT(m->name_is("rule://rrel_zero_or_more"), " unexpected: ", m);
+        TEXTX_ASSERT(m->children.size()==2, " unexpected, expected seq with '*' at the end ", m);
+        if (m->children[0]->name_is("rule://rrel_brackets")) {
+            return std::make_unique<tr::RRELZeroOrMore>(rrel_path_element(m->children[0]));
         }
-        else if (m.children[0].name_is("rule://rrel_path_element") && m.children[0].children[0].name_is("rule://rrel_brackets")) {
-            return std::make_unique<tr::RRELZeroOrMore>(rrel_path_element(m.children[0]));
+        else if (m->children[0]->name_is("rule://rrel_path_element") && m->children[0]->children[0]->name_is("rule://rrel_brackets")) {
+            return std::make_unique<tr::RRELZeroOrMore>(rrel_path_element(m->children[0]));
         }
         else {
             std::vector<std::unique_ptr<tr::RRELPath>> paths{};
             std::vector<std::unique_ptr<tr::RRELPathElement>> path_elements{};
-            path_elements.push_back(rrel_path_element(m.children[0]));
+            path_elements.push_back(rrel_path_element(m->children[0]));
             paths.push_back(std::make_unique<tr::RRELPath>( std::move(path_elements)));
             return std::make_unique<tr::RRELZeroOrMore>(
                 std::make_unique<tr::RRELBrackets>(
@@ -66,105 +66,105 @@ namespace {
         }
     }
 
-    std::unique_ptr<tr::RRELParent> rrel_parent(const ta::Match& m) {
-        TEXTX_ASSERT(m.name_is("rule://rrel_parent"), " unexpected: ", m);
-        TEXTX_ASSERT(m.children.size()==4, " unexpected, expected parent(type) ", m);
-        std::string type = m.children[2].captured.value();
+    std::unique_ptr<tr::RRELParent> rrel_parent(std::shared_ptr<const ta::Match> m) {
+        TEXTX_ASSERT(m->name_is("rule://rrel_parent"), " unexpected: ", m);
+        TEXTX_ASSERT(m->children.size()==4, " unexpected, expected parent(type) ", m);
+        std::string type = m->children[2]->captured.value();
         return std::make_unique<tr::RRELParent>(type);
     }
 
-    std::unique_ptr<tr::RRELBrackets> rrel_brackets(const ta::Match& m) {
-        TEXTX_ASSERT(m.name_is("rule://rrel_brackets"), " unexpected: ", m);
-        TEXTX_ASSERT(m.children.size()==3, " unexpected, expected '(' seq. ')' ", m);
-        return std::make_unique<tr::RRELBrackets>(rrel_sequence(m.children[1]));
+    std::unique_ptr<tr::RRELBrackets> rrel_brackets(std::shared_ptr<const ta::Match> m) {
+        TEXTX_ASSERT(m->name_is("rule://rrel_brackets"), " unexpected: ", m);
+        TEXTX_ASSERT(m->children.size()==3, " unexpected, expected '(' seq. ')' ", m);
+        return std::make_unique<tr::RRELBrackets>(rrel_sequence(m->children[1]));
     }
 
-    std::unique_ptr<tr::RRELNavigation> rrel_navigation(const ta::Match& m) {
-        TEXTX_ASSERT(m.name_is("rule://rrel_navigation"), " unexpected: ", m);
-        TEXTX_ASSERT(m.children.size()==2, " unexpected, expected seq with '*' at the end ", m);
+    std::unique_ptr<tr::RRELNavigation> rrel_navigation(std::shared_ptr<const ta::Match> m) {
+        TEXTX_ASSERT(m->name_is("rule://rrel_navigation"), " unexpected: ", m);
+        TEXTX_ASSERT(m->children.size()==2, " unexpected, expected seq with '*' at the end ", m);
         bool consume_name = true;
         std::string fixed_name = "";
-        if (m.children[0].children.size()>0) {
-            TEXTX_ASSERT_EQUAL(m.children[0].children[0].children.size(), 2);
+        if (m->children[0]->children.size()>0) {
+            TEXTX_ASSERT_EQUAL(m->children[0]->children[0]->children.size(), 2);
             consume_name = false;
-            TEXTX_ASSERT(m.children[0].children[0].children[0].captured.has_value());
-            fixed_name = m.children[0].children[0].children[0].captured.value();
+            TEXTX_ASSERT(m->children[0]->children[0]->children[0]->captured.has_value());
+            fixed_name = m->children[0]->children[0]->children[0]->captured.value();
             if (fixed_name.size() > 0) {
                 TEXTX_ASSERT(fixed_name.size() > 2)
                 fixed_name = fixed_name.substr(1,fixed_name.size()-2);
             }
         }
-        std::string name = m.children[1].captured.value();
+        std::string name = m->children[1]->captured.value();
         return std::make_unique<tr::RRELNavigation>(name, fixed_name, consume_name);
     }
 
-    std::unique_ptr<tr::RRELPathElement> rrel_path_element(const ta::Match& choice) {
-        TEXTX_ASSERT(choice.type() == ta::MatchType::ordered_choice);
-        TEXTX_ASSERT_EQUAL(choice.children.size(), 1);
-        if (choice.children[0].name_is("rule://rrel_zero_or_more")) {
-            return rrel_zero_or_more(choice.children[0]);
+    std::unique_ptr<tr::RRELPathElement> rrel_path_element(std::shared_ptr<const ta::Match> choice) {
+        TEXTX_ASSERT(choice->type() == ta::MatchType::ordered_choice);
+        TEXTX_ASSERT_EQUAL(choice->children.size(), 1);
+        if (choice->children[0]->name_is("rule://rrel_zero_or_more")) {
+            return rrel_zero_or_more(choice->children[0]);
         }
-        else if (choice.children[0].name_is("rule://rrel_parent")) {
-            return rrel_parent(choice.children[0]);
+        else if (choice->children[0]->name_is("rule://rrel_parent")) {
+            return rrel_parent(choice->children[0]);
         }
-        else if (choice.children[0].name_is("rule://rrel_brackets")) {
-            return rrel_brackets(choice.children[0]);
+        else if (choice->children[0]->name_is("rule://rrel_brackets")) {
+            return rrel_brackets(choice->children[0]);
         }
-        else if (choice.children[0].name_is("rule://rrel_navigation")) {
-            return rrel_navigation(choice.children[0]);
+        else if (choice->children[0]->name_is("rule://rrel_navigation")) {
+            return rrel_navigation(choice->children[0]);
         }
-        else if (choice.children[0].name_is("rule://rrel_path_element")) {
-            return rrel_path_element(choice.children[0]);
+        else if (choice->children[0]->name_is("rule://rrel_path_element")) {
+            return rrel_path_element(choice->children[0]);
         }
         else {
-            ta::raise(choice.children[0].start(), " unexpected match ", choice.children[0], " in ", choice);
+            ta::raise(choice->children[0]->start(), " unexpected match ", choice->children[0], " in ", choice);
         }
     }
 
-    std::unique_ptr<tr::RRELPath> rrel_path(const ta::Match& m) {
+    std::unique_ptr<tr::RRELPath> rrel_path(std::shared_ptr<const ta::Match> m) {
         std::vector<std::unique_ptr<tr::RRELPathElement>> path_elements;
-        TEXTX_ASSERT(m.name_is("rule://rrel_path"), "unexpected: ", m);
-        TEXTX_ASSERT(m.children.size()==1, " unexpected, expected choice ", m);
-        if (m.children[0].type() == ta::MatchType::sequence) { // #1
-            const auto &seq = m.children[0];
+        TEXTX_ASSERT(m->name_is("rule://rrel_path"), "unexpected: ", m);
+        TEXTX_ASSERT(m->children.size()==1, " unexpected, expected choice ", m);
+        if (m->children[0]->type() == ta::MatchType::sequence) { // #1
+            const auto &seq = m->children[0];
             // start
-            if (seq.children[0].children.size()>0) process_start_of_path(seq.children[0].children[0], path_elements);
+            if (seq->children[0]->children.size()>0) process_start_of_path(seq->children[0]->children[0], path_elements);
             // zero or more
-            for (const auto& im: seq.children[1].children) {
-                path_elements.push_back(rrel_path_element(im.children[0]));
+            for (const auto& im: seq->children[1]->children) {
+                path_elements.push_back(rrel_path_element(im->children[0]));
             }
             // final path entry
-            path_elements.push_back(rrel_path_element(seq.children[2]));
+            path_elements.push_back(rrel_path_element(seq->children[2]));
         }
         else { // #2
-            const auto &choice = m.children[0];
+            const auto &choice = m->children[0];
             process_start_of_path(choice, path_elements);
         }
         return std::make_unique<tr::RRELPath>(std::move(path_elements));
     }
-    std::unique_ptr<tr::RRELSequence> rrel_sequence(const ta::Match& m) {
-        TEXTX_ASSERT(m.name_is("rule://rrel_sequence"), "unexpected: ", m);
+    std::unique_ptr<tr::RRELSequence> rrel_sequence(std::shared_ptr<const ta::Match> m) {
+        TEXTX_ASSERT(m->name_is("rule://rrel_sequence"), "unexpected: ", m);
         std::vector<std::unique_ptr<tr::RRELPath>> v;
-        for(const auto& im: m.children[0].children) {
-            TEXTX_ASSERT(im.children.size()==2, " unexpected, expected sequence with two entries and a rrel_path at first pos ", im);
-            v.push_back( rrel_path(im.children[0]) );
+        for(const auto& im: m->children[0]->children) {
+            TEXTX_ASSERT(im->children.size()==2, " unexpected, expected sequence with two entries and a rrel_path at first pos ", im);
+            v.push_back( rrel_path(im->children[0]) );
         }
-        v.push_back( rrel_path(m.children[1]) );
+        v.push_back( rrel_path(m->children[1]) );
         return std::make_unique<tr::RRELSequence>(std::move(v));
     }
-    std::unique_ptr<tr::RRELExpression> rrel_expression(const ta::Match& m) {
-        TEXTX_ASSERT(m.name_is("rule://rrel_expression"), "unexpected: ", m);
-        TEXTX_ASSERT(m.children.size()==2," unexpected ",m);
+    std::unique_ptr<tr::RRELExpression> rrel_expression(std::shared_ptr<const ta::Match> m) {
+        TEXTX_ASSERT(m->name_is("rule://rrel_expression"), "unexpected: ", m);
+        TEXTX_ASSERT(m->children.size()==2," unexpected ",m);
         bool use_proxy = false;
         bool use_multimodel = false;
         std::string flags = "";
-        if (m.children[0].children.size()>0) {
-            flags = m.children[0].children[0].captured.value();
+        if (m->children[0]->children.size()>0) {
+            flags = m->children[0]->children[0]->captured.value();
             if (flags.find('p')!=-1) { use_proxy = true; }
             if (flags.find('m')!=-1) { use_multimodel = true; }
         }
         auto ret = std::make_unique<tr::RRELExpression>(
-            rrel_sequence(m.children[1]), use_proxy, use_multimodel, flags
+            rrel_sequence(m->children[1]), use_proxy, use_multimodel, flags
         );
         ret->setExpression(ret.get());
         return ret;
@@ -172,7 +172,7 @@ namespace {
 }
 
 namespace textx::rrel {
-    std::unique_ptr<RRELExpression> create_RREL_expression(const textx::arpeggio::Match& m) {
+    std::unique_ptr<RRELExpression> create_RREL_expression(std::shared_ptr<const textx::arpeggio::Match> m) {
         return rrel_expression(m);
     }
     std::unique_ptr<RRELExpression> create_RREL_expression(std::string rrel_expression_string) {

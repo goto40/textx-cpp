@@ -23,11 +23,11 @@ TEST_CASE("str_match", "[arpeggio]")
     auto world_pattern = str_match("world");
     CHECK(hello_pattern(config, text, {}));
     CHECK(!world_pattern(config, text, {}));
-    auto match = hello_pattern(config, text, {}).value();
-    auto match2_opt = world_pattern(config, text, match.end().add(text,1));
+    auto match = hello_pattern(config, text, {}).ptr();
+    auto match2_opt = world_pattern(config, text, match->end().add(text,1));
     REQUIRE(match2_opt);
 
-    CHECK(get_str(text, match) == "hello");
+    CHECK(get_str(text, *match) == "hello");
     CHECK(get_str(text, match2_opt.value()) == "world");
 }
 
@@ -39,16 +39,16 @@ TEST_CASE("named", "[arpeggio]")
     ParserState text = {"hello world", "test-filename.txt"};
     auto hello_pattern = str_match("hello");
     auto named_hello_pattern = named("hello", str_match("hello"));
-    auto match = hello_pattern(config, text, {}).value();
-    auto named_match = named_hello_pattern(config, text, {}).value();
+    auto match = hello_pattern(config, text, {}).ptr();
+    auto named_match = named_hello_pattern(config, text, {}).ptr();
     {
         std::ostringstream o;
-        o << match;
+        o << *match;
         CHECK_THAT(o.str(), Catch::Matchers::Contains("<str_match>"));
     }
     {
         std::ostringstream o;
-        o << named_match;
+        o << *named_match;
         CHECK_THAT(o.str(), Catch::Matchers::Contains("<str_match:hello>"));
     }
 }
@@ -61,16 +61,16 @@ TEST_CASE("captured", "[arpeggio]")
     ParserState text = {"hello world", "test-filename.txt"};
     auto hello_pattern = capture(str_match("hello"));
     auto named_hello_pattern = capture(named("hello", str_match("hello")));
-    auto match = hello_pattern(config, text, {}).value();
-    auto named_match = named_hello_pattern(config, text, {}).value();
+    auto match = hello_pattern(config, text, {}).ptr();
+    auto named_match = named_hello_pattern(config, text, {}).ptr();
     {
         std::ostringstream o;
-        o << match;
+        o << *match;
         CHECK_THAT(o.str(), Catch::Matchers::Contains("<str_match captured=hello>"));
     }
     {
         std::ostringstream o;
-        o << named_match;
+        o << *named_match;
         CHECK_THAT(o.str(), Catch::Matchers::Contains("<str_match:hello captured=hello>"));
     }
 }
@@ -89,12 +89,12 @@ TEST_CASE("regex_match", "[arpeggio]")
         CHECK(test_parse(word_pattern, config, " space and a word", {1,1,1}));
         CHECK(test_parse(word_pattern, config, "\nspace and a word", {1,1,1}));
 
-        auto match = word_pattern(config, text, {}).value();
+        auto match = word_pattern(config, text, {}).ptr();
         std::ostringstream o;
-        o << match;
+        o << *match;
         CHECK_THAT(o.str(), Catch::Matchers::Contains("<regex_match captured=hello123>"));
-        CHECK(match.start().pos == 0);
-        CHECK(match.end().pos == 0+8);
+        CHECK(match->start().pos == 0);
+        CHECK(match->end().pos == 0+8);
     }
 }
 
@@ -336,8 +336,8 @@ TEST_CASE("end_of_file", "[arpeggio]")
     // }
     CHECK(partly->type()==MatchType::sequence);
     CHECK(partly->children.size()>0);
-    CHECK(partly->children[0].type()==MatchType::zero_or_more);
-    CHECK(partly->children[0].children.size()==2);
+    CHECK(partly->children[0]->type()==MatchType::zero_or_more);
+    CHECK(partly->children[0]->children.size()==2);
     
     // for(auto&[pos, completition]: state.get_completion_info()) {
     //     std::cout << "pos: " << pos << ":";
@@ -424,9 +424,9 @@ TEST_CASE("unordered_group", "[arpeggio]")
 
     auto [match, state] = grammar.parse("CAB");
     REQUIRE(match);
-    CHECK(match.value().children[0].children[0].captured.value() == "C");
-    CHECK(match.value().children[0].children[1].captured.value() == "A");
-    CHECK(match.value().children[0].children[2].captured.value() == "B");
+    CHECK(match.value().children[0]->children[0]->captured.value() == "C");
+    CHECK(match.value().children[0]->children[1]->captured.value() == "A");
+    CHECK(match.value().children[0]->children[2]->captured.value() == "B");
 
 }
 
@@ -450,8 +450,8 @@ TEST_CASE("unordered_group_optional1", "[arpeggio]")
     CHECK(grammar.parse("").first); // all optionals unmatched --> ok
 
     auto match = grammar.parse_or_throw("B");
-    CHECK(match.value().children[0].children.size()==1);
-    CHECK(match.value().children[0].children[0].children[0].captured.value() == "B");
+    CHECK(match.value().children[0]->children.size()==1);
+    CHECK(match.value().children[0]->children[0]->children[0]->captured.value() == "B");
 }
 
 TEST_CASE("unordered_group_optional2", "[arpeggio]")
@@ -475,9 +475,9 @@ TEST_CASE("unordered_group_optional2", "[arpeggio]")
     CHECK(!grammar.parse("").first); // all optionals unmatched --> error
 
     auto match = grammar.parse_or_throw("BC");
-    CHECK(match.value().children[0].children.size()==2);
-    CHECK(match.value().children[0].children[0].children[0].captured.value() == "B"); // optional B found
-    CHECK(match.value().children[0].children[1].captured.value() == "C"); // req. C found
+    CHECK(match.value().children[0]->children.size()==2);
+    CHECK(match.value().children[0]->children[0]->children[0]->captured.value() == "B"); // optional B found
+    CHECK(match.value().children[0]->children[1]->captured.value() == "C"); // req. C found
 }
 
 TEST_CASE("pattern_type", "[arpeggio]")
