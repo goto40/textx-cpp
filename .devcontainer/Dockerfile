@@ -1,7 +1,7 @@
 FROM mcr.microsoft.com/vscode/devcontainers/cpp:0-ubuntu-22.04
 
 RUN apt update -y
-RUN apt install -y catch
+RUN apt install -y catch2
 RUN apt install -y libboost-regex-dev
 
 RUN git clone https://github.com/andreasbuhr/cppcoro.git
