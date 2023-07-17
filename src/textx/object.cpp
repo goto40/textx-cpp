@@ -167,4 +167,13 @@ namespace textx::object {
         if (!one_line) o << "\n";
     }
 
+    void ValueVector::push_back(Value v) {
+        if (v.is_obj() && v.obj()->has_attr("name")) {
+            auto name = (*v.obj())["name"];
+            if (name.is_str()) {
+                map[name.str()] = vec.size();
+            }
+        }
+        vec.push_back(v);
+    }        
 }

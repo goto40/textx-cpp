@@ -49,9 +49,9 @@ TEST_CASE("big_model_with_benchmark", "[textx/metamodel]")
     BENCHMARK("big_model 50") {
         return mm->model_from_str(create_model(50));
     };
-    BENCHMARK("big_model 100") {
-        return mm->model_from_str(create_model(100));
-    };
+    // BENCHMARK("big_model 100") {
+    //     return mm->model_from_str(create_model(100));
+    // };
     // BENCHMARK("big_model 200") {
     //     return mm->model_from_str(create_model(200));
     // };

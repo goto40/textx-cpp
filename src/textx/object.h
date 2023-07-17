@@ -147,7 +147,17 @@ namespace textx::object {
             v.print(o);
             return o;
         }
-   };
+    };
+    class ValueVector {
+        std::vector<Value> vec={};
+        std::unordered_map<std::string, size_t> map={};
+    public:
+        void push_back(Value v);
+        Value& get(size_t index) { return vec[index]; }
+        Value& get(std::string index) { return vec[map.at(index)]; }
+        bool has(std::string index) { return map.contains(index); }
+        size_t size() { return vec.size(); }
+    };
     struct AttributeValue {
         std::variant<Value, std::vector<Value>> data = std::vector<Value>{};
 
