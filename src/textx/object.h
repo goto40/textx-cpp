@@ -157,6 +157,12 @@ namespace textx::object {
         Value& get(std::string index) { return vec[map.at(index)]; }
         bool has(std::string index) { return map.contains(index); }
         size_t size() { return vec.size(); }
+        std::vector<Value>::iterator begin() { return vec.begin(); }
+        std::vector<Value>::iterator end() { return vec.end(); }
+        std::vector<Value>::const_iterator begin() const { return vec.begin(); }
+        std::vector<Value>::const_iterator end() const { return vec.end(); }
+        Value& operator[](size_t idx) { return vec[idx]; }
+        const Value& operator[](size_t idx) const { return vec[idx]; }
     };
     struct AttributeValue {
         std::variant<Value, std::vector<Value>> data = std::vector<Value>{};
