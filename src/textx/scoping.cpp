@@ -1,6 +1,7 @@
 #include "textx/scoping.h"
 #include "textx/metamodel.h"
 #include "textx/arpeggio.h"
+#include "textx/object.h"
 #include <sstream>
 #include <iostream>
 
@@ -46,7 +47,7 @@ namespace textx::scoping {
                         }
                     }
                     else {
-                        for (auto &iv: std::get<std::vector<textx::object::Value>>(av.data)) {
+                        for (auto &iv: std::get<object::ValueVector>(av.data)) {
                             auto p = traverse(iv);
                             if (p) return p;
                         }

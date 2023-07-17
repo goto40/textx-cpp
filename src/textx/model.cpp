@@ -1,6 +1,7 @@
 #include "textx/model.h"
 #include "textx/metamodel.h"
 #include "textx/arpeggio.h"
+#include "textx/object.h"
 #include "textx/rrel.h"
 
 namespace textx {
@@ -47,7 +48,7 @@ namespace textx {
             if (info.cardinality == AttributeCardinality::list) {
                 obj->create_attribute_if_not_present(attr_name);
                 //std::cout << "create list " << attr_name << "\n";
-                (*obj)[attr_name] = textx::object::AttributeValue{std::vector<textx::object::Value>{}};
+                (*obj)[attr_name] = textx::object::AttributeValue{object::ValueVector{}};
             }
             else if (info.cardinality == AttributeCardinality::scalar) {
                 obj->create_attribute_if_not_present(attr_name);
@@ -169,6 +170,15 @@ namespace textx {
                     v.ref().objpath = std::move(objpath);
                     if (v.ref().obj.lock() == nullptr) {
                         unresolved++;
+                    }
+                }
+            }
+        });
+        textx::object::traverse(root,[&](textx::object::Value& v) -> void {
+            if (v.is_pure_obj() && !v.is_null()) {
+                for(auto& [n,a]: v.obj()->attributes) {
+                    if (a.is_list()) {
+                        a.list().updateMap();
                     }
                 }
             }

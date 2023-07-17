@@ -153,23 +153,26 @@ namespace textx::object {
         std::unordered_map<std::string, size_t> map={};
     public:
         void push_back(Value v);
-        Value& get(size_t index) { return vec[index]; }
-        Value& get(std::string index) { return vec[map.at(index)]; }
         bool has(std::string index) { return map.contains(index); }
-        size_t size() { return vec.size(); }
+        size_t size() const { return vec.size(); }
         std::vector<Value>::iterator begin() { return vec.begin(); }
         std::vector<Value>::iterator end() { return vec.end(); }
         std::vector<Value>::const_iterator begin() const { return vec.begin(); }
         std::vector<Value>::const_iterator end() const { return vec.end(); }
         Value& operator[](size_t idx) { return vec[idx]; }
+        Value& operator[](std::string idx) { return vec[map.at(idx)]; }
         const Value& operator[](size_t idx) const { return vec[idx]; }
+        const Value& operator[](std::string idx) const { return vec[map.at(idx)]; }
+        void clear() { vec.clear(); map.clear(); }
+        void updateMap(Value &v);
+        void updateMap() { for(auto& v: *this) { updateMap(v); }}
     };
     struct AttributeValue {
-        std::variant<Value, std::vector<Value>> data = std::vector<Value>{};
+        std::variant<Value, ValueVector> data = ValueVector{};
 
         void append(Value v) {
-            TEXTX_ASSERT(std::holds_alternative<std::vector<Value>>(data), "error appending data:", v);
-            std::get<std::vector<Value>>(data).push_back(v);
+            TEXTX_ASSERT(std::holds_alternative<ValueVector>(data), "error appending data:", v);
+            std::get<ValueVector>(data).push_back(v);
         }
 
         bool is_null() const {
@@ -226,7 +229,12 @@ namespace textx::object {
             return value.is_number();
         }
         bool is_list() const {
-            return std::holds_alternative<std::vector<Value>>(data);
+            return std::holds_alternative<ValueVector>(data);
+        }
+
+        ValueVector& list() {
+            //TEXTX_ASSERT(is_list(), "must be a list");
+            return std::get<ValueVector>(data);
         }
 
         bool boolean() const {
@@ -346,7 +354,7 @@ namespace textx::object {
                     traverse(std::get<textx::object::Value>(av.data),f);
                 }
                 else {
-                    for (auto &iv: std::get<std::vector<textx::object::Value>>(av.data)) {
+                    for (auto &iv: std::get<ValueVector>(av.data)) {
                         traverse(iv,f);
                     }
                 }

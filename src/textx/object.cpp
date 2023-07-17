@@ -18,36 +18,36 @@ namespace textx::object {
     }
 
     const Value& AttributeValue::operator[](size_t idx) const {
-        TEXTX_ASSERT(std::holds_alternative<std::vector<Value>>(data));
-        auto &v = std::get<std::vector<Value>>(data);
+        TEXTX_ASSERT(std::holds_alternative<ValueVector>(data));
+        auto &v = std::get<ValueVector>(data);
         TEXTX_ASSERT(idx<v.size(), "index out of bounds: index ", idx, " must be <", v.size());
         return v[idx];
     }
     Value& AttributeValue::operator[](size_t idx) {
-        TEXTX_ASSERT(std::holds_alternative<std::vector<Value>>(data));
-        auto &v = std::get<std::vector<Value>>(data);
+        TEXTX_ASSERT(std::holds_alternative<ValueVector>(data));
+        auto &v = std::get<ValueVector>(data);
         TEXTX_ASSERT(idx<v.size(), "index out of bounds: index ", idx, " must be <", v.size());
         return v[idx];
     }
     std::vector<Value>::iterator AttributeValue::begin() {
-        TEXTX_ASSERT(std::holds_alternative<std::vector<Value>>(data));
-        return std::get<std::vector<Value>>(data).begin();
+        TEXTX_ASSERT(std::holds_alternative<ValueVector>(data));
+        return std::get<ValueVector>(data).begin();
     }
     std::vector<Value>::iterator AttributeValue::end() {
-        TEXTX_ASSERT(std::holds_alternative<std::vector<Value>>(data));
-        return std::get<std::vector<Value>>(data).end();
+        TEXTX_ASSERT(std::holds_alternative<ValueVector>(data));
+        return std::get<ValueVector>(data).end();
     }
     std::vector<Value>::const_iterator AttributeValue::begin() const {
-        TEXTX_ASSERT(std::holds_alternative<std::vector<Value>>(data));
-        return std::get<std::vector<Value>>(data).begin();
+        TEXTX_ASSERT(std::holds_alternative<ValueVector>(data));
+        return std::get<ValueVector>(data).begin();
     }
     std::vector<Value>::const_iterator AttributeValue::end() const {
-        TEXTX_ASSERT(std::holds_alternative<std::vector<Value>>(data));
-        return std::get<std::vector<Value>>(data).end();
+        TEXTX_ASSERT(std::holds_alternative<ValueVector>(data));
+        return std::get<ValueVector>(data).end();
     }
     size_t AttributeValue::size() const {
-        TEXTX_ASSERT(std::holds_alternative<std::vector<Value>>(data));
-        return std::get<std::vector<Value>>(data).size();
+        TEXTX_ASSERT(std::holds_alternative<ValueVector>(data));
+        return std::get<ValueVector>(data).size();
     }
 
     bool Object::is_instance(std::string base) {
@@ -168,12 +168,16 @@ namespace textx::object {
     }
 
     void ValueVector::push_back(Value v) {
-        if (v.is_obj() && v.obj()->has_attr("name")) {
+        updateMap(v);
+        vec.push_back(v);
+    }
+
+    void ValueVector::updateMap(Value &v) {
+        if (v.is_obj() && (!v.is_ref() || v.is_resolved()) && !v.is_null() && v.obj()->has_attr("name")) {
             auto name = (*v.obj())["name"];
-            if (name.is_str()) {
+            if (name.is_str() && !map.contains(name.str())) {
                 map[name.str()] = vec.size();
             }
-        }
-        vec.push_back(v);
-    }        
+        }        
+    }
 }
