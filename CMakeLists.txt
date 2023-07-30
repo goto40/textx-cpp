@@ -28,7 +28,7 @@ include(Version)
 find_path(CATCH_INCLUDE_PATH catch.hpp PATHS /usr/include/catch2 REQUIRED)
 
 message("CATCH_INCLUDE_PATH=${CATCH_INCLUDE_PATH}")
-add_definitions(-DCATCH_CONFIG_ENABLE_BENCHMARKING)
+#add_definitions(-DCATCH_CONFIG_ENABLE_BENCHMARKING)
 
 FIND_PACKAGE( Boost COMPONENTS regex program_options REQUIRED )
 

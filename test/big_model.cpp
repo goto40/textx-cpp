@@ -46,6 +46,7 @@ TEST_CASE("big_model_with_benchmark", "[textx/metamodel]")
         CHECK( (*(*m)["classes"][0]["refs"][3]["ref"]["class"].obj())["name"].str() == "A97" ); // c.c.c
     }
 
+#ifdef CATCH_CONFIG_ENABLE_BENCHMARKING
     BENCHMARK("big_model 50") {
         return mm->model_from_str(create_model(50));
     };
@@ -58,4 +59,5 @@ TEST_CASE("big_model_with_benchmark", "[textx/metamodel]")
     // BENCHMARK("big_model 400") {
     //     return mm->model_from_str(create_model(400));
     // };
+#endif
 }
