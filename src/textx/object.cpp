@@ -168,15 +168,18 @@ namespace textx::object {
     }
 
     void ValueVector::push_back(Value v) {
-        updateMap(v);
         vec.push_back(v);
+        updateMap(vec.size()-1);
     }
 
-    void ValueVector::updateMap(Value &v) {
+    void ValueVector::updateMap(size_t idx) {
+        auto& v = vec[idx];
+        if (v.is_ref() && !v.is_resolved()) m_is_fully_resolved = false;
+        if (v.is_null()) m_is_fully_resolved = false;
         if (v.is_obj() && (!v.is_ref() || v.is_resolved()) && !v.is_null() && v.obj()->has_attr("name")) {
             auto name = (*v.obj())["name"];
             if (name.is_str() && !map.contains(name.str())) {
-                map[name.str()] = vec.size();
+                map[name.str()] = idx;
             }
         }        
     }

@@ -151,7 +151,10 @@ namespace textx::object {
     class ValueVector {
         std::vector<Value> vec={};
         std::unordered_map<std::string, size_t> map={};
+        bool m_is_fully_resolved=true;
+        void updateMap(size_t idx);
     public:
+        bool is_fully_resolved() { return m_is_fully_resolved; }
         void push_back(Value v);
         bool has(std::string index) { return map.contains(index); }
         size_t size() const { return vec.size(); }
@@ -159,13 +162,12 @@ namespace textx::object {
         std::vector<Value>::iterator end() { return vec.end(); }
         std::vector<Value>::const_iterator begin() const { return vec.begin(); }
         std::vector<Value>::const_iterator end() const { return vec.end(); }
-        Value& operator[](size_t idx) { return vec[idx]; }
-        Value& operator[](std::string idx) { return vec[map.at(idx)]; }
+        Value& operator[](size_t idx) { return vec.at(idx); }
+        Value& operator[](std::string idx) { return vec.at(map.at(idx)); }
         const Value& operator[](size_t idx) const { return vec[idx]; }
         const Value& operator[](std::string idx) const { return vec[map.at(idx)]; }
         void clear() { vec.clear(); map.clear(); }
-        void updateMap(Value &v);
-        void updateMap() { for(auto& v: *this) { updateMap(v); }}
+        void updateMap() { m_is_fully_resolved = true; for(size_t i=0;i<size();i++) { updateMap(i); }}
     };
     struct AttributeValue {
         std::variant<Value, ValueVector> data = ValueVector{};

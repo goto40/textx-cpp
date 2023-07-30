@@ -3,6 +3,7 @@
 #include "textx/arpeggio.h"
 #include "textx/lang.h"
 #include "textx/metamodel.h"
+#include <exception>
 #include <unordered_map>
 
 #define MYDBG(x)
@@ -336,38 +337,63 @@ namespace textx::rrel {
                     MYDBG(std::cout << "name found...\n";)
                     auto &target = (*idata.obj)[this->name];
                     if (target.is_list()) {
-                        MYDBG(std::cout << "is list... #"<< target.size() << "\n";)
-                        for (auto& itarget: target) {
-                            if (itarget.is_ref() && !itarget.is_resolved()) {
-                                MYDBG(std::cout << "postponed...\n";)
-                                MYYIELD((textx::scoping::Postponed{}));
-                                co_return;
+                        // TODO speedup fixed name search
+                        if (consume_name && fixed_name.size()==0 && target.list().is_fully_resolved()) {
+                            MYDBG(std::cout << "shortcut...search "<< data.lookup_list[0] << " in " << &target.list() << "\n";)
+                            if (target.list().has(data.lookup_list[0])) {
+                                auto &itarget = target.list()[data.lookup_list[0]];
+                                if (!itarget.is_null()) {
+                                    TEXTX_ASSERT(data.lookup_list.size()>0);
+                                    TEXTX_ASSERT(itarget["name"].str() == data.lookup_list[0], "Unexpected name");
+                                    std::vector<std::string> lookup_copy{
+                                        data.lookup_list.begin()+1,
+                                        data.lookup_list.end()
+                                    };
+                                    auto matched_path_copy = data.matched_path;
+                                    matched_path_copy.push_back( itarget.obj() );
+                                    MYDBG(std::cout << "yield..."<<itarget.obj().get()<<"\n";)
+                                    MYYIELD((py::RRELInternalResultData{data.mm, itarget.obj(), lookup_copy, matched_path_copy}));
+                                }
                             }
-                            else if (!consume_name) {
-                                if (fixed_name.size()>0 && itarget.obj()->has_attr("name")) {
-                                    if (itarget["name"].str() == fixed_name) {
-                                        MYDBG(std::cout << "no consume with fixed name...\n";)
-                                        //std::cout << "no consume with fixed name " << fixed_name << "...\n";
+                            else {
+                                // not found
+                            }
+                        }
+                        else {
+                            MYDBG(std::cout << "is list... #"<< target.size() << "\n";)
+                            for (auto& itarget: target) {
+                                if (itarget.is_ref() && !itarget.is_resolved()) {
+                                    MYDBG(std::cout << "postponed...\n";)
+                                    MYYIELD((textx::scoping::Postponed{}));
+                                    co_return;
+                                }
+                                else if (!consume_name) {
+                                    if (fixed_name.size()>0 && itarget.obj()->has_attr("name")) {
+                                        if (itarget["name"].str() == fixed_name) {
+                                            MYDBG(std::cout << "no consume with fixed name...\n";)
+                                            //std::cout << "no consume with fixed name " << fixed_name << "...\n";
+                                            MYYIELD((py::RRELInternalResultData{ data.mm, itarget.obj(), data.lookup_list, data.matched_path }));
+                                        }
+                                    }
+                                    else {
+                                        TEXTX_ASSERT(fixed_name.size()==0, "when specifying a fixed name you need to reference an attribute with a name");
+                                        MYDBG(std::cout << "no consume...\n";)
                                         MYYIELD((py::RRELInternalResultData{ data.mm, itarget.obj(), data.lookup_list, data.matched_path }));
                                     }
                                 }
-                                else {
-                                    TEXTX_ASSERT(fixed_name.size()==0, "when specifying a fixed name you need to reference an attribute with a name");
-                                    MYDBG(std::cout << "no consume...\n";)
-                                    MYYIELD((py::RRELInternalResultData{ data.mm, itarget.obj(), data.lookup_list, data.matched_path }));
+                                else if (!itarget.is_null() && itarget.obj()->has_attr("name") && itarget["name"].str() == data.lookup_list[0]) {
+                                    TEXTX_ASSERT (target.list().has(data.lookup_list[0]), "unexpected, inconsistent valuevec");
+                                    MYDBG(std::cout << "consume...\n";)
+                                    TEXTX_ASSERT(data.lookup_list.size()>0);
+                                    std::vector<std::string> lookup_copy{
+                                        data.lookup_list.begin()+1,
+                                        data.lookup_list.end()
+                                    };
+                                    auto matched_path_copy = data.matched_path;
+                                    matched_path_copy.push_back( itarget.obj() );
+                                    MYDBG(std::cout << "yield..."<<itarget.obj().get()<<"\n";)
+                                    MYYIELD((py::RRELInternalResultData{data.mm, itarget.obj(), lookup_copy, matched_path_copy}));
                                 }
-                            }
-                            else if (!itarget.is_null() && itarget.obj()->has_attr("name") && itarget["name"].str() == data.lookup_list[0]) {
-                                MYDBG(std::cout << "consume...\n";)
-                                TEXTX_ASSERT(data.lookup_list.size()>0);
-                                std::vector<std::string> lookup_copy{
-                                    data.lookup_list.begin()+1,
-                                    data.lookup_list.end()
-                                };
-                                auto matched_path_copy = data.matched_path;
-                                matched_path_copy.push_back( itarget.obj() );
-                                MYDBG(std::cout << "yield..."<<itarget.obj().get()<<"\n";)
-                                MYYIELD((py::RRELInternalResultData{data.mm, itarget.obj(), lookup_copy, matched_path_copy}));
                             }
                         }
                     }
