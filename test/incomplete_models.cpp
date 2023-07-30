@@ -43,3 +43,36 @@ TEST_CASE("incomplete_model_with_point", "[textx/metamodel]")
         }
     }
 }
+
+TEST_CASE("incomplete_model_with_refs", "[textx/metamodel]")
+{
+    {
+        auto workspace = textx::Workspace::create();
+        workspace->set_throw_on_problem(false);
+        workspace->add_metamodel_from_str_for_extension("model", "mygrammar.tx", 
+            R"#(
+                Model: refs+=Ref;
+                Ref: name=ID ref=[Ref] ';';
+            )#");
+
+        {
+            auto m0 = workspace->model_from_str("mygrammar", "a a;");
+            CHECK(m0->ok());
+        }
+        {
+            auto m0 = workspace->model_from_str("mygrammar", "a b; b a;");
+            CHECK(m0->ok());
+        }
+        {
+            auto m1 = workspace->model_from_str("mygrammar", "a a; b b; c d;");
+            CHECK(!m1->ok());
+
+            CHECK((*m1)["refs"].size() == 3);
+            CHECK(!(*m1)["refs"][0]["ref"].is_null());
+            CHECK(!(*m1)["refs"][1]["ref"].is_null());
+            CHECK((*m1)["refs"][2]["ref"].is_null());
+            CHECK(m1->get_errors().size()==1);
+            CHECK_THAT(m1->get_errors()[0].error, Catch::Matchers::Contains("'d' not found"));
+        }
+    }
+}

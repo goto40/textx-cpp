@@ -467,17 +467,24 @@ namespace textx {
                 if (unresolved_refs>0) {
                     textx::arpeggio::TextPosition pos;
                     std::shared_ptr<textx::Model> err_model;
-                    std::stringstream error_text;
+                    size_t length=0;
+                    std::stringstream global_error_text;
                     for(auto m: all_models) {
+                        std::stringstream error_text;
                         textx::object::traverse(m->val(),[&](textx::object::Value& v) {
                             if (v.is_ref() && !v.ref().obj.lock()) {
                                 error_text << "ref '" << v.ref().name << "' not found at " << v.pos << ";\n";
                                 pos = v.pos;
+                                length = v.match->end().pos - v.match->start().pos;
                                 err_model = m;
+                                global_error_text << error_text.str();
                             }
                         });
+                        m->add_error({pos, length, error_text.str()});
                     }
-                    textx::arpeggio::raise(err_model->tx_text(), err_model->tx_filename(), pos, error_text.str());
+                    if (workspace->get_throw_on_problem()) {
+                        textx::arpeggio::raise(err_model->tx_text(), err_model->tx_filename(), pos, global_error_text.str());
+                    }
                 }
             }
             return ret;
