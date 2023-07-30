@@ -416,7 +416,9 @@ namespace textx {
             ret->parsestate = state;
             ret->m_completionInfo = ret->parsestate.get_completion_info();
             ret->m_errors = ret->parsetree.errors();
-            //std::cout << parsetree.value() << "\n";
+            if (workspace->get_throw_on_problem() && !ret->parsetree.ok()) {
+                arpeggio::raise(text, filename, ret->parsestate.farthest_position, ret->parsestate.get_last_error_string());
+            }
             ret->init(filename, text, ret->parsetree.ptr(), shared_from_this());
 
             if (filename.size()>0) {

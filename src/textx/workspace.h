@@ -21,6 +21,8 @@ namespace textx {
         virtual std::shared_ptr<textx::Model> model_from_str(std::string model_text) = 0;
         virtual bool has_metamodelmodel_by_shortcut(std::string name) = 0;
         virtual std::shared_ptr<textx::Metamodel> get_metamodel_by_shortcut(std::string name) = 0;
+        virtual void set_throw_on_problem(bool v) = 0;
+        virtual bool get_throw_on_problem() = 0;
 
         protected:
         friend Metamodel;
@@ -49,8 +51,12 @@ namespace textx {
         std::unordered_map<std::string, std::shared_ptr<textx::Model>> known_models;
         std::unordered_map<std::string, std::shared_ptr<textx::Metamodel>> known_metamodels;
         std::unordered_map<std::string, std::shared_ptr<textx::Metamodel>> known_metamodels_by_shortcut;
+        bool throw_on_problem = true;
         WorkspaceImpl() = default;
     public:
+        void set_throw_on_problem(bool v) override { throw_on_problem = v; }
+        bool get_throw_on_problem() override { return throw_on_problem; }
+
         static std::shared_ptr<WorkspaceImpl> create() { return std::shared_ptr<textx::WorkspaceImpl<Ptr4DefaultMM>>{new textx::WorkspaceImpl<Ptr4DefaultMM>{}}; }
         void set_default_metamodel(std::shared_ptr<textx::Metamodel> m) override {
             TEXTX_ASSERT(m!=nullptr, "default metamodel must not be a nullptr");

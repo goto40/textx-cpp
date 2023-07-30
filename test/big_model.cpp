@@ -23,13 +23,13 @@ TEST_CASE("big_model_with_benchmark", "[textx/metamodel]")
             model_text << "  c: A" << ((i+n-1)%n) << "\n";
             model_text << "  d: A" << ((i+n-2)%n) << "\n";
             model_text << "  {\n";
-            model_text << "  ref c\n";
-            model_text << "  ref a.a.a.a\n";
-            model_text << "  ref b.b.b\n";
-            model_text << "  ref c.c.c\n";
-            model_text << "  ref a.b.c.d\n";
-            model_text << "  ref b.b.b.b\n";
-            model_text << "  ref d.d.d.d\n";
+            model_text << "    ref c\n";
+            model_text << "    ref a.a.a.a\n";
+            model_text << "    ref b.b.b\n";
+            model_text << "    ref c.c.c\n";
+            model_text << "    ref a.b.c.d\n";
+            model_text << "    ref b.b.b.b\n";
+            model_text << "    ref d.d.d.d\n";
             model_text << "  }\n";
             model_text << "}\n";
         }

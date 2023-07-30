@@ -112,7 +112,7 @@ namespace textx
         {
             TextPosition m_start, m_end;
             MatchType m_type;
-            bool m_has_error;
+            bool m_has_error=false;
 
             Match(TextPosition s, TextPosition e, MatchType t, std::vector<std::shared_ptr<Match>> c = {}) : m_start{s}, m_end{e}, m_type{t}, children{c}
             {

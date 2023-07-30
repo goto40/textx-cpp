@@ -28,6 +28,7 @@ namespace textx {
     public:
         bool ok() { return m_errors.size()==0; }
         void add_error(arpeggio::TextxErrorEntry e) { m_errors.push_back(e); }
+        const auto& get_errors() { return m_errors; }
         void set_filename_info(std::string f) { model_filename=f; }
         std::shared_ptr<textx::Metamodel> tx_metamodel() const { return weak_mm.lock(); }
         textx::object::Value& val() { 
